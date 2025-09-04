@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — Environmental & Social Impact Screening (Norway)</title>
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --blue:#74aeea; --pink:#ea7ad6;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
+       font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  .crumb{color:var(--muted);font-size:13px}
+  .wrap{display:grid;grid-template-columns:380px 1fr;gap:18px;max-width:1840px;margin:0 auto;padding:18px}
+  .left{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h1{margin:.2rem 0 .8rem;font-size:28px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  h3{margin:10px 0 6px;font-size:13px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  label{display:block;margin:8px 0 6px}
+  input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)}
+  textarea{min-height:64px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 140px;gap:8px;align-items:center}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .btn-ghost{background:transparent}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
+  .muted{color:var(--muted)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  /* Topic Library: single column + scroll so all checkboxes fit in the card */
+  .grid3{display:grid;grid-template-columns:1fr;gap:10px}
+  .topicLib{max-height:520px; overflow:auto; padding-right:4px}
+  .rightGrid{display:grid;grid-template-rows:auto auto auto 1fr;gap:14px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--panel)}
+  tr:hover{background:rgba(25,197,190,.06)}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .k{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .k strong{display:block;font-size:18px}
+  .tag{display:inline-block;border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:2px 6px;font-size:11px;margin-right:4px}
+  .status-open{background:rgba(246,201,71,.16)}
+  .status-closed{background:rgba(87,211,155,.16)}
+  .status-flag{background:rgba(239,140,122,.16)}
+  .sig-low{background:rgba(25,197,190,.14)}
+  .sig-med{background:rgba(246,201,71,.14)}
+  .sig-high{background:rgba(239,140,122,.18)}
+  svg.small{width:100%;height:260px;background:#0c141a;border-radius:12px}
+  .axis{stroke:#2b3b46;stroke-width:1}
+  .grid{stroke:#1a2530;stroke-width:.8}
+  /* NEW: white axis labels on the heatmap */
+  .axisLabel{fill:var(--text);font-size:12px}
+  .chip{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:var(--panel-2);
+        border-radius:999px;padding:4px 8px;font-size:12px}
+  .chip input{width:auto}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  .sticky-actions{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,rgba(19,32,42,.98));
+                  padding-top:8px;margin-top:8px}
+  @media (max-width:1300px){ .wrap{grid-template-columns:1fr} .kpi{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>SEIDR</strong> <span class="crumb">/ Project Builder / Env. & Social Screening (NO)</span></div>
+    <div class="stack">
+      <span class="pill">Site: Herøya North • v1.0</span>
+      <a class="btn" href="./">Back</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- LEFT SIDEBAR -->
+    <div class="left">
+      <div class="card">
+        <h1>Environmental & Social Impact Screening</h1>
+        <div class="muted">Covers EIA/SEA triggers, nature diversity, water, pollution, noise, climate, cultural heritage, Sami, reindeer herding, fisheries/shipping, workers & communities, and cumulative/transboundary effects for Norway.</div>
+      </div>
+
+      <div class="card">
+        <h2>Project Basics</h2>
+        <div class="row"><label>Project type</label>
+          <select id="projType">
+            <option selected>Hydrogen (100 MW Electrolysis)</option>
+            <option>Battery Plant</option>
+            <option>Data Center</option>
+            <option>Onshore Wind</option>
+            <option>Industrial Expansion</option>
+          </select>
+        </div>
+        <div class="grid2">
+          <div><label>Municipality</label><input id="kommune" value="Porsgrunn (Telemark)" placeholder="Porsgrunn (Telemark)"/></div>
+          <div><label>Property/gnr-bnr</label><input id="gbnr" value="Gnr 188 / Bnr 45" placeholder="Gnr 12 / Bnr 345"/></div>
+        </div>
+        <div class="grid2">
+          <div><label>Nearest protected area</label><input id="prot" value="Jomfruland nasjonalpark — 17.2 km (buffer outside)" placeholder="e.g., Natura area, nature reserve"/></div>
+          <div><label>Nearest water body</label><input id="water" value="Frierfjorden (WFD: Moderat, mål God)" placeholder="e.g., river/lake/coast (WFD)"/></div>
+        </div>
+        <div class="grid2">
+          <div><label>Planning status</label>
+            <select id="plan">
+              <option>Zoning compliant (Reguleringsplan)</option>
+              <option selected>Requires zoning change</option>
+              <option>Regional plan alignment needed</option>
+            </select>
+          </div>
+          <div><label>EIA trigger (Forskrift om KU)</label>
+            <select id="eiaTrigger">
+              <option>Not triggered (below thresholds)</option>
+              <option selected>Notification & screening</option>
+              <option>Full EIA (konsekvensutredning)</option>
+            </select>
+          </div>
+        </div>
+        <div class="stack" style="margin-top:8px">
+          <button id="btnAutoSeed" class="btn">Auto-seed Topics</button>
+          <button id="btnClear" class="btn btn-ghost">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Topic Library (Norway)</h2>
+        <!-- Now scrollable & single-column so all checkboxes fit the frame -->
+        <div class="grid3 topicLib">
+          <div>
+            <h3>Nature & Biodiversity</h3>
+            <label class="chip"><input type="checkbox" class="topic" value="NAT-RedList" checked/> Red-listed species (Artsdatabanken)</label>
+            <label class="chip"><input type="checkbox" class="topic" value="NAT-Habitats" checked/> Selected habitat types / priority species</label>
+            <label class="chip"><input type="checkbox" class="topic" value="NAT-Protected" checked/> Protected areas (national parks, nature reserves, Ramsar)</label>
+            <label class="chip"><input type="checkbox" class="topic" value="NAT-Invasive" /> Invasive alien species</label>
+            <label class="chip"><input type="checkbox" class="topic" value="NAT-BatsBirds"/> Birds & bats (collision/disturbance)</label>
+            <label class="chip"><input type="checkbox" class="topic" value="NAT-Marine" /> Marine ecology / coastal zones</label>
+          </div>
+          <div>
+            <h3>Water & Soil</h3>
+            <label class="chip"><input type="checkbox" class="topic" value="WFD-Status" checked/> Water Framework assessments (ecological/chemical)</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Hydro-Flood" checked/> Flood risk / storm surge</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Hydro-GW" /> Groundwater / aquifers</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Soil-Contam" checked/> Contaminated land / legacy pollution</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Hydro-Discharge"/> Discharges & permits</label>
+          </div>
+          <div>
+            <h3>Air, Noise, Climate</h3>
+            <label class="chip"><input type="checkbox" class="topic" value="Air-Emis" checked/> Air emissions (NOx, particulates, odors)</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Noise-Vib" checked/> Noise & vibration</label>
+            <label class="chip"><input type="checkbox" class="topic" value="GHG-Climate" checked/> GHG & climate strategy</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Light-Visual"/> Light pollution / visual / landscape</label>
+          </div>
+          <div>
+            <h3>People & Heritage</h3>
+            <label class="chip"><input type="checkbox" class="topic" value="Soc-Health" checked/> Community health/safety (H2 risk, MAH)</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Sami-Reindeer" checked/> Sámi consultation & reindeer husbandry</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Cult-Heritage" checked/> Cultural heritage & archaeology</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Workers-OSH" /> Workers (Working Environment Act)</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Traffic" /> Traffic & logistics</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Recreation" /> Outdoor life (friluftsliv) & access</label>
+          </div>
+          <div>
+            <h3>Coastal, Marine, Fisheries</h3>
+            <label class="chip"><input type="checkbox" class="topic" value="Fish-Fleet" /> Fisheries interactions</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Shipping" /> Shipping lanes / port safety</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Sea-Noise" /> Underwater noise / marine mammals</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Seabed" /> Seabed habitats / minerals screening</label>
+          </div>
+          <div>
+            <h3>Planning & Permits</h3>
+            <label class="chip"><input type="checkbox" class="topic" value="Plan-PBA" checked/> Planning & Building Act compliance</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Pollution-Permits" checked/> Pollution Control Act permits</label>
+            <label class="chip"><input type="checkbox" class="topic" value="EIA-Process" checked/> EIA/SEA process & scoping</label>
+            <label class="chip"><input type="checkbox" class="topic" value="MajorAccident" /> Major Accident Regulations (Seveso-type)</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Waste-Circ" /> Waste & circularity</label>
+            <label class="chip"><input type="checkbox" class="topic" value="Cumulative" checked/> Cumulative & transboundary</label>
+          </div>
+        </div>
+        <div class="stack" style="margin-top:10px">
+          <button id="btnAddSelectedTopics" class="btn">Add Selected to Worksheet</button>
+          <span class="pill">Topics in worksheet: <span id="topicCount">0</span></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Exports</h2>
+        <div class="toolbar">
+          <button id="btnCSV" class="btn">Export CSV</button>
+          <button id="btnJSON" class="btn">Export JSON</button>
+          <button id="btnPrint" class="btn btn-ghost">Print / PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="rightGrid">
+      <!-- KPIs -->
+      <div class="card">
+        <h2>Screening KPIs</h2>
+        <div class="kpi">
+          <div class="k"><small class="muted">Coverage</small><strong id="kCoverage">0%</strong><small class="muted">topics assessed</small></div>
+          <div class="k"><small class="muted">High Significance</small><strong id="kHigh">0</strong><small class="muted">≥15</small></div>
+          <div class="k"><small class="muted">Permits Needed</small><strong id="kPermits">0</strong><small class="muted">flagged</small></div>
+          <div class="k"><small class="muted">Open Issues</small><strong id="kOpen">0</strong><small class="muted">actions</small></div>
+        </div>
+      </div>
+
+      <!-- Worksheet -->
+      <div class="card">
+        <h2>Worksheet — Evidence, Significance, Mitigation & Permits</h2>
+        <div style="overflow:auto;max-height:360px">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Topic</th>
+                <th>Law/Reference</th>
+                <th>Screening Question(s)</th>
+                <th>Evidence / Data Source (URL/Doc)</th>
+                <th>Baseline Notes</th>
+                <th>Magnitude (1–5)</th>
+                <th>Sensitivity (1–5)</th>
+                <th>Significance</th>
+                <th>Mitigation / Conditions</th>
+                <th>Authority / Stakeholders</th>
+                <th>Permit?</th>
+                <th>Status</th>
+                <th>Owner</th>
+                <th>Due</th>
+                <th><input id="selAll" type="checkbox"/></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="sticky-actions">
+          <div class="stack">
+            <span class="pill">Significance = Magnitude × Sensitivity</span>
+            <button id="btnNewIssue" class="btn">New Issue from Selection</button>
+            <button id="btnClose" class="btn btn-ghost">Mark Selected Closed</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Heatmap & Coverage -->
+      <div class="card">
+        <h2>Significance Heatmap & Coverage</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <svg id="heat" class="small" aria-label="Significance heatmap"></svg>
+          <div>
+            <svg id="coverage" class="small" aria-label="Coverage gauge"></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issues & Actions -->
+      <div class="card">
+        <h2>Issues & Actions</h2>
+        <div style="overflow:auto;max-height:220px">
+          <table id="actTbl">
+            <thead>
+              <tr><th>ID</th><th>Topic</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- Norway-specific topic templates ---------- */
+const TEMPLATES = [
+  t('NAT-RedList','Red-listed species','Nature Diversity Act; Biodiversity Centre (Artsdatabanken)','Any red-listed/priority species in site/1 km buffer?','https://www.artsdatabanken.no','Check red lists & occurrence records; seasonal use'),
+  t('NAT-Habitats','Selected habitat types / priority species','Nature Diversity Act (priority species/selected habitats)','Selected habitats within/near site? Ecological function areas impacted?','','Map habitats; avoid or compensate'),
+  t('NAT-Protected','Protected areas','Nature Diversity Act; Ramsar; protected landscapes','Proximity to protected areas, buffer intrusions, connectivity breaks?','','Buffers; crossings; NP/NR consent'),
+  t('NAT-Invasive','Invasive alien species','Nature Diversity Act (alien species)','Listed invasive species present/introduced risk?','','Biosecurity plan'),
+  t('NAT-BatsBirds','Birds & bats','Nature Diversity Act; Bern Convention','Breeding colonies/roosts/flight paths at risk (collision, disturbance)?','','Timing restrictions; design changes'),
+  t('NAT-Marine','Marine/coastal ecology','Nature Diversity Act; Coastal zone','Intertidal/subtidal habitats affected? Marine mammals?','','Turbidity/noise limits; exclusion zones'),
+
+  t('WFD-Status','Water Framework Directive status','Water regulations (WFD implementation)','Nearby water bodies’ status/objectives? Deterioration risk?','', 'No deterioration; mitigation hierarchy'),
+  t('Hydro-Flood','Flood risk & storm surge','Civil Protection & flood maps','Site flood level, drainage capacity, climate resilience?','','Plinths, attenuation, SUDS'),
+  t('Hydro-GW','Groundwater & aquifers','Groundwater protection','Aquifer vulnerability; abstractions; drawdown risk?','','Liners; monitoring'),
+  t('Soil-Contam','Contaminated land / legacy','Pollution Control Act','Historic contamination? Remediation needed?','','Site investigation; remediation plan'),
+  t('Hydro-Discharge','Discharge & permits','Pollution Regulations; discharge permits','Any liquid discharges? Cooling water? pH/salinity/metals?','','Permit & monitoring plan'),
+
+  t('Air-Emis','Air emissions','Pollution Control Act; permits','Combustion/process emissions; odour?','','Dispersion assessment; BAT'),
+  t('Noise-Vib','Noise & vibration','Local noise limits; Working Environment Act','Construction/operation noise to receptors?','','Barriers, shift limits'),
+  t('GHG-Climate','GHG & climate','Climate targets; permits if relevant','Scope 1–3; electrification; lifecycle impacts','','Energy efficiency; PPAs'),
+  t('Light-Visual','Light/visual/landscape','Local plan; landscape assessment','Glare/spill; landscape character & viewpoints','','Shielding; color/height; planting'),
+
+  t('Soc-Health','Community H&S / MAH','Major Accident rules; COMAH/Seveso-type','Hydrogen safety distances; offsite risk?','','QRA; emergency planning'),
+  t('Sami-Reindeer','Sámi & reindeer husbandry','Consultation duty; ILO 169','Traditional use areas affected? Routes/pastures?','','Consult Sámediggi, herding districts'),
+  t('Cult-Heritage','Cultural heritage & archaeology','Cultural Heritage Act; Riksantikvaren','Known/unknown sites? Chance finds?','','Surveys; avoidance; permits'),
+  t('Workers-OSH','Workers (HSE)','Working Environment Act','Worker exposure (noise, chemicals)?','','HSE mgmt & monitoring'),
+  t('Traffic','Traffic & logistics','Road authority/local plan','Trips/day; abnormal loads; safety?','','TMP; time windows'),
+  t('Recreation','Outdoor life (friluftsliv)','Outdoor Access & planning','Access/trails; coastal access; amenity?','','Path diversions; buffers'),
+
+  t('Fish-Fleet','Fisheries interactions','Fisheries Directorate','Overlap with fisheries/gear; loss of access?','','Navigation, timing'),
+  t('Shipping','Shipping & port safety','Coastal Administration','Fairways, AIS density, exclusion zones','','Harbor master approval'),
+  t('Sea-Noise','Underwater noise','Marine mammals','Pile driving/compressor/ship noise levels?','','Soft starts; monitoring'),
+  t('Seabed','Seabed habitats/minerals','Seabed Minerals Act (if offshore)','Vulnerable habitats; minerals screening?','','Precautionary approach'),
+
+  t('Plan-PBA','Planning & Building Act (PBA)','PBA; municipal/regional plans','Zoning conformity; plan amendments?','','Plan process timeline'),
+  t('Pollution-Permits','Pollution permits','Pollution Control Act','Emissions/discharges/waste permits needed?','','Authority dialogue'),
+  t('EIA-Process','EIA/SEA process','Regulations on Impact Assessments (Forskrift om KU)','Screening, scoping, consultation requirements?','','Notices; program'),
+  t('MajorAccident','Major Accident (Seveso-type)','Storulykke regulations','Thresholds triggered? Safety report?','','Zones; public info'),
+  t('Waste-Circ','Waste & circularity','Waste regulations','Construction/operational waste; recycling','','Waste plan & targets'),
+  t('Cumulative','Cumulative/transboundary','EIA & Espoo principles','Other plans/projects interactions? Transboundary?','','Cumulative matrix')
+];
+function t(code,name,law,qs,evidence,notes){ return {code,name,law,qs,evidence,notes}; }
+
+/* ---------- Mock dataset (per-topic overrides) ---------- */
+const MOCK = {
+  'NAT-RedList': {
+    ev:'https://mock.artsdatabanken.no/occurrence?id=HERY-REDLIST-2024',
+    notes:'Two observations of Eurasian otter (VU) within 1 km buffer (2022–2024). Seasonal shoreline use.',
+    mag:3, sens:4, mit:'Maintain 50 m riparian buffer; time in-water works (Nov–Mar).',
+    auth:'Statsforvalteren; Miljødirektoratet', permit:'No', status:'OPEN', owner:'Ecology Lead', due:'2025-10-01'
+  },
+  'NAT-Habitats': {
+    ev:'https://mock.miljodir.no/habitats?site=heroya-north',
+    notes:'Patches of semi-natural meadow to the north; low continuity.',
+    mag:2, sens:3, mit:'Micro-siting + habitat enhancement (native seed mix).',
+    auth:'Kommune; Statsforvalter', permit:'No', status:'OPEN', owner:'Ecology Lead', due:'2025-10-10'
+  },
+  'NAT-Protected': {
+    ev:'https://mock.eea.europa.eu/natura?buffer=25km',
+    notes:'Nearest protected area: Jomfruland NP (~17 km). No buffer intrusion.',
+    mag:1, sens:3, mit:'None required', auth:'Miljødirektoratet',
+    permit:'No', status:'CLOSED', owner:'Env. Manager', due:''
+  },
+  'WFD-Status': {
+    ev:'https://mock.vann-nett.no/waterbody/frierfjorden',
+    notes:'WFD status: Moderat. Objective: God. Risk of deterioration if warm cooling discharge unmanaged.',
+    mag:3, sens:3, mit:'No-deterioration plan; temperature/salinity envelope; monitoring.',
+    auth:'NVE; Kommune', permit:'Likely', status:'FLAG', owner:'Water Lead', due:'2025-11-05'
+  },
+  'Hydro-Flood': {
+    ev:'https://mock.nve.no/floodmaps?cell=heroya',
+    notes:'Edge of parcel touches 200-yr flood fringe; site pad mostly above.',
+    mag:2, sens:3, mit:'Raise critical equipment +0.6 m; SUDS; overflow to canal.',
+    auth:'NVE; Kommune', permit:'No', status:'OPEN', owner:'Civil Lead', due:'2025-09-30'
+  },
+  'Soil-Contam': {
+    ev:'https://mock.miljodir.no/grunnforurensning/heroya',
+    notes:'Legacy hydrocarbons & metals (historic industry). Hotspots near quay.',
+    mag:4, sens:3, mit:'Phase II site investigation; remedial action plan; soil management.',
+    auth:'Statsforvalteren', permit:'Required', status:'OPEN', owner:'HSE Lead', due:'2025-10-20'
+  },
+  'Air-Emis': {
+    ev:'https://mock.noa.no/limits?municipality=porsgrunn',
+    notes:'Process NOx & minor venting; construction dust at receptors 350 m.',
+    mag:3, sens:2, mit:'BAT abatement; dust suppression; real-time PM at fence line.',
+    auth:'Miljødirektoratet', permit:'Required', status:'OPEN', owner:'Process Lead', due:'2025-12-01'
+  },
+  'Noise-Vib': {
+    ev:'https://mock.kommune.no/noise-zones?area=heroya',
+    notes:'Closest sensitive receptor ~320 m NE; baseline industrial noise present.',
+    mag:3, sens:3, mit:'Barriers; night-shift limits during piling; complaint protocol.',
+    auth:'Kommune', permit:'No', status:'OPEN', owner:'Construction PM', due:'2025-10-05'
+  },
+  'GHG-Climate': {
+    ev:'https://mock.seidr.local/ghg-plan?v=1',
+    notes:'Scope 1 negligible (electrolysis). Scope 2 tied to PPA; Scope 3 logistics to be refined.',
+    mag:2, sens:2, mit:'100% RE PPA; supplier code; fleet electrification.',
+    auth:'Company/ESG', permit:'No', status:'CLOSED', owner:'ESG Lead', due:''
+  },
+  'Soc-Health': {
+    ev:'https://mock.dsb.no/mah/hydrogen-safety?ref=heroya',
+    notes:'Hydrogen storage triggers MAH screening; separation distances to boundary assessed.',
+    mag:4, sens:4, mit:'QRA; ALARP; emergency plan w/ local fire brigade.',
+    auth:'DSB; Kommune', permit:'Likely', status:'FLAG', owner:'Safety Engineer', due:'2025-10-25'
+  },
+  'Sami-Reindeer': {
+    ev:'https://mock.sametinget.no/kart?area=telemark',
+    notes:'No reindeer husbandry areas in proximity.',
+    mag:1, sens:1, mit:'—', auth:'Sámediggi (informal check)', permit:'No', status:'CLOSED', owner:'Stakeholder Lead', due:''
+  },
+  'Cult-Heritage': {
+    ev:'https://mock.kulturminnesok.no/site/heroya-buffer',
+    notes:'Registered cultural heritage ~600 m SE; no direct overlap. Chance finds possible.',
+    mag:2, sens:3, mit:'Archaeology watching brief during groundworks.',
+    auth:'Riksantikvaren; Kommune', permit:'Likely', status:'OPEN', owner:'Env. Manager', due:'2025-11-15'
+  },
+  'Plan-PBA': {
+    ev:'https://mock.porsgrunn.kommune.no/planregister?case=HZ-2025-014',
+    notes:'Requires zoning change (industry → energy/chem).',
+    mag:3, sens:4, mit:'Initiate plan program; align with regional plan.',
+    auth:'Kommune', permit:'Required', status:'OPEN', owner:'Planning Lead', due:'2026-01-15'
+  },
+  'Pollution-Permits': {
+    ev:'https://mock.miljodir.no/permits?type=utslepp',
+    notes:'Operational discharge & emissions permits required.',
+    mag:3, sens:3, mit:'Pre-application meeting; consolidated application.',
+    auth:'Miljødirektoratet', permit:'Required', status:'OPEN', owner:'Compliance Lead', due:'2025-12-10'
+  },
+  'EIA-Process': {
+    ev:'https://mock.regjeringen.no/ku/forskrift?threshold=energy-industrial',
+    notes:'Notification & screening appropriate; full EIA if scope expands.',
+    mag:2, sens:3, mit:'KU-plan; consultation schedule.',
+    auth:'Kommune; Statsforvalteren', permit:'Likely', status:'OPEN', owner:'Env. Manager', due:'2025-09-20'
+  },
+  'Cumulative': {
+    ev:'https://mock.county.no/projects?buffer=5km',
+    notes:'Concurrent quay works & logistics projects within 5 km.',
+    mag:3, sens:3, mit:'Cumulative matrix; coordinate with neighboring projects.',
+    auth:'Kommune; Port Authority', permit:'No', status:'OPEN', owner:'Env. Manager', due:'2025-11-30'
+  }
+};
+
+/* ---------- State ---------- */
+let rows = [];     // worksheet rows
+const $ = s => document.querySelector(s);
+
+/* ---------- Rendering: Table ---------- */
+const tb = $('#tbl tbody');
+function renderTable(){
+  tb.innerHTML='';
+  rows.forEach((r,i)=>{
+    const sig = (r.mag||0)*(r.sens||0);
+    const cls = sig>=15?'sig-high': sig>=8?'sig-med':'sig-low';
+    const tr=document.createElement('tr');
+    tr.className = (r.status==='OPEN'? 'status-open ':(r.status==='FLAG'?'status-flag ': r.status==='CLOSED'?'status-closed ':''))
+                   + cls;
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td><span class="tag">${r.code}</span> ${esc(r.name)}</td>
+      <td contenteditable="true">${esc(r.law)}</td>
+      <td contenteditable="true">${esc(r.qs)}</td>
+      <td contenteditable="true">${esc(r.ev||r.evidence||'')}</td>
+      <td contenteditable="true">${esc(r.notes||'')}</td>
+      <td>${selNum('mag',r.id,r.mag||1)}</td>
+      <td>${selNum('sens',r.id,r.sens||1)}</td>
+      <td><strong>${sig||0}</strong></td>
+      <td contenteditable="true">${esc(r.mit||'')}</td>
+      <td contenteditable="true">${esc(r.auth||'')}</td>
+      <td>${selPermit(r.id,r.permit||'No')}</td>
+      <td>${selStatus(r.id,r.status||'OPEN')}</td>
+      <td contenteditable="true">${esc(r.owner||'')}</td>
+      <td><input type="date" value="${r.due||''}" data-id="${r.id}" class="fit" onchange="editDue(this)"/></td>
+      <td style="text-align:center"><input type="checkbox" data-id="${r.id}" ${r.sel?'checked':''} onchange="toggleSel(this)"/></td>
+    `;
+    tr.querySelectorAll('[contenteditable]').forEach((cell,ci)=>{
+      cell.addEventListener('input', ()=>{
+        const keys=['law','qs','ev','notes','mit','auth','owner'];
+        const key = keys[ci>=2?ci-2:0];
+        if(key){ const it=rows.find(x=>x.id===r.id); it[key]=cell.textContent.trim(); renderKPIs(); drawHeat(); }
+      });
+    });
+    tb.appendChild(tr);
+  });
+  $('#topicCount').textContent = rows.length;
+  renderKPIs();
+  drawHeat();
+  drawCoverage();
+}
+
+/* ---------- Helpers ---------- */
+function esc(s){ return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function uid(){ return 'ES-' + Math.random().toString(36).slice(2,7).toUpperCase(); }
+function selNum(field,id,val){
+  const opts=[1,2,3,4,5].map(n=>`<option ${n===val?'selected':''}>${n}</option>`).join('');
+  return `<select data-id="${id}" onchange="editNum(this,'${field}')">${opts}</select>`;
+}
+function selStatus(id,val){
+  const opts=['OPEN','FLAG','CLOSED'].map(s=>`<option ${s===val?'selected':''}>${s}</option>`).join('');
+  return `<select data-id="${id}" onchange="editStatus(this)">${opts}</select>`;
+}
+function selPermit(id,val){
+  const opts=['No','Likely','Required'].map(s=>`<option ${s===val?'selected':''}>${s}</option>`).join('');
+  return `<select data-id="${id}" onchange="editPermit(this)">${opts}</select>`;
+}
+
+/* ---------- Editors ---------- */
+function editNum(el,field){ const id=el.getAttribute('data-id'); const it=rows.find(x=>x.id===id); it[field]=+el.value; renderTable(); }
+function editStatus(el){ const id=el.getAttribute('data-id'); const it=rows.find(x=>x.id===id); it.status=el.value; renderTable(); }
+function editPermit(el){ const id=el.getAttribute('data-id'); const it=rows.find(x=>x.id===id); it.permit=el.value; renderKPIs(); }
+function editDue(el){ const id=el.getAttribute('data-id'); const it=rows.find(x=>x.id===id); it.due=el.value; }
+function toggleSel(el){ const id=el.getAttribute('data-id'); const it=rows.find(x=>x.id===id); it.sel = el.checked; }
+
+/* ---------- KPIs ---------- */
+function renderKPIs(){
+  const assessed = rows.filter(r=> (r.mag||0)>0 && (r.sens||0)>0).length;
+  const coverage = Math.round(assessed / Math.max(1, rows.length) * 100);
+  const high = rows.filter(r=> (r.mag||0)*(r.sens||0) >= 15).length;
+  const permits = rows.filter(r=> r.permit==='Likely' || r.permit==='Required').length;
+  const open = rows.filter(r=> r.status!=='CLOSED').length;
+  $('#kCoverage').textContent = coverage + '%';
+  $('#kHigh').textContent = high;
+  $('#kPermits').textContent = permits;
+  $('#kOpen').textContent = open;
+}
+
+/* ---------- Heatmap ---------- */
+function drawHeat(){
+  const svg = $('#heat'); svg.innerHTML='';
+  const W=svg.clientWidth||600, H=svg.clientHeight||260, pad=40;
+  // grid 5x5
+  for(let i=0;i<=5;i++){
+    const x=pad + i*(W-2*pad)/5, y=pad + i*(H-2*pad)/5;
+    svg.insertAdjacentHTML('beforeend', `<line x1="${x}" y1="${pad}" x2="${x}" y2="${H-pad}" class="grid"/>`);
+    svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+    if(i>0){ svg.insertAdjacentHTML('beforeend', `<text x="${pad-24}" y="${H-pad - (i-1)*(H-2*pad)/5 + 4}" class="axisLabel">Sens ${i}</text>`); }
+    if(i>0){ svg.insertAdjacentHTML('beforeend', `<text x="${pad + (i-1)*(W-2*pad)/5}" y="${H-pad+16}" class="axisLabel">Mag ${i}</text>`); }
+  }
+  rows.forEach(r=>{
+    const m=r.mag||0, s=r.sens||0; if(!m||!s) return;
+    const x=pad + (m-0.5)*(W-2*pad)/5; const y=H-pad - (s-0.5)*(H-2*pad)/5;
+    const sig=m*s; const col = sig>=15?'#ef8c7a':sig>=8?'#f6c947':'#19c5be';
+    const op = r.status==='CLOSED' ? .35 : (r.status==='FLAG' ? .95 : .85);
+    svg.insertAdjacentHTML('beforeend', `<circle cx="${x}" cy="${y}" r="${6+(sig/8)}" fill="${col}" opacity="${op}"><title>${r.name} [${sig}]</title></circle>`);
+  });
+}
+
+/* ---------- Coverage gauge ---------- */
+function drawCoverage(){
+  const svg=$('#coverage'); svg.innerHTML='';
+  const W=svg.clientWidth||600, H=svg.clientHeight||260;
+  const pad=20, cx=W/2, cy=H*0.75, r=Math.min(W,H)*0.38;
+  // arc bg
+  svg.insertAdjacentHTML('beforeend', `<path d="${arc(cx,cy,r,Math.PI,0)}" stroke="#1a2530" stroke-width="16" fill="none"/>`);
+  const cov = parseInt($('#kCoverage').textContent)||0;
+  const ang = Math.PI * (1 - cov/100);
+  svg.insertAdjacentHTML('beforeend', `<path d="${arc(cx,cy,r,Math.PI,ang)}" stroke="#19c5be" stroke-width="16" fill="none"/>`);
+  svg.insertAdjacentHTML('beforeend', `<text x="${cx}" y="${cy-6}" text-anchor="middle" style="font-size:28px;fill:#e9eef2">${cov}%</text>`);
+  svg.insertAdjacentHTML('beforeend', `<text x="${cx}" y="${cy+18}" text-anchor="middle" class="muted">Topics assessed</text>`);
+  function arc(cx,cy,r,a1,a2){
+    const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1), x2=cx+r*Math.cos(a2), y2=cy+r*Math.sin(a2);
+    const large = (a2-a1 <= Math.PI) ? 0 : 1;
+    return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
+  }
+}
+
+/* ---------- Topic add/seed ---------- */
+function addSelected(){
+  const picked = Array.from(document.querySelectorAll('.topic:checked')).map(x=>x.value);
+  TEMPLATES.filter(t=>picked.includes(t.code)).forEach(tpl=>{
+    if(rows.some(r=>r.code===tpl.code)) return;
+    rows.push(applyMock({
+      id: uid(), code:tpl.code, name:tpl.name, law:tpl.law, qs:tpl.qs,
+      ev:tpl.evidence, notes:tpl.notes, mag:1, sens:1, status:'OPEN', permit:'No'
+    }));
+  });
+  renderTable();
+}
+function clearAll(){
+  rows=[]; $('#actTbl tbody').innerHTML=''; renderTable();
+}
+function autoSeed(){
+  clearAll();
+  // Baseline set for NO projects (16 items)
+  const baseline = ['NAT-RedList','NAT-Habitats','NAT-Protected','WFD-Status','Hydro-Flood','Soil-Contam',
+                    'Air-Emis','Noise-Vib','GHG-Climate','Soc-Health','Sami-Reindeer','Cult-Heritage',
+                    'Plan-PBA','Pollution-Permits','EIA-Process','Cumulative'];
+  baseline.forEach(code=>{
+    const tpl=TEMPLATES.find(t=>t.code===code);
+    rows.push(applyMock({id:uid(), code:tpl.code, name:tpl.name, law:tpl.law, qs:tpl.qs,
+                         ev:tpl.evidence, notes:tpl.notes, mag:1, sens:1, status:'OPEN', permit:'No'}));
+  });
+  renderTable();
+  seedIssues(); // prefill a few actions
+}
+function applyMock(row){
+  const m = MOCK[row.code]||{};
+  return {...row, ...m};
+}
+
+/* ---------- Issues / Actions ---------- */
+const actBody = $('#actTbl tbody');
+function seedIssues(){
+  actBody.innerHTML='';
+  const pick = code => rows.find(r=>r.code===code);
+  const todo = [
+    {r:pick('Soil-Contam'), action:'Commission Phase II site investigation & RAP', owner:'HSE Lead', due:'2025-10-20', status:'OPEN'},
+    {r:pick('Soc-Health'), action:'Initiate QRA + emergency plan workshop (DSB + brann)', owner:'Safety Engineer', due:'2025-10-25', status:'FLAG'},
+    {r:pick('Plan-PBA'), action:'Start zoning change process (planprogram + oppstartsmøte)', owner:'Planning Lead', due:'2026-01-15', status:'OPEN'},
+    {r:pick('WFD-Status'), action:'Set up no-deterioration monitoring plan for Frierfjorden', owner:'Water Lead', due:'2025-11-05', status:'FLAG'}
+  ];
+  todo.forEach(it=>{
+    if(!it.r) return;
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${it.r.id}</td><td>${esc(it.r.name)}</td>
+      <td>${esc(it.action)}</td><td>${esc(it.owner)}</td><td>${it.due}</td><td>${it.status}</td>`;
+    actBody.appendChild(tr);
+  });
+}
+
+/* ---------- Exports ---------- */
+$('#btnCSV').addEventListener('click', ()=>{
+  const headers = ['ID','Code','Topic','Law','Questions','Evidence','Baseline','Magnitude','Sensitivity','Significance','Mitigation','Authority','Permit','Status','Owner','Due'];
+  const lines = [headers.join(',')].concat(rows.map(r=>[
+    r.id,r.code,escCSV(r.name),escCSV(r.law),escCSV(r.qs),escCSV(r.ev||''),escCSV(r.notes||''),r.mag||'',r.sens||'',(r.mag||0)*(r.sens||0),escCSV(r.mit||''),escCSV(r.auth||''),r.permit||'',r.status||'',escCSV(r.owner||''),r.due||''
+  ].join(',')));
+  download(lines.join('\n'),'seidr_env_social_screening_NO.csv','text/csv');
+});
+$('#btnJSON').addEventListener('click', ()=>{ download(JSON.stringify(rows,null,2),'seidr_env_social_screening_NO.json','application/json'); });
+$('#btnPrint').addEventListener('click', ()=>{ window.print(); });
+function escCSV(s){ return `"${(s||'').replace(/"/g,'""')}"`; }
+function download(data,name,type){ const blob=new Blob([data],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url); }
+
+/* ---------- Events ---------- */
+$('#btnAddSelectedTopics').addEventListener('click', addSelected);
+$('#btnClear').addEventListener('click', clearAll);
+$('#btnNewIssue').addEventListener('click', ()=>{
+  rows.filter(r=>r.sel).forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${r.id}</td><td>${esc(r.name)}</td>
+      <td>${esc(r.mit||'(add mitigation/action)')}</td>
+      <td>${esc(r.owner||'')}</td><td>${r.due||''}</td><td>${r.status||'OPEN'}</td>`;
+    actBody.appendChild(tr);
+  });
+});
+$('#btnClose').addEventListener('click', ()=>{
+  rows.filter(r=>r.sel).forEach(r=>{ r.status='CLOSED'; r.sel=false; });
+  renderTable();
+});
+$('#selAll').addEventListener('change', e=>{
+  rows.forEach(r=>r.sel = e.target.checked); renderTable();
+});
+$('#btnAutoSeed').addEventListener('click', autoSeed);
+
+/* ---------- Boot ---------- */
+autoSeed();
+</script>
+</body>
+</html>

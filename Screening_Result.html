@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — No-Go Review (Meråker)</title>
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --warn:#f59e52; --blue:#74aeea; --grey:#7f8b95;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);
+    color:var(--text);
+    font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif
+  }
+  .wrap{max-width:1280px;margin:0 auto;padding:18px}
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 20px;background:rgba(15,26,34,.9);
+    border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)
+  }
+  .crumb{color:var(--muted);font-size:13px}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+        background:rgba(239,140,122,.12);border:1px solid #8b3f33;color:#efb4a8;font-weight:600;font-size:12px}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+        background:var(--panel-2);border:1px solid var(--line);color:var(--text);font-size:12px}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+       border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+  .btn:hover{filter:brightness(1.08)}
+  h1{margin:.2rem 0 .6rem;font-size:26px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  h3{margin:8px 0 6px;font-size:16px}
+  .muted{color:var(--muted)}
+  .num{font-variant-numeric:tabular-nums}
+  /* Grid layout */
+  .grid12{display:grid;grid-template-columns:1fr 360px;gap:16px}
+  .grid-main{display:grid;grid-template-columns:1fr;gap:16px}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
+  .panel-body{padding:12px}
+  .bar-wrap{height:8px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);overflow:hidden}
+  .bar{height:100%;background:linear-gradient(90deg,var(--red),#ffb0a3);transition:width .35s ease}
+  .bar-ok{background:linear-gradient(90deg,var(--green),#b7f0d4)}
+  .kv{display:flex;justify-content:space-between;gap:12px;margin:6px 0}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+  .ok{background:rgba(87,211,155,.12);border-color:#2a5f46;color:#cdecd9}
+  .bad{background:rgba(239,140,122,.12);border-color:#8b3f33;color:#efb4a8}
+  .warn{background:rgba(245,158,82,.12);border-color:#6f4c21;color:#ffd3a8}
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:12px;background:var(--panel-2);padding:4px}
+  .toggle button{padding:6px 10px;border-radius:8px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+  .toggle button.active{background:var(--panel);color:var(--text);box-shadow:0 0 0 1px var(--line) inset}
+  .waterfall-row{display:flex;align-items:center;gap:10px}
+  .waterfall-row .lab{width:240px;color:var(--muted);font-size:12px}
+  .waterfall-row .val{width:90px;text-align:right;font-size:12px}
+  .divider{height:1px;background:var(--line);margin:10px 0}
+  /* Sidebar facts + score */
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fact{padding:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px}
+  .fact .t{font-size:12px;color:var(--muted)}
+  .fact .v{font-weight:600}
+  .score-bar{height:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .score-bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--red),#ffb0a3)}
+  /* Blockers */
+  .blocker{padding:12px 0;border-top:1px solid var(--line)}
+  .b-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .sev{padding:6px;border-radius:10px;font-size:12px;border:1px solid var(--line)}
+  .sev.high{background:rgba(239,140,122,.12);color:#efb4a8;border-color:#8b3f33}
+  .sev.med{background:rgba(245,158,82,.12);color:#ffd3a8;border-color:#6f4c21}
+  .sev.low{background:rgba(87,211,155,.12);color:#cdecd9;border-color:#2a5f46}
+  .b-title{font-weight:600}
+  .b-sub{color:var(--muted);font-size:14px}
+  .b-imp{color:#efb4a8;font-size:12px;margin-top:2px}
+  .link{font-size:12px;color:var(--text);background:var(--panel-2);border:1px solid var(--line);padding:6px 10px;border-radius:8px;cursor:pointer}
+  .link:hover{filter:brightness(1.08)}
+  .fixes{margin-top:10px;padding-left:46px}
+  .fix-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fix{border:1px solid var(--line);background:var(--panel-2);border-radius:10px;padding:10px}
+  .fix .meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .meta .cell{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px}
+  .meta .k{font-size:10px;color:var(--muted);text-transform:uppercase}
+  /* Actions */
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .a-btn{border-radius:10px;padding:10px;border:1px solid var(--line);cursor:pointer}
+  .a-btn.primary{background:var(--text);color:#0c1318}
+  .a-btn.ghost{background:var(--panel-2);color:var(--text)}
+  .foot{color:var(--muted);font-size:12px;margin-top:12px}
+  @media (max-width:1100px){
+    .grid12{grid-template-columns:1fr}
+  }
+</style>
+<!-- Lucide (icons) -->
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="topbar">
+    <div>
+      <strong>SEIDR</strong>
+      <span class="crumb">/ Meråker — No-Go Review</span>
+    </div>
+    <div class="stack">
+      <span class="chip"><i data-lucide="x-circle" class="w-4 h-4"></i> Not Passing</span>
+      <span class="pill">Data grade: B-</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="grid12">
+      <!-- MAIN COLUMN -->
+      <div class="grid-main">
+        <!-- KPI + Waterfall -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
+            <div style="flex:1">
+              <div class="muted" style="font-size:12px">Levelized cost vs target <span id="unitsLabel">(€/kg)</span></div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+                <div id="p50Text" style="font-size:28px;font-weight:700">P50 4.10 €/kg</div>
+                <div id="deltaChip" class="badge bad">
+                  <i data-lucide="trending-up" class="w-4 h-4"></i>
+                  +1.10 vs target 3.00
+                </div>
+              </div>
+              <div class="bar-wrap" style="margin-top:10px">
+                <div id="kpiBar" class="bar" style="width:68%"></div>
+              </div>
+              <div id="p90Text" class="muted" style="font-size:12px;margin-top:8px">P90 4.70 €/kg · Threshold to pass ≤ 3.00 €/kg</div>
+            </div>
+            <div>
+              <div class="toggle">
+                <button class="active" data-fuel="H2">H2</button>
+                <button data-fuel="eMeOH">eMeOH</button>
+                <button data-fuel="eNH3">eNH3</button>
+              </div>
+              <div class="muted" style="font-size:12px;margin-top:6px;text-align:right">Switch fuel lens</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div style="font-weight:600;margin-bottom:6px">Why we miss the target — cost deltas</div>
+          <div id="waterfall" class="space"></div>
+        </div>
+
+        <!-- Blockers -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:600;display:flex;align-items:center;gap:8px">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i> Top blockers
+            </div>
+            <button id="toggleFixes" class="link"><i data-lucide="chevron-down" class="w-4 h-4"></i> <span>Hide fixes</span></button>
+          </div>
+          <div id="blockersWrap"></div>
+        </div>
+
+        <!-- Would pass if -->
+        <div class="card">
+          <div style="font-weight:600;display:flex;align-items:center;gap:8px">
+            <i data-lucide="target" class="w-4 h-4"></i> What would make this site pass
+          </div>
+          <ul id="wouldPassList" style="margin-top:8px;padding-left:18px">
+            <!-- populated by JS -->
+          </ul>
+        </div>
+
+        <div class="foot">All values are illustrative mock data to demonstrate the Seidr no-go review logic and UI. Not for real-world decision making.</div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div style="font-weight:600;display:flex;align-items:center;gap:8px">
+            <i data-lucide="map-pin" class="w-4 h-4"></i> Quick facts
+          </div>
+          <div class="facts" style="margin-top:10px">
+            <div class="fact"><div class="t">Grid (firm)</div><div class="v">15 MW</div></div>
+            <div class="fact"><div class="t">Demand</div><div class="v">60 MW</div></div>
+            <div class="fact"><div class="t">Water avail.</div><div class="v">100 m³/h</div></div>
+            <div class="fact"><div class="t">Water need</div><div class="v">350 m³/h</div></div>
+            <div class="fact"><div class="t">CO₂ (nearest bio)</div><div class="v">120 km</div></div>
+            <div class="fact"><div class="t">Land</div><div class="v">58 ha / 6 parcels</div></div>
+          </div>
+          <div style="height:140px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;margin-top:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">
+            Map & grid overlays placeholder
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:600;display:flex;align-items:center;gap:8px">
+            <i data-lucide="gauge" class="w-4 h-4"></i> Score
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+            <div id="scoreVal" style="font-size:28px;font-weight:700">54</div>
+            <div class="muted">/ 100 · Threshold 70</div>
+          </div>
+          <div class="score-bar" style="margin-top:6px"><span style="width:54%"></span></div>
+          <div class="divider"></div>
+          <div class="muted" style="font-size:12px">Weights: Grid & energy 30%, Permitting 20%, Site & logistics 20%, Utilities 15%, Market & offtake 15%</div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:600;display:flex;align-items:center;gap:8px">
+            <i data-lucide="check-square" class="w-4 h-4"></i> Gate checklist
+          </div>
+          <div id="gateList" style="margin-top:8px;display:flex;flex-direction:column;gap:8px"></div>
+          <div class="actions" style="margin-top:12px">
+            <button class="a-btn primary">Save to Watchlist</button>
+            <button class="a-btn ghost">Export slide</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:600;display:flex;align-items:center;gap:8px">
+            <i data-lucide="clock" class="w-4 h-4"></i> Data confidence
+          </div>
+          <div class="muted" style="font-size:12px;margin-top:6px">Data grade: B- (grid & permit desk research; water pre-screen; CO₂ logistics estimate)</div>
+          <ul class="muted" style="font-size:12px;margin-top:6px;padding-left:18px">
+            <li>Grid: TSO public plan (v2024), DNO capacity note (mock)</li>
+            <li>Water: municipal abstractions register (mock)</li>
+            <li>Permits: protected buffers (mock map layer)</li>
+            <li>CO₂: biogenic sources inventory (mock)</li>
+          </ul>
+          <div class="muted" style="font-size:12px;margin-top:6px">Upgrade path: add utility letters, OEM LoIs, transport survey, EIA scoping.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ------- Data -------
+  const kpis = {
+    H2:    { target: 3.0, p50: 4.1,  p90: 4.7,  units: "€/kg" },
+    eMeOH: { target: 900, p50: 1450, p90: 1650, units: "€/t"  },
+    eNH3:  { target: 600, p50: 920,  p90: 1050, units: "€/t"  },
+  };
+
+  const baseDeltas = {
+    H2: [
+      { label: "Grid constraint & curtailment", val: 0.35 },
+      { label: "Water sourcing & treatment",   val: 0.18 },
+      { label: "Logistics & access civils",    val: 0.08 },
+      { label: "CO₂ logistics (e-fuels)",      val: 0.00 },
+      { label: "Permitting & schedule risk",   val: 0.12 },
+      { label: "Heat recovery opportunity loss", val: 0.06 },
+    ],
+    eMeOH: [
+      { label: "Grid constraint & curtailment", val: 0.35 },
+      { label: "Water sourcing & treatment",   val: 0.18 },
+      { label: "Logistics & access civils",    val: 0.08 },
+      { label: "CO₂ logistics (e-fuels)",      val: 0.22 },
+      { label: "Permitting & schedule risk",   val: 0.12 },
+      { label: "Heat recovery opportunity loss", val: 0.06 },
+    ],
+    eNH3: [
+      { label: "Grid constraint & curtailment", val: 0.35 },
+      { label: "Water sourcing & treatment",   val: 0.18 },
+      { label: "Logistics & access civils",    val: 0.08 },
+      { label: "CO₂ logistics (e-fuels)",      val: 0.00 },
+      { label: "Permitting & schedule risk",   val: 0.12 },
+      { label: "Heat recovery opportunity loss", val: 0.06 },
+    ]
+  };
+
+  const blockers = [
+    {
+      key: "grid",
+      icon: "plug-zap",
+      title: "Grid capacity shortfall",
+      summary: "Required 60 MW — Available 15 MW until 2029",
+      impact: "+0.35 €/kg H2 (diesel gens / curtailed ops)",
+      severity: "high",
+      fixes: [
+        { label: "TSO expansion 132 kV (2029)", cost: "€22–30m CAPEX (off-site)", time: "+36–48 months", residual: "Grid curtailment risk remains <5%" },
+        { label: "Relocate to Stjørdal hub (40 km)", cost: "€2–4m re-siting + lease delta", time: "+4–6 months", residual: "Longer CO₂ haul mitigated via rail" },
+        { label: "Onsite RES + PPA (40 MW)", cost: "€55–70m (wind/PV + BESS)", time: "+24–36 months", residual: "Still need 20 MW firm grid" },
+      ],
+      expanded: true
+    },
+    {
+      key: "water",
+      icon: "droplets",
+      title: "Process water deficit",
+      summary: "Need 350 m³/h — Available 100 m³/h (seasonal)",
+      impact: "+0.18 €/kg H2 (trucking / RO losses)",
+      severity: "high",
+      fixes: [
+        { label: "12 km raw-water pipeline", cost: "€6–8m", time: "+12–18 months", residual: "Permitting across river corridor" },
+        { label: "Industrial reuse (paper mill 28 km)", cost: "€2–3m tie-in", time: "+9–12 months", residual: "Supply contract / quality variability" },
+      ],
+      expanded: true
+    },
+    {
+      key: "permit",
+      icon: "shield-x",
+      title: "Permitting constraints",
+      summary: "Natura-type buffer within 1.8 km; heritage area within 600 m",
+      impact: "+10–14 months schedule",
+      severity: "high",
+      fixes: [
+        { label: "Micro-relocate within parcel (500 m)", cost: "€0.5–1m", time: "+3–5 months (new EIA addendum)", residual: "Noise/traffic still scrutinized" },
+        { label: "Alternative parcel (SE side)", cost: "€1–2m switching", time: "+6–9 months", residual: "Reduces biodiversity risk by ~70%" },
+      ],
+      expanded: true
+    },
+    {
+      key: "logistics",
+      icon: "truck",
+      title: "Heavy transport access",
+      summary: "Primary road gradient 12–14% over 3.2 km",
+      impact: "+€3–5m civil works; +4 months",
+      severity: "medium",
+      fixes: [
+        { label: "Bypass spur (4.5 km)", cost: "€4–6m", time: "+6–8 months", residual: "Seasonal restrictions" },
+      ],
+      expanded: false
+    },
+    {
+      key: "co2",
+      icon: "factory",
+      title: "CO₂ source too distant (for e-fuels)",
+      summary: "Nearest biogenic CO₂ 120 km; 200 kt/yr required",
+      impact: "+€90–120/t eMeOH logistics",
+      severity: "high",
+      fixes: [
+        { label: "Switch to H₂ only (Phase 1)", cost: "€- (scope reduce)", time: "—", residual: "Defers e-fuel ramp 24–36 months" },
+        { label: "Rail corridor tie-in (2027)", cost: "€5–7m loading/unloading", time: "+12–18 months", residual: "Opex ↓ ~35% vs trucking" },
+      ],
+      expanded: true
+    },
+    {
+      key: "heat",
+      icon: "thermometer",
+      title: "Low-grade heat sink missing",
+      summary: "<1 MW local demand; 12 MWth recoverable",
+      impact: "LCOH +0.06 €/kg (wasted heat)",
+      severity: "low",
+      fixes: [
+        { label: "District heat export (pipe 3.2 km)", cost: "€3–4m", time: "+10–14 months", residual: "Contracts with municipality" },
+      ],
+      expanded: false
+    },
+    {
+      key: "land",
+      icon: "layers",
+      title: "Land fragmentation",
+      summary: "6 parcels; 3 owners; total 58 ha; setbacks bite",
+      impact: "Plot inefficiency ~12%",
+      severity: "medium",
+      fixes: [
+        { label: "Parcel swap + 10 ha extension", cost: "€1.5–2.5m", time: "+4–6 months", residual: "Servitudes remain on NW corner" },
+      ],
+      expanded: false
+    },
+  ];
+
+  const wouldPassIf = [
+    "Secure firm 60 MW grid before 2029 (or relocate within 40 km hub)",
+    "Guarantee 350 m³/h process water with <€0.20/m³ treatment Opex",
+    "Place main process >2.5 km from Natura/heritage buffers",
+    "Lock biogenic CO₂ supply ≥200 kt/yr within 50 km or rail corridor",
+    "Keep heavy-transport approach <8% gradient for ≥4 m wide cargos",
+  ];
+
+  const gateChecklist = [
+    { label: "Firm 60 MW grid by ≤36 mo", pass: false },
+    { label: "Water ≥350 m³/h secured", pass: false },
+    { label: "CO₂ supply (≥200 kt/yr) ≤50 km", pass: false },
+    { label: "Parcel control ≥60 ha", pass: true },
+    { label: "Noise/dust within limits", pass: true },
+    { label: "Heavy-transport gradient <8%", pass: false },
+    { label: "Permitting timeline ≤30 mo", pass: false },
+    { label: "Heat sink ≥8 MWth or export", pass: false },
+  ];
+
+  // ------- Helpers -------
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const fmt = n => (typeof n==='number' ? (Math.round(n*100)/100).toFixed(2) : n);
+
+  function renderWaterfall(fuelKey){
+    const wrap = $('#waterfall'); wrap.innerHTML = '';
+    const units = kpis[fuelKey].units;
+    const rows = baseDeltas[fuelKey];
+    const p50 = kpis[fuelKey].p50, tgt = kpis[fuelKey].target;
+    const targetDelta = Math.max(p50 - tgt, 0.001);
+    const sum = rows.reduce((a,b)=>a+b.val,0);
+    const denom = Math.max(targetDelta, sum);
+
+    rows.forEach(r=>{
+      const row = document.createElement('div');
+      row.className='waterfall-row';
+      const pct = Math.min(100, (r.val/denom)*100);
+      row.innerHTML = `
+        <div class="lab">${r.label}</div>
+        <div class="bar-wrap" style="flex:1">
+          <div class="bar" style="width:${pct.toFixed(1)}%"></div>
+        </div>
+        <div class="val">+${r.val.toFixed(2)} ${units}</div>
+      `;
+      wrap.appendChild(row);
+    });
+  }
+
+  let showFixes = true;
+  function renderBlockers(){
+    const wrap = $('#blockersWrap'); wrap.innerHTML = '';
+    blockers.forEach((b, idx)=>{
+      const sevClass = b.severity==='high' ? 'high' : (b.severity==='medium'?'med':'low');
+      const detailsIcon = b.expanded ? 'chevron-down' : 'chevron-right';
+      const blk = document.createElement('div');
+      blk.className='blocker';
+      blk.innerHTML = `
+        <div class="b-head">
+          <div style="display:flex;gap:10px">
+            <div class="sev ${sevClass}"><i data-lucide="${b.icon}" class="w-4 h-4" style="vertical-align:-2px"></i></div>
+            <div>
+              <div class="b-title">${b.title} ${b.severity==='high' ? '<span class="badge bad" style="margin-left:6px">High</span>' : ''}</div>
+              <div class="b-sub">${b.summary}</div>
+              <div class="b-imp">Impact: ${b.impact}</div>
+            </div>
+          </div>
+          <button class="link toggle-details" data-idx="${idx}">
+            <i data-lucide="${detailsIcon}" class="w-4 h-4"></i> Details
+          </button>
+        </div>
+
+        <div class="fixes" style="${showFixes && b.expanded ? '' : 'display:none'}">
+          <div class="muted" style="font-size:11px;margin-bottom:6px;text-transform:uppercase">Fix paths</div>
+          <div class="fix-grid">
+            ${b.fixes.map(f=>`
+              <div class="fix">
+                <div style="font-weight:600">${f.label}</div>
+                <div class="meta" style="margin-top:6px">
+                  <div class="cell"><div class="k">Cost</div><div>${f.cost}</div></div>
+                  <div class="cell"><div class="k">Time</div><div>${f.time}</div></div>
+                  <div class="cell"><div class="k">Residual</div><div>${f.residual}</div></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      wrap.appendChild(blk);
+    });
+
+    lucide.createIcons();
+    wrap.querySelectorAll('.toggle-details').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const i = +btn.dataset.idx;
+        blockers[i].expanded = !blockers[i].expanded;
+        renderBlockers();
+      });
+    });
+  }
+
+  function renderGates(){
+    const gl = $('#gateList'); gl.innerHTML = '';
+    gateChecklist.forEach(g=>{
+      const row = document.createElement('div');
+      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center';
+      row.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px">
+          ${g.pass
+            ? '<i data-lucide="check-circle-2" class="w-4 h-4" style="color: var(--green)"></i>'
+            : '<i data-lucide="x-circle" class="w-4 h-4" style="color: var(--red)"></i>'}
+          <span>${g.label}</span>
+        </div>
+        <span class="badge ${g.pass?'ok':'bad'}">${g.pass?'PASS':'FAIL'}</span>
+      `;
+      gl.appendChild(row);
+    });
+    lucide.createIcons();
+  }
+
+  function renderWouldPass(){
+    const ul = $('#wouldPassList'); ul.innerHTML='';
+    wouldPassIf.forEach(line=>{
+      const li = document.createElement('li');
+      li.textContent = line;
+      ul.appendChild(li);
+    });
+  }
+
+  function updateKPI(fuelKey){
+    const k = kpis[fuelKey];
+    const delta = k.p50 - k.target;
+    const deltaPos = delta > 0;
+
+    $('#unitsLabel').textContent = `(${k.units})`;
+    $('#p50Text').textContent = `P50 ${fmt(k.p50)} ${k.units}`;
+    $('#p90Text').textContent = `P90 ${fmt(k.p90)} ${k.units} · Threshold to pass ≤ ${fmt(k.target)} ${k.units}`;
+
+    const chip = $('#deltaChip');
+    chip.className = `badge ${deltaPos?'bad':'ok'}`;
+    chip.innerHTML = `
+      <i data-lucide="${deltaPos ? 'trending-up' : 'trending-down'}" class="w-4 h-4"></i>
+      ${deltaPos?'+':''}${fmt(delta)} vs target ${fmt(k.target)}
+    `;
+
+    // Visual bar vs 2× target for context
+    const pct = Math.min(100, (k.p50 / (k.target * 2)) * 100);
+    $('#kpiBar').style.width = pct + '%';
+    renderWaterfall(fuelKey);
+    lucide.createIcons();
+  }
+
+  function initFuelToggle(){
+    document.querySelectorAll('.toggle button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.toggle button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        updateKPI(btn.dataset.fuel);
+      });
+    });
+  }
+
+  function initFixesToggle(){
+    const btn = $('#toggleFixes');
+    btn.addEventListener('click', ()=>{
+      showFixes = !showFixes;
+      btn.querySelector('span').textContent = showFixes ? 'Hide fixes' : 'Show fixes';
+      const icon = btn.querySelector('i');
+      icon.setAttribute('data-lucide', showFixes ? 'chevron-down' : 'chevron-right');
+      renderBlockers();
+      lucide.createIcons();
+    });
+  }
+
+  // ------- Init -------
+  renderWaterfall('H2');
+  renderBlockers();
+  renderGates();
+  renderWouldPass();
+  initFuelToggle();
+  initFixesToggle();
+  updateKPI('H2');
+  lucide.createIcons();
+</script>
+</body>
+</html>

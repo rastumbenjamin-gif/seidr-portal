@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — Project Schedule & Critical Path</title>
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --blue:#74aeea; --pink:#ea7ad6;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
+       font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  .crumb{color:var(--muted);font-size:13px}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;max-width:1780px;margin:0 auto;padding:18px}
+  .left{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h1{margin:.2rem 0 .8rem;font-size:28px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  label{display:block;margin:8px 0 6px}
+  input,select{width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)}
+  .row{display:grid;grid-template-columns:1fr 140px;gap:10px;align-items:center}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .btn-ghost{background:transparent}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
+  .muted{color:var(--muted)}
+  /* charts */
+  svg.gantt,svg.small{width:100%;height:420px;background:#0c141a;border-radius:12px}
+  svg.small{height:260px}
+  .axis{stroke:#2b3b46;stroke-width:1}
+  .grid{stroke:#1a2530;stroke-width:.8}
+  .bar{rx:6;ry:6}
+  .bar-critical{stroke:#f6c947;stroke-width:2}
+  .bar-milestone{stroke-dasharray:6 4}
+  .today{stroke:#ef8c7a;stroke-dasharray:4 4}
+  .reftext{fill:#a7b2bb;font-size:12px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  tr:hover{background:rgba(25,197,190,.06)}
+  .risk-low{background:rgba(25,197,190,.15)}
+  .risk-med{background:rgba(246,201,71,.12)}
+  .risk-high{background:rgba(239,140,122,.12)}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .k{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .k strong{display:block;font-size:18px}
+  @media (max-width:1300px){ .wrap{grid-template-columns:1fr} svg.gantt{height:520px} .kpi{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>SEIDR</strong> <span class="crumb">/ Project Builder / Schedule & Critical Path</span></div>
+    <div class="stack">
+      <span class="pill">Site: Herøya North</span>
+      <a class="btn" href="./">Back</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- LEFT: Controls & Status -->
+    <div class="left">
+      <div class="card">
+        <h1>Project Schedule</h1>
+        <div class="muted">Critical Path, risks, milestones, and resource views.</div>
+      </div>
+
+      <div class="card">
+        <h2>Calendar & Options</h2>
+        <div class="row"><label>Project start (YYYY-MM-DD)</label><input id="startDate" value="2025-09-01"/></div>
+        <div class="row"><label>Scenario</label>
+          <select id="scen">
+            <option value="most" selected>Most likely</option>
+            <option value="opt">Optimistic</option>
+            <option value="pes">Pessimistic</option>
+          </select>
+        </div>
+        <div class="row"><label>Show floats (slack)</label>
+          <select id="showFloat"><option>Yes</option><option selected>No</option></select>
+        </div>
+        <div class="stack" style="margin-top:8px">
+          <button id="btnRecalc" class="btn">Recalculate</button>
+          <button id="btnExportCSV" class="btn btn-ghost">Export CSV</button>
+          <button id="btnExportSVG" class="btn btn-ghost">Export Gantt SVG</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Quick Monte-Carlo</h2>
+        <div class="row"><label>Iterations</label><input id="mcN" type="number" value="300"/></div>
+        <div class="row"><label>Task variance (±%)</label><input id="mcVar" type="number" value="20"/></div>
+        <div class="stack" style="margin-top:8px">
+          <button id="btnMC" class="btn">Run P50/P80</button>
+          <span class="pill">P50: <span id="p50">—</span></span>
+          <span class="pill">P80: <span id="p80">—</span></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>KPIs</h2>
+        <div class="kpi">
+          <div class="k"><small class="muted">Total Duration</small><strong id="kDur">—</strong><small class="muted">days (scenario)</small></div>
+          <div class="k"><small class="muted">Critical Tasks</small><strong id="kCrit">—</strong><small class="muted">count</small></div>
+          <div class="k"><small class="muted">Milestones</small><strong id="kMs">—</strong><small class="muted">count</small></div>
+          <div class="k"><small class="muted">Finish Date</small><strong id="kFinish">—</strong><small class="muted">most likely</small></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Charts & Tables -->
+    <div>
+      <!-- GANTT -->
+      <div class="card">
+        <h2>Gantt (computed CPM)</h2>
+        <svg id="gantt" class="gantt" aria-label="Gantt chart"></svg>
+      </div>
+
+      <!-- Critical Path & Network -->
+      <div class="card">
+        <h2>Critical Path</h2>
+        <div id="cpList" class="muted" style="margin-bottom:10px"></div>
+        <div style="overflow:auto;max-height:280px">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th>ID</th><th>Task</th><th>Dur</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>Float</th><th>Deps</th><th>Critical</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Risks -->
+      <div class="card">
+        <h2>Risk Register (linked to tasks)</h2>
+        <div class="stack" style="margin-bottom:8px">
+          <span class="pill">Low</span><span class="pill" style="background:rgba(246,201,71,.2)">Medium</span><span class="pill" style="background:rgba(239,140,122,.2)">High</span>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+          <div style="overflow:auto;max-height:260px">
+            <table id="riskTbl">
+              <thead>
+                <tr><th>Risk</th><th>Task</th><th>P</th><th>I</th><th>Score</th><th>Response</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <svg id="riskHeat" class="small" aria-label="Risk heatmap"></svg>
+        </div>
+      </div>
+
+      <!-- Resources & S-curve -->
+      <div class="card">
+        <h2>Resources & S-curve</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <svg id="resChart" class="small" aria-label="Resource histogram"></svg>
+          <svg id="scurve" class="small" aria-label="S-curve"></svg>
+        </div>
+      </div>
+
+      <!-- Milestones -->
+      <div class="card">
+        <h2>Milestones</h2>
+        <div style="overflow:auto;max-height:220px">
+          <table id="msTbl">
+            <thead><tr><th>Milestone</th><th>Task ID</th><th>Date</th><th>Notes</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------------- Mock WBS (duration in days; O/M/P for scenarios) ---------------- */
+const TASKS = [
+  {id:'A1', name:'Feasibility & Site Control', dur:{opt:20, most:30, pes:45}, deps:[], res:4},
+  {id:'A2', name:'Grid Connection Application', dur:{opt:25, most:40, pes:60}, deps:['A1'], res:2, risk:'R4'},
+  {id:'A3', name:'Environmental & Permitting (EIA)', dur:{opt:60, most:90, pes:140}, deps:['A1'], res:6, risk:'R1'},
+  {id:'A4', name:'Front-End Engineering (FEED)', dur:{opt:70, most:100, pes:140}, deps:['A1'], res:8, risk:'R2'},
+  {id:'A5', name:'OEM Long-Lead Procurement', dur:{opt:45, most:70, pes:110}, deps:['A4'], res:3, risk:'R3'},
+  {id:'A6', name:'Financial Close', dur:{opt:30, most:45, pes:90}, deps:['A3','A4','A2'], res:2},
+  {id:'C1', name:'Site Prep & Civils', dur:{opt:50, most:75, pes:110}, deps:['A6'], res:12},
+  {id:'E1', name:'Electrolyzer Hall Construction', dur:{opt:80, most:110, pes:160}, deps:['C1'], res:20, risk:'R5'},
+  {id:'E2', name:'Substation & Grid Tie-In', dur:{opt:60, most:90, pes:140}, deps:['C1','A2'], res:10},
+  {id:'E3', name:'Utilities & BoP Install', dur:{opt:60, most:90, pes:120}, deps:['C1'], res:14},
+  {id:'E4', name:'OEM Delivery & Install', dur:{opt:40, most:70, pes:100}, deps:['E1','A5'], res:12},
+  {id:'E5', name:'Pipelines & Storage', dur:{opt:50, most:75, pes:110}, deps:['C1'], res:10},
+  {id:'C2', name:'Cold Commissioning', dur:{opt:20, most:30, pes:45}, deps:['E2','E3','E4','E5'], res:8},
+  {id:'C3', name:'Hot Commissioning & Ramp', dur:{opt:25, most:40, pes:70}, deps:['C2'], res:10},
+  {id:'M1', name:'Commercial Operations Date (COD)', dur:{opt:0, most:0, pes:0}, deps:['C3'], res:0, milestone:true}
+];
+
+/* ---------------- Risks (prob 1-5, impact 1-5) ---------------- */
+const RISKS = [
+  {id:'R1', title:'EIA delay due to new wetland boundary', prob:3, impact:4, response:'Early scoping & parallel surveys', task:'A3'},
+  {id:'R2', title:'FEED scope creep', prob:3, impact:3, response:'Change control gate at week 4', task:'A4'},
+  {id:'R3', title:'OEM long-lead slippage', prob:2, impact:4, response:'Expedite & dual-source where possible', task:'A5'},
+  {id:'R4', title:'Grid study backlog at TSO', prob:4, impact:4, response:'Pre-application consult & capacity reservation', task:'A2'},
+  {id:'R5', title:'Hall steel supply volatility', prob:3, impact:3, response:'Frame contract & buffer stock', task:'E1'}
+];
+
+/* ---------------- Utilities ---------------- */
+const $ = s => document.querySelector(s);
+const addDays = (d, n)=>{ const x=new Date(d.getTime()); x.setDate(x.getDate()+n); return x; }
+const fmtD = d => d.toISOString().slice(0,10);
+const parseYMD = s => { const [Y,M,D]=s.split('-').map(Number); return new Date(Date.UTC(Y,M-1,D)); }
+
+/* ---------------- CPM (forward/backward pass, float, critical) ---------------- */
+function computeSchedule(scenario='most', startStr='2025-09-01'){
+  const start = parseYMD(startStr);
+  // clone tasks with working duration per scenario
+  const tasks = TASKS.map(t=>({
+    id:t.id, name:t.name, deps:[...t.deps], dur:t.dur[scenario], milestone:!!t.milestone, res:t.res||0, risk:t.risk||null
+  }));
+  // index
+  const byId = Object.fromEntries(tasks.map(t=>[t.id,t]));
+  // forward pass
+  tasks.forEach(t=>{
+    const es = t.deps.length ? Math.max(...t.deps.map(d=>byId[d].EF||0)) : 0;
+    t.ES = es;
+    t.EF = es + t.dur;
+  });
+  const projectDur = Math.max(...tasks.map(t=>t.EF));
+  // backward pass
+  tasks.slice().reverse().forEach(t=>{
+    const lf = tasks.some(x=>x.deps.includes(t.id))
+      ? Math.min(...tasks.filter(x=>x.deps.includes(t.id)).map(x=>x.LS))
+      : projectDur;
+    t.LF = lf;
+    t.LS = lf - t.dur;
+    t.float = t.LS - t.ES;
+    t.critical = (t.float===0);
+  });
+  // dates
+  tasks.forEach(t=>{
+    t.startDate = addDays(start, t.ES);
+    t.finishDate= addDays(start, t.EF);
+  });
+  const finishDate = addDays(start, projectDur);
+  return {tasks, projectDur, start, finishDate};
+}
+
+/* ---------------- Rendering: Gantt ---------------- */
+function drawGantt(model){
+  const svg = $('#gantt'); svg.innerHTML='';
+  const W=svg.clientWidth||900, H=svg.clientHeight||420, padL=160, padR=20, padT=30, rowH=22;
+  const T=model.projectDur||1;
+  // axes
+  svg.insertAdjacentHTML('beforeend', `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-40}" class="axis"/>`);
+  svg.insertAdjacentHTML('beforeend', `<line x1="${padL}" y1="${H-40}" x2="${W-padR}" y2="${H-40}" class="axis"/>`);
+  // monthly grid
+  const start = model.start; const end = model.finishDate;
+  const ms = new Date(start.getTime());
+  ms.setUTCDate(1);
+  while(ms<=end){
+    const dx = (ms-start)/(1000*3600*24);
+    const x = padL + (dx/T)*(W-padL-padR);
+    svg.insertAdjacentHTML('beforeend', `<line x1="${x}" y1="${padT}" x2="${x}" y2="${H-40}" class="grid"/>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+4}" y="${padT-8}" class="reftext">${ms.toISOString().slice(0,7)}</text>`);
+    ms.setUTCMonth(ms.getUTCMonth()+1);
+  }
+  // today line
+  const today=new Date();
+  const dxT=(parseYMD(fmtD(today))-start)/(1000*3600*24);
+  const xT = padL + (dxT/T)*(W-padL-padR);
+  if(dxT>=0 && dxT<=T) svg.insertAdjacentHTML('beforeend', `<line x1="${xT}" y1="${padT}" x2="${xT}" y2="${H-40}" class="today"/>`);
+
+  // bars
+  model.tasks.forEach((t,i)=>{
+    const y = padT + 10 + i*rowH;
+    const x = padL + (t.ES/T)*(W-padL-padR);
+    const w = Math.max(2, (t.dur/T)*(W-padL-padR));
+    const col = t.milestone ? 'none' : (t.critical ? '#f6c947' : '#19c5be');
+    const fill = t.milestone ? 'none' : (t.critical ? 'rgba(246,201,71,.25)' : 'rgba(25,197,190,.22)');
+    if(t.milestone){
+      svg.insertAdjacentHTML('beforeend', `<circle cx="${x}" cy="${y+6}" r="6" stroke="#ea7ad6" fill="none" class="bar bar-milestone"/>`);
+    }else{
+      svg.insertAdjacentHTML('beforeend', `<rect x="${x}" y="${y}" width="${w}" height="12" fill="${fill}" stroke="${col}" class="bar ${t.critical?'bar-critical':''}"/>`);
+      if($('#showFloat').value==='Yes' && t.float>0){
+        const xf = padL + ((t.EF)/T)*(W-padL-padR);
+        const wf = Math.max(2, (t.float/T)*(W-padL-padR));
+        svg.insertAdjacentHTML('beforeend', `<rect x="${xf}" y="${y+4}" width="${wf}" height="4" fill="rgba(167,178,187,.22)"/>`);
+      }
+    }
+    // labels
+    svg.insertAdjacentHTML('beforeend', `<text x="12" y="${y+10}" class="reftext">${t.id} — ${t.name}</text>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+w+4}" y="${y+10}" class="reftext">${fmtD(t.finishDate)}</text>`);
+    // dependency lines (simple)
+    t.deps.forEach(d=>{
+      const src=model.tasks.find(x=>x.id===d);
+      const x1 = padL + (src.EF/T)*(W-padL-padR);
+      const y1 = padT + 10 + model.tasks.indexOf(src)*rowH + 6;
+      const x2 = x;
+      const y2 = y + 6;
+      svg.insertAdjacentHTML('beforeend', `<path d="M ${x1} ${y1} L ${x1+12} ${y1} L ${x1+12} ${y2} L ${x2} ${y2}" stroke="#6e7f8a" fill="none"/>`);
+    });
+  });
+}
+
+/* ---------------- Tables ---------------- */
+function fillCPTable(model){
+  const tb = $('#tbl tbody'); tb.innerHTML='';
+  model.tasks.forEach(t=>{
+    const tr=document.createElement('tr');
+    if(t.critical) tr.style.outline='1px solid rgba(246,201,71,.3)';
+    tr.innerHTML = `<td>${t.id}</td><td>${t.name}</td><td>${t.dur}</td>
+      <td>${t.ES}</td><td>${t.EF}</td><td>${t.LS}</td><td>${t.LF}</td>
+      <td>${t.float}</td><td>${t.deps.join('→')||'—'}</td><td>${t.critical?'Yes':'No'}</td>`;
+    tb.appendChild(tr);
+  });
+  // list
+  const crit = model.tasks.filter(t=>t.critical && !t.milestone).map(t=>t.id);
+  $('#cpList').textContent = `Critical path: ${crit.join(' → ')} → M1 (COD)`;
+  $('#kDur').textContent = model.projectDur + ' d';
+  $('#kCrit').textContent = crit.length;
+  $('#kMs').textContent = model.tasks.filter(t=>t.milestone).length;
+  $('#kFinish').textContent = fmtD(model.finishDate);
+}
+
+function fillMilestones(model){
+  const tb=$('#msTbl tbody'); tb.innerHTML='';
+  model.tasks.filter(t=>t.milestone).forEach(m=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${m.name}</td><td>${m.id}</td><td>${fmtD(m.finishDate)}</td><td>Depends on ${m.deps.join(', ')}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/* ---------------- Risks ---------------- */
+function fillRisks(model){
+  const tb=$('#riskTbl tbody'); tb.innerHTML='';
+  RISKS.forEach(r=>{
+    const sc = r.prob*r.impact;
+    const t = model.tasks.find(x=>x.id===r.task);
+    const cls = sc>=15?'risk-high': sc>=8?'risk-med':'risk-low';
+    const tr=document.createElement('tr');
+    tr.className = cls;
+    tr.innerHTML = `<td>${r.title}</td><td>${r.task} — ${t?t.name:'—'}</td><td>${r.prob}</td><td>${r.impact}</td><td>${sc}</td><td>${r.response}</td>`;
+    tb.appendChild(tr);
+  });
+  drawRiskHeat();
+}
+function drawRiskHeat(){
+  const svg=$('#riskHeat'); svg.innerHTML='';
+  const W=svg.clientWidth||600, H=svg.clientHeight||260, pad=40;
+  // grid 5x5
+  for(let i=0;i<=5;i++){
+    const x=pad + i*(W-2*pad)/5, y=pad + i*(H-2*pad)/5;
+    svg.insertAdjacentHTML('beforeend', `<line x1="${x}" y1="${pad}" x2="${x}" y2="${H-pad}" class="grid"/>`);
+    svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+    if(i>0){ svg.insertAdjacentHTML('beforeend', `<text x="${pad-24}" y="${H-pad - (i-1)*(H-2*pad)/5 + 4}" class="reftext">I${i}</text>`); }
+    if(i>0){ svg.insertAdjacentHTML('beforeend', `<text x="${pad + (i-1)*(W-2*pad)/5}" y="${H-pad+16}" class="reftext">P${i}</text>`); }
+  }
+  // points
+  RISKS.forEach(r=>{
+    const x = pad + (r.prob-0.5)*(W-2*pad)/5;
+    const y = H-pad - (r.impact-0.5)*(H-2*pad)/5;
+    const col = (r.prob*r.impact>=15)?'#ef8c7a': (r.prob*r.impact>=8)?'#f6c947':'#19c5be';
+    svg.insertAdjacentHTML('beforeend', `<circle cx="${x}" cy="${y}" r="7" fill="${col}" opacity=".9"><title>${r.id}: ${r.title}</title></circle>`);
+  });
+  svg.insertAdjacentHTML('beforeend', `<text x="${W/2}" y="${pad-10}" text-anchor="middle" class="reftext">Risk Heatmap (P vs I)</text>`);
+}
+
+/* ---------------- Resources & S-curve ---------------- */
+function drawResources(model){
+  // simple: sum "res" per month for active tasks
+  const svg=$('#resChart'); svg.innerHTML='';
+  const W=svg.clientWidth||600, H=svg.clientHeight||260, pad=40;
+  // month bins
+  const mBins = binByMonth(model);
+  const maxVal = Math.max(1, ...mBins.map(b=>b.sum));
+  // axes
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" class="axis"/>`);
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" class="axis"/>`);
+  // bars
+  const bw = (W-2*pad)/mBins.length * 0.6;
+  mBins.forEach((b,i)=>{
+    const x = pad + (i+0.2)*(W-2*pad)/mBins.length;
+    const h = (b.sum/maxVal)*(H-2*pad);
+    const y = H-pad-h;
+    svg.insertAdjacentHTML('beforeend', `<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="#74aeea" class="bar"/>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${H-pad+14}" text-anchor="middle" class="reftext">${b.label}</text>`);
+  });
+  svg.insertAdjacentHTML('beforeend', `<text x="${8}" y="${pad-10}" class="reftext">Crew equivalents / month</text>`);
+}
+function binByMonth(model){
+  const start=new Date(model.start.getTime()), end=new Date(model.finishDate.getTime());
+  start.setUTCDate(1); end.setUTCMonth(end.getUTCMonth()+1); end.setUTCDate(1);
+  const months=[];
+  const cur=new Date(start.getTime());
+  while(cur<end){ months.push({y:cur.getUTCFullYear(), m:cur.getUTCMonth(), sum:0}); cur.setUTCMonth(cur.getUTCMonth()+1); }
+  // distribute per task evenly over its months
+  model.tasks.forEach(t=>{
+    const s=new Date(t.startDate.getTime()), f=new Date(t.finishDate.getTime());
+    months.forEach(b=>{
+      const mStart=new Date(Date.UTC(b.y,b.m,1));
+      const mEnd=new Date(Date.UTC(b.y,b.m+1,1));
+      const overlap = Math.max(0, Math.min(f, mEnd) - Math.max(s, mStart));
+      if(overlap>0){ b.sum += t.res; }
+    });
+  });
+  months.forEach(b=> b.label = `${b.y}-${String(b.m+1).padStart(2,'0')}`);
+  return months;
+}
+
+function drawSCurve(model){
+  const svg=$('#scurve'); svg.innerHTML='';
+  const W=svg.clientWidth||600, H=svg.clientHeight||260, pad=40;
+  // cumulative % complete assuming each task contributes proportional to duration
+  const totalDur = model.tasks.reduce((a,t)=>a+t.dur,0);
+  const points=[];
+  for(let d=0; d<=model.projectDur; d+=Math.max(1,Math.floor(model.projectDur/60))){
+    const c = model.tasks.reduce((s,t)=> s + Math.max(0, Math.min(d, t.EF) - Math.min(d, t.ES)), 0);
+    points.push({d, pct: (c/totalDur)});
+  }
+  // axes
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" class="axis"/>`);
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" class="axis"/>`);
+  // grid
+  for(let i=0;i<=4;i++){
+    const y=pad + i*(H-2*pad)/4;
+    svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="8" y="${y+4}" class="reftext">${(100 - i*25)}%</text>`);
+  }
+  // line
+  let dStr='';
+  points.forEach((p,i)=>{
+    const x = pad + (p.d/model.projectDur)*(W-2*pad);
+    const y = H-pad - (p.pct)*(H-2*pad);
+    dStr += (i?' L ':'M ')+x+','+y;
+  });
+  svg.insertAdjacentHTML('beforeend', `<path d="${dStr}" stroke="#19c5be" fill="none" stroke-width="2.5"/>`);
+  svg.insertAdjacentHTML('beforeend', `<text x="${W/2}" y="${H-8}" text-anchor="middle" class="reftext">Project days →</text>`);
+}
+
+/* ---------------- Monte Carlo ---------------- */
+function monteCarlo(startStr, N=300, varPct=20){
+  const endDays=[];
+  for(let i=0;i<N;i++){
+    const scenTasks = TASKS.map(t=>{
+      const base = t.dur.most;
+      const jitter = base * (varPct/100) * (Math.random()*2-1);
+      const dur = Math.max(0, Math.round(base + jitter));
+      return {id:t.id, name:t.name, deps:[...t.deps], dur, milestone:!!t.milestone};
+    });
+    // compute forward/backward quickly
+    const byId = Object.fromEntries(scenTasks.map(t=>[t.id,t]));
+    scenTasks.forEach(t=>{ t.ES = t.deps.length ? Math.max(...t.deps.map(d=>byId[d].EF||0)) : 0; t.EF = t.ES + t.dur; });
+    endDays.push(Math.max(...scenTasks.map(t=>t.EF)));
+  }
+  endDays.sort((a,b)=>a-b);
+  const p50 = endDays[Math.floor(0.50*(endDays.length-1))];
+  const p80 = endDays[Math.floor(0.80*(endDays.length-1))];
+  const start = parseYMD(startStr);
+  return {p50: fmtD(addDays(start,p50)), p80: fmtD(addDays(start,p80))};
+}
+
+/* ---------------- Export ---------------- */
+function exportCSV(model){
+  const lines = ['ID,Task,Dur,ES,EF,LS,LF,Float,Deps,Critical,Start,Finish'];
+  model.tasks.forEach(t=>{
+    lines.push([t.id,t.name,t.dur,t.ES,t.EF,t.LS,t.LF,t.float,t.deps.join('|'),t.critical?'Y':'N',fmtD(t.startDate),fmtD(t.finishDate)].join(','));
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'}), url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='seidr_schedule.csv'; a.click(); URL.revokeObjectURL(url);
+}
+function exportGanttSVG(){
+  const xml=new XMLSerializer().serializeToString($('#gantt'));
+  const blob=new Blob([xml],{type:'image/svg+xml'}), url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='seidr_gantt.svg'; a.click(); URL.revokeObjectURL(url);
+}
+
+/* ---------------- Orchestration ---------------- */
+function recalc(){
+  const scen = $('#scen').value;
+  const start = $('#startDate').value;
+  const model = computeSchedule(scen, start);
+  drawGantt(model);
+  fillCPTable(model);
+  fillMilestones(model);
+  fillRisks(model);
+  drawResources(model);
+  drawSCurve(model);
+  return model;
+}
+
+/* ---------------- Events ---------------- */
+let currentModel=null;
+$('#btnRecalc').addEventListener('click', ()=>{ currentModel=recalc(); });
+$('#btnExportCSV').addEventListener('click', ()=>{ if(currentModel) exportCSV(currentModel); });
+$('#btnExportSVG').addEventListener('click', exportGanttSVG);
+$('#btnMC').addEventListener('click', ()=>{
+  const N = +$('#mcN').value||300;
+  const v = +$('#mcVar').value||20;
+  const {p50,p80} = monteCarlo($('#startDate').value, N, v);
+  $('#p50').textContent = p50;
+  $('#p80').textContent = p80;
+});
+
+/* ---------------- Boot ---------------- */
+currentModel = recalc();
+</script>
+</body>
+</html>

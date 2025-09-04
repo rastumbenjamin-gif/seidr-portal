@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SEIDR — Project Builder / Long Lead Items (LLI)</title>
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --amber:#f59e52; --blue:#74aeea;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);
+    color:var(--text);
+    font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif
+  }
+  /* Topbar */
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 20px;background:rgba(15,26,34,.9);
+    border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)
+  }
+  .crumb{color:var(--muted);font-size:13px}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+        background:var(--panel-2);border:1px solid var(--line);color:var(--text);font-size:12px}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+       border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+  .btn:hover{filter:brightness(1.08)}
+  .btn-ghost{background:transparent}
+  .muted{color:var(--muted)}
+  .wrap{display:grid;grid-template-columns:380px 1fr;gap:18px;max-width:1840px;margin:0 auto;padding:18px}
+  .left{display:flex;flex-direction:column;gap:14px}
+  .rightGrid{display:grid;grid-template-rows:auto auto auto auto auto auto;gap:14px}
+
+  /* Cards & headings */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h1{margin:.2rem 0 .8rem;font-size:28px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  h3{margin:10px 0 6px;font-size:13px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+
+  /* KPI tiles */
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .k{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .k strong{display:block;font-size:20px}
+  .line{height:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .line>span{display:block;height:100%;background:linear-gradient(90deg,var(--teal),#48e9df)}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--panel);cursor:pointer}
+  tr:hover{background:rgba(25,197,190,.06)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px;background:var(--panel-2)}
+
+  /* Status & risk chips */
+  .status{font-weight:700}
+  .s-pending{background:#2b2b2b;color:#e2e2e2;border-color:#3a3a3a}
+  .s-rfq{background:rgba(246,201,71,.15);color:var(--yellow)}
+  .s-quoted{background:rgba(25,197,190,.15);color:var(--teal)}
+  .s-ordered{background:rgba(87,211,155,.18);color:var(--green)}
+  .risk{padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line)}
+  .r-high{background:rgba(239,140,122,.18);color:var(--red)}
+  .r-med{background:rgba(245,158,82,.18);color:var(--amber)}
+  .r-low{background:rgba(87,211,155,.18);color:var(--green)}
+
+  /* SVG charts */
+  svg.block{width:100%;height:260px;background:#0c141a;border-radius:12px}
+  .axis{stroke:#2b3b46;stroke-width:1}
+  .grid{stroke:#1a2530;stroke-width:.8}
+  .axisLabel{fill:#e9eef2;font-size:12px}
+
+  /* Risk heatmap grid */
+  .hm{display:grid;grid-template-columns:40px repeat(5,1fr);gap:6px;align-items:center}
+  .hm div{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:8px;text-align:center}
+  .hm .hd{background:transparent;border:0;color:var(--muted)}
+
+  /* Small text helper */
+  .tiny{font-size:12px}
+
+  @media (max-width:1300px){
+    .wrap{grid-template-columns:1fr}
+    .kpi{grid-template-columns:repeat(2,1fr)}
+    .rightGrid{grid-template-rows:auto auto auto auto auto auto}
+  }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div><strong>SEIDR</strong> <span class="crumb">/ Project Builder / Long Lead Items (LLI)</span></div>
+  <div class="stack">
+    <span class="pill">Project: Northern H₂ Hub</span>
+    <span class="pill">Stage: Pre-FEED</span>
+    <span class="pill">Target COD: Aug 2027</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- LEFT SIDEBAR -->
+  <div class="left">
+    <div class="card">
+      <h1>Long Lead Items</h1>
+      <div class="muted">Track procurement for stacks, power systems, compression, storage, auxiliaries, and control. Monitor lead times, ordering gates, vendor health, and critical-path impact.</div>
+      <div class="stack" style="margin-top:10px">
+        <button class="btn" id="sendRFQ">Send RFQ</button>
+        <button class="btn" id="lockVendor">Lock Vendor</button>
+        <button class="btn" id="exportCSV">Export CSV</button>
+        <button class="btn btn-ghost" id="simImpact">Simulate Delay Impact</button>
+      </div>
+      <div class="muted tiny" style="margin-top:6px">Last updated: <strong>2h ago</strong></div>
+    </div>
+
+    <div class="card">
+      <h2>Vendor Insights</h2>
+      <ul class="tiny" style="margin:0 0 0 18px;line-height:1.4">
+        <li><strong>H-Tec</strong> adds 1.2 GW PEM line (EU) — 3h</li>
+        <li><strong>Howden</strong> compressor backlog +18% QoQ — 6h</li>
+        <li><strong>ABB</strong> transformer lead times easing — 1d</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>OEM Health</h2>
+      <div class="tiny" style="margin-bottom:6px">Financial stability (0–100)</div>
+      <div class="tiny">NEL <div class="line"><span style="width:68%"></span></div></div>
+      <div class="tiny" style="margin-top:6px">Plug <div class="line"><span style="width:54%"></span></div></div>
+      <div class="tiny" style="margin-top:6px">Siemens <div class="line"><span style="width:82%"></span></div></div>
+    </div>
+
+    <div class="card">
+      <h2>Price Trends</h2>
+      <svg class="block" id="spark1" viewBox="0 0 320 60" style="height:60px"></svg>
+      <div class="tiny">Steel Index</div>
+      <svg class="block" id="spark2" viewBox="0 0 320 60" style="height:60px;margin-top:8px"></svg>
+      <div class="tiny">Power electronics</div>
+    </div>
+
+    <div class="card">
+      <h2>AI Forecast</h2>
+      <div class="tiny" id="aiReco">
+        If <strong>ordered now</strong>, delivery expected: <strong>2027-02-15</strong>.<br/>
+        If delayed 6 months: <strong>2027-09-01</strong> (COD slip ~<strong>+7 months</strong>).
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT CONTENT -->
+  <div class="rightGrid">
+    <!-- KPIs -->
+    <div class="card">
+      <h2>Procurement KPIs</h2>
+      <div class="kpi">
+        <div class="k"><small class="muted">Total LLI Budget</small><strong id="kBudget">$ 0</strong></div>
+        <div class="k"><small class="muted">Lead Time Range</small><strong id="kLead">—</strong></div>
+        <div class="k"><small class="muted">Critical Path Items</small><strong id="kCrit">—</strong></div>
+        <div class="k">
+          <small class="muted">Ordered vs Pending</small>
+          <div class="line"><span id="kProgress" style="width:0%"></span></div>
+          <div class="tiny" id="kProgressTxt" style="margin-top:6px">0% ordered</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LLI table -->
+    <div class="card" style="overflow:auto">
+      <h2>Long Lead Items — Register</h2>
+      <table id="lliTbl">
+        <thead>
+          <tr>
+            <th data-sort="name">Item</th>
+            <th>Description</th>
+            <th>Vendors</th>
+            <th data-sort="budget">Budget</th>
+            <th>Lead (wks)</th>
+            <th data-sort="orderBy">Order By</th>
+            <th>Status</th>
+            <th data-sort="risk">Risk</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="stack" style="margin-top:10px">
+        <span class="pill">Sort by clicking column headers</span>
+      </div>
+    </div>
+
+    <!-- Gantt (larger) -->
+    <div class="card">
+      <h2>Gantt — Spec → RFQ → PO → MFG → FAT → Delivery</h2>
+      <svg id="gantt" class="block" viewBox="0 0 1000 560" height="560" aria-label="LLI Gantt"></svg>
+      <div class="tiny muted" style="margin-top:6px">Dashed marker ≈ “order-by” week (critical path in red outline).</div>
+    </div>
+
+    <!-- Commitments -->
+    <div class="card">
+      <h2>Commitment Schedule (by quarter)</h2>
+      <svg id="commit" class="block" viewBox="0 0 1000 240" height="240"></svg>
+    </div>
+
+    <!-- Cash-out waterfall -->
+    <div class="card">
+      <h2>Cash-out Waterfall</h2>
+      <svg id="waterfall" class="block" viewBox="0 0 1000 240" height="240"></svg>
+    </div>
+
+    <!-- Risk heatmap -->
+    <div class="card">
+      <h2>Risk Heatmap</h2>
+      <div class="hm" id="heatmap">
+        <div class="hd"></div><div class="hd">Very Low</div><div class="hd">Low</div><div class="hd">Med</div><div class="hd">High</div><div class="hd">Very High</div>
+        <div class="hd">Rare</div>     <div>—</div><div>—</div><div>—</div><div>—</div><div>—</div>
+        <div class="hd">Unlikely</div> <div>—</div><div>—</div><div>—</div><div>—</div><div>—</div>
+        <div class="hd">Possible</div> <div>—</div><div>—</div><div>—</div><div>—</div><div>—</div>
+        <div class="hd">Likely</div>   <div>—</div><div>—</div><div>—</div><div>—</div><div>—</div>
+        <div class="hd">Almost</div>   <div>—</div><div>—</div><div>—</div><div>—</div><div>—</div>
+      </div>
+      <div class="tiny muted" style="margin-top:6px">Color scale: green (low) → amber (medium) → red (high) severity.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Expanded Mock LLI dataset ---------- */
+const lli = [
+  {id:'STACK', name:'Electrolyzer Stacks', desc:'100 MW PEM stacks', vendors:'NEL; Plug; Siemens', budget:62.0, leadMin:50, leadMax:58, orderBy:'2026-01-15', status:'Pending', risk:'High',
+    phases:{spec:6, rfq:6, po:4, mfg:40, fat:4, del:2}, critical:true,  commit:{Q1_26:5,Q2_26:10,Q3_26:20,Q4_26:27}},
+  {id:'RECT',  name:'Rectifier/Power Skids', desc:'DC rectifiers, harmonic filters', vendors:'ABB; Siemens; TMEIC', budget:18.2, leadMin:36, leadMax:44, orderBy:'2026-03-01', status:'RFQ', risk:'High',
+    phases:{spec:6, rfq:8, po:4, mfg:22, fat:3, del:1}, critical:true,  commit:{Q2_26:6,Q3_26:6,Q4_26:6.2}},
+  {id:'GIS',   name:'110 kV GIS Substation', desc:'Indoor GIS bay & busbar', vendors:'Hitachi; Siemens; GE', budget:9.6, leadMin:48, leadMax:56, orderBy:'2026-02-10', status:'Pending', risk:'Med',
+    phases:{spec:6, rfq:6, po:4, mfg:34, fat:4, del:2}, critical:true,  commit:{Q2_26:3,Q3_26:3,Q4_26:3.6}},
+  {id:'COMP',  name:'Compressor Package', desc:'H₂ > 350 bar', vendors:'Howden; Burckhardt', budget:8.4, leadMin:42, leadMax:48, orderBy:'2026-02-20', status:'RFQ', risk:'Med',
+    phases:{spec:4, rfq:8, po:4, mfg:26, fat:4, del:2}, critical:true,  commit:{Q2_26:2,Q3_26:3,Q4_26:3.4}},
+  {id:'TRAF',  name:'Power Transformers', desc:'300 MVA step-down', vendors:'Hitachi; ABB', budget:5.8, leadMin:32, leadMax:40, orderBy:'2026-05-01', status:'Pending', risk:'Med',
+    phases:{spec:4, rfq:6, po:4, mfg:22, fat:2, del:2}, critical:false, commit:{Q3_26:2.5,Q4_26:3.3}},
+  {id:'TANK',  name:'Storage Tanks', desc:'5 × 500 m³ cryo tanks', vendors:'Chart; Cryolor', budget:12.5, leadMin:44, leadMax:52, orderBy:'2026-03-12', status:'Quoted', risk:'High',
+    phases:{spec:5, rfq:6, po:4, mfg:30, fat:5, del:2}, critical:true,  commit:{Q2_26:4,Q3_26:4,Q4_26:4.5}},
+  {id:'DCS',   name:'DCS & Safety System', desc:'Control + SIS/ESD', vendors:'Emerson; ABB; Honeywell', budget:3.5, leadMin:26, leadMax:34, orderBy:'2026-06-01', status:'Pending', risk:'Low',
+    phases:{spec:6, rfq:4, po:3, mfg:14, fat:3, del:1}, critical:false, commit:{Q3_26:1.2,Q4_26:2.3}},
+  {id:'SWGR',  name:'MV Switchgear', desc:'11 kV lineup', vendors:'Schneider; ABB; Siemens', budget:6.8, leadMin:30, leadMax:38, orderBy:'2026-04-15', status:'RFQ', risk:'Med',
+    phases:{spec:5, rfq:6, po:3, mfg:18, fat:2, del:2}, critical:false, commit:{Q3_26:2.5,Q4_26:4.3}},
+  {id:'HVCL',  name:'HV Cables', desc:'110 kV cable sets', vendors:'NKT; Prysmian; Nexans', budget:4.1, leadMin:28, leadMax:36, orderBy:'2026-05-10', status:'Quoted', risk:'Low',
+    phases:{spec:4, rfq:4, po:3, mfg:16, fat:1, del:2}, critical:false, commit:{Q3_26:1.6,Q4_26:2.5}},
+  {id:'DIW',   name:'Deionized Water Plant', desc:'5,000 m³/day', vendors:'Veolia; Ovivo; Pentair', budget:4.0, leadMin:26, leadMax:34, orderBy:'2026-05-25', status:'Pending', risk:'Med',
+    phases:{spec:4, rfq:6, po:3, mfg:16, fat:2, del:1}, critical:false, commit:{Q3_26:1.5,Q4_26:2.5}},
+  {id:'N2PSA', name:'Nitrogen PSA', desc:'Instrument N₂', vendors:'Atlas Copco; Parker', budget:2.7, leadMin:22, leadMax:28, orderBy:'2026-06-05', status:'Pending', risk:'Low',
+    phases:{spec:3, rfq:4, po:2, mfg:12, fat:1, del:1}, critical:false, commit:{Q3_26:1.1,Q4_26:1.6}},
+  {id:'CTOW',  name:'Cooling Towers', desc:'Closed-circuit', vendors:'Baltimore Aircoil; SPX', budget:3.1, leadMin:26, leadMax:32, orderBy:'2026-05-30', status:'Ordered', risk:'Low',
+    phases:{spec:3, rfq:4, po:2, mfg:14, fat:2, del:1}, critical:false, commit:{Q2_26:0.6,Q3_26:1.2,Q4_26:1.3}},
+  {id:'BESS',  name:'BESS (Grid Support)', desc:'20 MW / 40 MWh', vendors:'Fluence; Wartsila', budget:9.8, leadMin:40, leadMax:48, orderBy:'2026-03-20', status:'RFQ', risk:'Med',
+    phases:{spec:5, rfq:6, po:4, mfg:24, fat:4, del:2}, critical:false, commit:{Q2_26:3.2,Q3_26:3.3,Q4_26:3.3}},
+  {id:'EHSE',  name:'E-house', desc:'Prefabricated electrical rooms', vendors:'AZZ; Siemens', budget:5.0, leadMin:30, leadMax:40, orderBy:'2026-04-25', status:'Pending', risk:'Med',
+    phases:{spec:4, rfq:6, po:3, mfg:18, fat:2, del:2}, critical:false, commit:{Q3_26:2.0,Q4_26:3.0}},
+  {id:'FWP',   name:'Firewater Pumps', desc:'2 duty + 1 standby', vendors:'KSB; Sulzer', budget:1.2, leadMin:24, leadMax:30, orderBy:'2026-06-15', status:'Quoted', risk:'Low',
+    phases:{spec:3, rfq:4, po:2, mfg:12, fat:1, del:1}, critical:false, commit:{Q3_26:0.5,Q4_26:0.7}},
+  {id:'INST',  name:'Field Instruments', desc:'Transmitters, valves, analyzers', vendors:'Emerson; Endress+Hauser', budget:1.6, leadMin:18, leadMax:24, orderBy:'2026-07-01', status:'Ordered', risk:'Low',
+    phases:{spec:2, rfq:3, po:2, mfg:10, fat:1, del:1}, critical:false, commit:{Q3_26:0.7,Q4_26:0.9}}
+];
+
+/* ---------- Helpers ---------- */
+const $ = s=>document.querySelector(s);
+const fmt = n=>Number(n).toLocaleString(undefined,{maximumFractionDigits:1});
+const sum = arr=>arr.reduce((a,b)=>a+b,0);
+
+/* ---------- Populate table ---------- */
+const tbody = document.querySelector('#lliTbl tbody');
+function renderTable(data=lli){
+  tbody.innerHTML = data.map(r=>`
+    <tr>
+      <td>${r.name}</td>
+      <td>${r.desc}</td>
+      <td><span class="badge">${r.vendors}</span></td>
+      <td>$ ${fmt(r.budget)} M</td>
+      <td>${r.leadMin}–${r.leadMax}</td>
+      <td>${r.orderBy}</td>
+      <td><span class="badge status ${statusClass(r.status)}">${r.status}</span></td>
+      <td><span class="risk ${riskClass(r.risk)}">${r.risk}</span></td>
+    </tr>
+  `).join('');
+}
+function statusClass(s){
+  return s==='Pending'?'s-pending':s==='RFQ'?'s-rfq':s==='Quoted'?'s-quoted':'s-ordered';
+}
+function riskClass(r){ return r==='High'?'r-high':r==='Med'?'r-med':'r-low'; }
+
+/* ---------- KPIs ---------- */
+function updateKPIs(){
+  const budget = sum(lli.map(r=>r.budget));
+  $('#kBudget').textContent = '$ '+fmt(budget)+' M';
+  const minLead = Math.min(...lli.map(r=>r.leadMin));
+  const maxLead = Math.max(...lli.map(r=>r.leadMax));
+  $('#kLead').textContent = `${minLead}–${maxLead} wks`;
+  const crit = lli.filter(r=>r.critical).length;
+  $('#kCrit').textContent = crit;
+  const ordered = lli.filter(r=>r.status==='Ordered').length;
+  const pct = Math.round(ordered/lli.length*100);
+  $('#kProgress').style.width = pct+'%';
+  $('#kProgressTxt').textContent = `${pct}% ordered`;
+}
+
+/* ---------- Sorting ---------- */
+document.querySelectorAll('#lliTbl th[data-sort]').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const key = th.dataset.sort;
+    let sorted = lli.slice();
+    sorted.sort((a,b)=>{
+      if(key==='budget') return b.budget-a.budget;
+      if(key==='orderBy') return new Date(a.orderBy)-new Date(b.orderBy);
+      if(key==='risk'){ const r={'High':3,'Med':2,'Low':1}; return r[b.risk]-r[a.risk]; }
+      return (''+a.name).localeCompare(b.name);
+    });
+    renderTable(sorted);
+  });
+});
+
+/* ---------- Gantt (auto-filling horizon) ---------- */
+function renderGantt(){
+  const svg = document.getElementById('gantt'); 
+  svg.innerHTML='';
+
+  // Horizon based on longest item
+  const totalWeeks = r => Object.values(r.phases).reduce((a,b)=>a+b,0);
+  const maxWeeks   = Math.max(...lli.map(totalWeeks));
+  const weeks      = Math.ceil((maxWeeks + 2) / 5) * 5;   // round up to nearest 5
+
+  // Layout & scale
+  const W=1000, H=560, Px=140, Py=28, rowH=30;
+  const x = w => Px + (w / weeks) * (W - Px - 20);
+
+  // Nice grid step (~8 cols)
+  const targetTicks = 8;
+  const rawStep = weeks / targetTicks;
+  const step = Math.max(5, Math.ceil(rawStep / 5) * 5);
+
+  // Grid + labels
+  for(let w=0; w<=weeks; w+=step){
+    const X = x(w);
+    svg.insertAdjacentHTML('beforeend', `<line x1="${X}" y1="${Py}" x2="${X}" y2="${H-32}" class="grid" opacity=".7"/>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${X}" y="${H-10}" class="axisLabel" text-anchor="middle">${w}w</text>`);
+  }
+
+  // Rows
+  lli.forEach((r,i)=>{
+    const y = Py + 6 + i*rowH;
+    svg.insertAdjacentHTML('beforeend', `<text x="12" y="${y+14}" class="axisLabel" style="fill:#d5dee5;font-size:13px">${r.name}</text>`);
+
+    let w0 = 0;
+    const segs=[
+      ['#345261',r.phases.spec,'Spec'],
+      ['#456e7a',r.phases.rfq,'RFQ'],
+      ['#137e86',r.phases.po,'PO'],
+      ['#19c5be',r.phases.mfg,'MFG'],
+      ['#f6c947',r.phases.fat,'FAT'],
+      ['#57d39b',r.phases.del,'Delivery']
+    ];
+    segs.forEach(([col,len,label])=>{
+      const wPix = Math.max(2, x(w0+len) - x(w0));
+      const x0   = x(w0);
+      svg.insertAdjacentHTML('beforeend',
+        `<rect x="${x0}" y="${y}" width="${wPix}" height="20" fill="${col}" rx="3" ry="3" ${r.critical?'stroke="#ef8c7a" stroke-width="2"':''}></rect>
+         <text x="${x0+4}" y="${y+14}" class="axisLabel" style="fill:#101b22;font-size:11px">${label}</text>`);
+      w0 += len;
+    });
+
+    // Order-by marker
+    const obWeeks = Math.min(weeks-1, Math.max(0, (r.leadMin || 0) - 10));
+    svg.insertAdjacentHTML('beforeend',
+      `<line x1="${x(obWeeks)}" x2="${x(obWeeks)}" y1="${y-6}" y2="${y+28}"
+             stroke="${r.critical ? '#ef8c7a' : '#f6c947'}" stroke-width="2" stroke-dasharray="4 4"/>`);
+  });
+}
+
+/* ---------- Commitments (bars per quarter) ---------- */
+function renderCommit(){
+  const svg = $('#commit'); svg.innerHTML=''; const W=1000,H=240,Px=60,Py=24;
+  const buckets = {};
+  lli.forEach(r=>Object.entries(r.commit).forEach(([q,v])=>{buckets[q]=(buckets[q]||0)+v;}));
+  const qs = Object.keys(buckets);
+  const max = Math.max(...Object.values(buckets));
+  const x=i=>Px+i*(W-Px-20)/qs.length, y=v=>H-Py - v/max*(H-2*Py);
+
+  svg.insertAdjacentHTML('beforeend', `<line x1="${Px}" x2="${W-20}" y1="${H-Py}" y2="${H-Py}" class="axis"/>`);
+  qs.forEach((q,i)=>{
+    const v=buckets[q];
+    svg.insertAdjacentHTML('beforeend',
+      `<rect x="${x(i)+8}" y="${y(v)}" width="36" height="${H-Py - y(v)}" fill="rgba(25,197,190,.6)" stroke="var(--line)"></rect>
+       <text x="${x(i)+26}" y="${H-6}" class="axisLabel" text-anchor="middle">${q.replace('_',' ’')}</text>`);
+  });
+}
+
+/* ---------- Waterfall ---------- */
+function renderWaterfall(){
+  const svg = $('#waterfall'); svg.innerHTML=''; const W=1000,H=240,Px=60,Py=20;
+  const steps = lli.map(r=>({name:r.name.split(' ')[0], val:-r.budget}))
+    .concat([{name:'Total', val: sum(lli.map(r=>-r.budget))}]);
+  const min = Math.min(0,sum(steps.map(s=>s.val))); const max = 0;
+  const x=i=>Px+i*(W-Px-40)/steps.length, y=v=>H-Py - (v-min)/(max-min)*(H-2*Py);
+  let cum = 0;
+  steps.forEach((s,i)=>{
+    const y0 = y(Math.min(0,cum)); cum += s.val; const y1 = y(Math.min(0,cum));
+    svg.insertAdjacentHTML('beforeend',
+      `<rect x="${x(i)+6}" y="${Math.min(y0,y1)}" width="40" height="${Math.abs(y1 - y0)}"
+              fill="${s.name==='Total' ? 'rgba(246,201,71,.7)' : 'rgba(239,140,122,.65)'}" stroke="var(--line)"></rect>
+       <text x="${x(i)+26}" y="${H-6}" class="axisLabel" text-anchor="middle">${s.name}</text>`);
+  });
+}
+
+/* ---------- Sparklines ---------- */
+function spark(el, arr){
+  const svg=$(el); svg.innerHTML=''; const W=320,H=60,P=8;
+  const x=i=>P+i*(W-2*P)/(arr.length-1);
+  const min=Math.min(...arr), max=Math.max(...arr);
+  const y=v=>H-P - (v-min)/(max-min)*(H-2*P);
+  const d=arr.map((v,i)=>(i?'L':'M')+x(i)+','+y(v)).join(' ');
+  svg.insertAdjacentHTML('beforeend', `<path d="${d}" stroke="var(--teal)" stroke-width="2.5" fill="none"/>`);
+}
+
+/* ---------- Risk heatmap placement ---------- */
+/* probIdx: 1..5 => Rare, Unlikely, Possible, Likely, Almost
+   impactIdx: 1..5 => Very Low, Low, Med, High, Very High
+   cell index = probIdx*6 + impactIdx  */
+function placeHeat(name, probIdx, impactIdx){
+  const grid = $('#heatmap');
+  const cellIndex = probIdx*6 + impactIdx;
+  const cell = grid.children[cellIndex];
+  if(!cell) return;
+
+  const tag = name.split(' ')[0];
+  cell.textContent = (cell.textContent==='—'?'':cell.textContent+' · ')+tag;
+
+  const sevScore = probIdx*impactIdx; // 1..25
+  let bg='rgba(25,197,190,.14)', border='#2a4e52';
+  if(sevScore>=12 && sevScore<18){ bg='rgba(246,201,71,.16)'; border='#6f4c21'; }
+  if(sevScore>=18){ bg='rgba(239,140,122,.18)'; border='#8b3f33'; }
+  cell.style.background = bg;
+  cell.style.borderColor = border;
+}
+
+/* ---------- Actions ---------- */
+$('#sendRFQ').onclick = ()=>alert('RFQ packages compiled and sent to selected vendors (demo).');
+$('#lockVendor').onclick = ()=>alert('Draft POs created for selected LLIs (demo).');
+$('#exportCSV').onclick = ()=>{
+  const rows=[['Item','Description','Vendors','Budget(M)','LeadMin','LeadMax','OrderBy','Status','Risk']];
+  lli.forEach(r=>rows.push([r.name,r.desc,r.vendors,r.budget,r.leadMin,r.leadMax,r.orderBy,r.status,r.risk]));
+  const csv=rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='seidr_lli.csv'; a.click(); URL.revokeObjectURL(url);
+};
+$('#simImpact').onclick = ()=>alert(`If POs are delayed by 26 weeks:\n• Electrolyzer stacks shift delivery by ~26 weeks\n• COD impact ≈ +7 months`);
+
+/* ---------- Init ---------- */
+renderTable();
+updateKPIs();
+renderGantt();
+renderCommit();
+renderWaterfall();
+spark('#spark1', [120,118,121,125,130,129,133,136,138,141,143,144,147]);
+spark('#spark2', [100,101,99,98,96,95,97,98,99,101,102,103,104]);
+
+// Populate heatmap
+placeHeat('Electrolyzer Stacks', 5, 5); // Almost x Very High
+placeHeat('Rectifier',           4, 5); // Likely x Very High
+placeHeat('GIS',                 4, 4); // Likely x High
+placeHeat('Compressors',         4, 4); // Likely x High
+placeHeat('Tanks',               4, 5); // Likely x Very High
+placeHeat('Transformers',        3, 4); // Possible x High
+placeHeat('Switchgear',          3, 3); // Possible x Med
+placeHeat('HV Cables',           2, 3); // Unlikely x Med
+placeHeat('DCS',                 2, 2); // Unlikely x Low
+placeHeat('DI Water',            3, 3); // Possible x Med
+placeHeat('N2 PSA',              2, 2); // Unlikely x Low
+placeHeat('Cooling',             2, 2); // Unlikely x Low
+placeHeat('BESS',                3, 4); // Possible x High
+placeHeat('E-house',             3, 3); // Possible x Med
+placeHeat('Firewater',           2, 2); // Unlikely x Low
+placeHeat('Instruments',         1, 2); // Rare x Low
+</script>
+</body>
+</html>

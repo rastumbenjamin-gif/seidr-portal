@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — Electrolyzer Config Comparison</title>
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --blue:#74aeea;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
+       font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  .crumb{color:var(--muted);font-size:13px}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;max-width:1760px;margin:0 auto;padding:18px}
+  .left{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+  h1{margin:.2rem 0 .8rem;font-size:28px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  label{display:block;margin:8px 0 6px}
+  input[type="number"],input[type="range"],select{width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel-2);color:var(--text)}
+  .row{display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center}
+  .muted{color:var(--muted)}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .btn-ghost{background:transparent}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .k{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .k strong{display:block;font-size:18px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  tr:hover{background:rgba(25,197,190,.06)}
+  .legend{display:flex;gap:10px;align-items:center}
+  .sw{width:12px;height:12px;border-radius:3px;border:1px solid var(--line);display:inline-block}
+  /* charts */
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  svg.chart{width:100%;height:360px;background:#0c141a;border-radius:12px}
+  .axis{stroke:#2b3b46;stroke-width:1}
+  .grid{stroke:#1a2530;stroke-width:.8}
+  .bar{rx:6;ry:6}
+  .bar-label{font-size:12px;fill:#cfd6db}
+  .refline{stroke-dasharray:6 4}
+  .reftext{fill:#a7b2bb;font-size:12px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
+  @media (max-width:1300px){ .wrap{grid-template-columns:1fr} .charts{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>SEIDR</strong> <span class="crumb">/ Project Builder / Cost Comparison</span></div>
+    <div class="stack">
+      <span class="pill">Site: Herøya North • 100 MW</span>
+      <a class="btn" href="./">Back</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- LEFT: Assumptions & Controls -->
+    <div class="left">
+      <div class="card">
+        <h1>Electrolyzer Config Comparison</h1>
+        <div class="muted">Compare CAPEX, OPEX & LCOH for 2–3 configurations with benchmark overlays.</div>
+      </div>
+
+      <div class="card">
+        <h2>Assumptions</h2>
+        <div class="row"><label>Electricity price (NOK/MWh)</label><input id="pElec" type="number" value="650"/></div>
+        <div class="row"><label>Capacity factor (%)</label><input id="capFac" type="number" value="90"/></div>
+        <div class="row"><label>System efficiency (kWh/kg H₂)</label><input id="kwhkg" type="number" value="53"/></div>
+        <div class="row"><label>Fixed OPEX (% of CAPEX/yr)</label><input id="fopex" type="number" value="3.0" step="0.1"/></div>
+        <div class="row"><label>Stack repl. (yrs)</label><input id="stackY" type="number" value="7"/></div>
+        <div class="row"><label>Stack repl. cost (% of ELX CAPEX)</label><input id="stackPct" type="number" value="40" step="1"/></div>
+        <div class="row"><label>WACC (%)</label><input id="wacc" type="number" value="8" step="0.1"/></div>
+        <div class="row"><label>Economic life (yrs)</label><input id="life" type="number" value="20"/></div>
+        <div class="stack" style="margin-top:8px">
+          <button class="btn" id="btnApply">Apply</button>
+          <button class="btn btn-ghost" id="btnReset">Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Benchmarks</h2>
+        <div class="row"><label>Market Median CAPEX (MNOK/MW)</label><input id="bmCapexMed" type="number" value="28"/></div>
+        <div class="row"><label>Best in Class CAPEX (MNOK/MW)</label><input id="bmCapexBest" type="number" value="22"/></div>
+        <div class="row"><label>Market Median OPEX (MNOK/yr)</label><input id="bmOpexMed" type="number" value="170"/></div>
+        <div class="row"><label>Best in Class OPEX (MNOK/yr)</label><input id="bmOpexBest" type="number" value="140"/></div>
+        <div class="muted" style="margin-top:6px">Edit these to match your internal view.</div>
+      </div>
+
+      <div class="card">
+        <h2>Currency</h2>
+        <div class="row"><label>Display</label>
+          <select id="curSel">
+            <option value="NOK" selected>NOK</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+        <div class="row"><label>NOK→USD</label><input id="fxUSD" type="number" value="0.095"/></div>
+        <div class="row"><label>NOK→EUR</label><input id="fxEUR" type="number" value="0.088"/></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Charts & Table -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="legend">
+          <span class="sw" style="background:#19c5be"></span> <span>Config A — PEM (20×5 MW)</span>
+          <span class="sw" style="background:#f6c947"></span> <span>Config B — Alkaline (10×10 MW)</span>
+          <span class="sw" style="background:#57d39b"></span> <span>Config C — PEM+Hybrid</span>
+        </div>
+        <div class="stack"><span class="pill">All-in: Balance of Plant included</span></div>
+      </div>
+      <div class="charts" style="padding:12px">
+        <svg id="capexChart" class="chart" aria-label="CAPEX chart"></svg>
+        <svg id="opexChart"  class="chart" aria-label="OPEX chart"></svg>
+      </div>
+      <div class="panel-head" style="margin-top:10px">
+        <div><strong>LCOH Breakdown</strong> <span class="crumb">— electricity • fixed+stack OPEX • CAPEX recovery</span></div>
+      </div>
+      <div style="padding:12px">
+        <svg id="lcohChart" class="chart" aria-label="LCOH stacked"></svg>
+      </div>
+      <div class="panel-head">
+        <div><strong>Detail Table</strong></div>
+        <div class="stack"><button id="btnCSV" class="btn">Export CSV</button></div>
+      </div>
+      <div style="padding:12px;overflow:auto;max-height:320px">
+        <table id="tbl">
+          <thead>
+            <tr>
+              <th>Config</th><th>CAPEX (MNOK)</th><th>OPEX/yr (MNOK)</th><th>kWh/kg</th><th>Avail (%)</th>
+              <th>Stack Life (yr)</th><th>LCOH Elec</th><th>LCOH Opex</th><th>LCOH Capex</th><th>LCOH Total</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="kpi" style="margin-top:10px">
+          <div class="k"><small class="muted">Cheapest LCOH</small><strong id="bestName">—</strong><small id="bestVal" class="muted">—</small></div>
+          <div class="k"><small class="muted">Δ vs Market Median LCOH</small><strong id="deltaMed">—</strong></div>
+          <div class="k"><small class="muted">CAPEX Range</small><strong id="capRange">—</strong></div>
+          <div class="k"><small class="muted">OPEX Range</small><strong id="opRange">—</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ------- Mock configurations (editable in code or wire to backend) ------- */
+const CONFIGS = [
+  { key:'A', name:'PEM (20×5 MW)',   color:'#19c5be', capexMW:29.5, elxShare:0.7, kwhkg:52, avail:95, stackY:7, notes:'High dynamic' },
+  { key:'B', name:'Alkaline (10×10)', color:'#f6c947', capexMW:26.0, elxShare:0.6, kwhkg:55, avail:96, stackY:10, notes:'Lower CAPEX' },
+  { key:'C', name:'PEM+Hybrid',      color:'#57d39b', capexMW:28.0, elxShare:0.65,kwhkg:53, avail:95, stackY:8, notes:'Balanced' }
+];
+// Site size assumption
+const SITE_MW = 100;
+
+/* ------- State from inputs ------- */
+const S = {
+  pElec: 650, capFac: 90, kwhkg: 53, fopex: 3.0, stackY: 7, stackPct: 40, wacc: 8, life: 20,
+  bmCapexMed: 28, bmCapexBest: 22, bmOpexMed: 170, bmOpexBest: 140,
+  cur: 'NOK', fxUSD: 0.095, fxEUR: 0.088
+};
+
+/* ------- Helpers ------- */
+const $ = s => document.querySelector(s);
+function readInputs(){
+  S.pElec = +$('#pElec').value || 0;
+  S.capFac= +$('#capFac').value || 0;
+  S.kwhkg = +$('#kwhkg').value || 0;
+  S.fopex = +$('#fopex').value || 0;
+  S.stackY= +$('#stackY').value || 0;
+  S.stackPct= +$('#stackPct').value || 0;
+  S.wacc  = +$('#wacc').value || 0;
+  S.life  = +$('#life').value || 0;
+  S.bmCapexMed= +$('#bmCapexMed').value||0;
+  S.bmCapexBest=+$('#bmCapexBest').value||0;
+  S.bmOpexMed= +$('#bmOpexMed').value||0;
+  S.bmOpexBest=+$('#bmOpexBest').value||0;
+  S.cur = $('#curSel').value;
+  S.fxUSD= +$('#fxUSD').value||1;
+  S.fxEUR= +$('#fxEUR').value||1;
+}
+function resetInputs(){
+  ['pElec','capFac','kwhkg','fopex','stackY','stackPct','wacc','life','bmCapexMed','bmCapexBest','bmOpexMed','bmOpexBest'].forEach(id=>{$('#'+id).value = $('#'+id).defaultValue;});
+  $('#curSel').value='NOK'; $('#fxUSD').value=0.095; $('#fxEUR').value=0.088;
+}
+
+/* Finance: capital recovery factor */
+function CRF(wacc, n){ const i=wacc/100; return (i*Math.pow(1+i,n)) / (Math.pow(1+i,n)-1); }
+
+/* Production: kg H2/year for given MW & capacity factor (using site kWh/kg input as baseline for electricity cost calc per config) */
+function annualKg(config){
+  const kwh = config.kwhkg ?? S.kwhkg;
+  const hours = 8760 * (S.capFac/100);
+  const siteMWh = SITE_MW * hours;
+  const kWhTotal = siteMWh * 1000;
+  return kWhTotal / kwh; // kg/year
+}
+
+/* Currency display */
+function fx(valNOK){
+  if(S.cur==='NOK') return {v:valNOK, s:'MNOK'};
+  if(S.cur==='USD') return {v:valNOK*S.fxUSD, s:'MUSD'};
+  if(S.cur==='EUR') return {v:valNOK*S.fxEUR, s:'MEUR'};
+}
+
+/* Compute metrics per config */
+function compute(){
+  const crf = CRF(S.wacc, S.life);
+  const out = CONFIGS.map(c=>{
+    // CAPEX
+    const capexMNOK = c.capexMW * SITE_MW; // MNOK all-in
+    // OPEX: fixed % of capex + stack repl amortized (approximate as annualized)
+    const elxCapexMNOK = capexMNOK * (c.elxShare ?? 0.65);
+    const stackReplMNOK = elxCapexMNOK * (S.stackPct/100); // per replacement
+    const stackAnnual = stackReplMNOK / (c.stackY ?? S.stackY);
+    const fixedAnnual = capexMNOK * (S.fopex/100);
+    const opexAnnualMNOK = fixedAnnual + stackAnnual;
+
+    // LCOH components
+    const kgYr = annualKg(c);
+    const elecCostPerKg = (S.pElec/1000) * (c.kwhkg ?? S.kwhkg); // NOK/kWh * kWh/kg
+    const elecPerKgNOK  = elecCostPerKg;
+    const opexPerKgNOK  = (opexAnnualMNOK*1e6) / kgYr;
+    const capexPerKgNOK = ((capexMNOK*1e6)*crf) / kgYr;
+
+    return {
+      key:c.key, name:c.name, color:c.color,
+      capexMNOK, opexAnnualMNOK,
+      kwhkg:c.kwhkg, avail:c.avail, stackY:c.stackY,
+      lcoh:{ elec:elecPerKgNOK, opex:opexPerKgNOK, capex:capexPerKgNOK }
+    };
+  });
+  return out;
+}
+
+/* ------- Charts (SVG, no libs) ------- */
+function drawBars(svgId, items, unitLabel, refMed, refBest){
+  const svg = $(svgId); svg.innerHTML='';
+  const W=svg.clientWidth||800, H=svg.clientHeight||360, pad=48, bw=56, gap=40;
+  const maxVal = Math.max(refMed, refBest, ...items.map(x=>x.val)) * 1.12;
+  // axes and grid
+  const axis = (x1,y1,x2,y2)=>svg.insertAdjacentHTML('beforeend',`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="axis"/>`);
+  axis(pad, H-pad, W-pad, H-pad); axis(pad, pad, pad, H-pad);
+  for(let i=0;i<5;i++){
+    const y=pad + i*(H-2*pad)/4;
+    svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+    const v=(maxVal*(1 - i/4)).toFixed(0);
+    svg.insertAdjacentHTML('beforeend', `<text x="${8}" y="${y+4}" class="reftext">${v}</text>`);
+  }
+  // bars
+  items.forEach((it,idx)=>{
+    const x = pad + 40 + idx*(bw+gap);
+    const h = (it.val/maxVal)*(H-2*pad);
+    const y = H-pad-h;
+    svg.insertAdjacentHTML('beforeend', `<rect class="bar" x="${x}" y="${y}" width="${bw}" height="${h}" fill="${it.color}"/>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${H-pad+16}" text-anchor="middle" class="bar-label">${it.name}</text>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" class="bar-label">${fmt(it.val)} ${unitLabel}</text>`);
+  });
+  // reference lines
+  const yMed = H-pad-(refMed/maxVal)*(H-2*pad);
+  const yBest= H-pad-(refBest/maxVal)*(H-2*pad);
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${yMed}" x2="${W-pad}" y2="${yMed}" class="refline" stroke="#a7b2bb"/>`);
+  svg.insertAdjacentHTML('beforeend', `<text x="${W-pad-6}" y="${yMed-6}" text-anchor="end" class="reftext">Market Median</text>`);
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${yBest}" x2="${W-pad}" y2="${yBest}" class="refline" stroke="#57d39b"/>`);
+  svg.insertAdjacentHTML('beforeend', `<text x="${W-pad-6}" y="${yBest-6}" text-anchor="end" class="reftext">Best in Class</text>`);
+}
+
+function drawLCOH(svgId, items){
+  const svg = $(svgId); svg.innerHTML='';
+  const W=svg.clientWidth||800, H=svg.clientHeight||360, pad=48, bw=56, gap=40;
+  const maxVal = Math.max(...items.map(x=>x.total)) * 1.18;
+  // axes/grid
+  const axis = (x1,y1,x2,y2)=>svg.insertAdjacentHTML('beforeend',`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="axis"/>`);
+  axis(pad, H-pad, W-pad, H-pad); axis(pad, pad, pad, H-pad);
+  for(let i=0;i<5;i++){
+    const y=pad + i*(H-2*pad)/4;
+    svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+    const v=(maxVal*(1 - i/4)).toFixed(1);
+    svg.insertAdjacentHTML('beforeend', `<text x="${8}" y="${y+4}" class="reftext">${v} NOK/kg</text>`);
+  }
+  // stacks
+  items.forEach((it,idx)=>{
+    const x = pad + 40 + idx*(bw+gap);
+    let y = H-pad;
+    const segs = [
+      {h: (it.elec/maxVal)*(H-2*pad), color:'#74aeea', name:'Elec'},
+      {h: (it.opex/maxVal)*(H-2*pad), color:'#f6c947', name:'OPEX'},
+      {h: (it.capex/maxVal)*(H-2*pad), color:'#19c5be', name:'CAPEX'}
+    ];
+    segs.forEach(s=>{
+      y -= s.h;
+      svg.insertAdjacentHTML('beforeend', `<rect class="bar" x="${x}" y="${y}" width="${bw}" height="${s.h}" fill="${s.color}"/>`);
+    });
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${H-pad+16}" text-anchor="middle" class="bar-label">${it.name}</text>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" class="bar-label">${it.total.toFixed(1)} NOK/kg</text>`);
+  });
+}
+
+function fmt(n){ return Math.round(n).toString(); }
+
+/* ------- Table ------- */
+function renderTable(rows){
+  const tb = $('#tbl tbody'); tb.innerHTML='';
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.name}</td>
+      <td>${r.capexDisp}</td>
+      <td>${r.opexDisp}</td>
+      <td>${r.kwhkg}</td>
+      <td>${r.avail}%</td>
+      <td>${r.stackY} yr</td>
+      <td>${r.lcoh.elec.toFixed(1)}</td>
+      <td>${r.lcoh.opex.toFixed(1)}</td>
+      <td>${r.lcoh.capex.toFixed(1)}</td>
+      <td><strong>${r.lcoh.total.toFixed(1)}</strong></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function exportCSV(rows){
+  const headers = ['Config','CAPEX (MNOK)','OPEX/yr (MNOK)','kWh/kg','Avail %','Stack Life yr','LCOH Elec','LCOH Opex','LCOH Capex','LCOH Total'];
+  const lines = [headers.join(',')].concat(rows.map(r=>[
+    r.name, r.capexMNOK.toFixed(0), r.opexAnnualMNOK.toFixed(0), r.kwhkg, r.avail, r.stackY,
+    r.lcoh.elec.toFixed(2), r.lcoh.opex.toFixed(2), r.lcoh.capex.toFixed(2), r.lcoh.total.toFixed(2)
+  ].join(',')));
+  const blob = new Blob([lines.join('\n')],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'seidr_config_comparison.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ------- Main render ------- */
+function render(){
+  readInputs();
+  // Rebase configs with site-level overrides for efficiency/stack life
+  const conf = compute().map(c=>{
+    // respect per-config kWh/kg if set, else S.kwhkg
+    const elec = c.lcoh.elec;
+    const opex = c.lcoh.opex;
+    const capx = c.lcoh.capex;
+    const total = elec + opex + capx;
+    const {v:capDisp,s:capU} = fx(c.capexMNOK);
+    const {v:opDisp,s:opU}  = fx(c.opexAnnualMNOK);
+    return {
+      ...c,
+      capexDisp:`${capDisp.toFixed(0)} ${capU}`,
+      opexDisp:`${opDisp.toFixed(0)} ${opU}`,
+      lcoh:{ elec, opex, capex:capx, total }
+    };
+  });
+
+  // CAPEX bars (MNOK) with benchmark lines in MNOK/MW translated to MNOK for site
+  const bmCapexMedMNOK  = S.bmCapexMed  * SITE_MW;
+  const bmCapexBestMNOK = S.bmCapexBest * SITE_MW;
+  drawBars('#capexChart',
+    conf.map(c=>({name:c.key, val:c.capexMNOK, color:c.color})),
+    fx(1).s, bmCapexMedMNOK, bmCapexBestMNOK
+  );
+
+  // OPEX bars (MNOK/yr) with benchmark lines
+  drawBars('#opexChart',
+    conf.map(c=>({name:c.key, val:c.opexAnnualMNOK, color:c.color})),
+    fx(1).s, S.bmOpexMed, S.bmOpexBest
+  );
+
+  // LCOH stacked
+  drawLCOH('#lcohChart', conf.map(c=>({
+    name:c.key, elec:c.lcoh.elec, opex:c.lcoh.opex, capex:c.lcoh.capex, total:c.lcoh.total
+  })));
+
+  // Table
+  renderTable(conf);
+
+  // KPIs
+  const best = conf.slice().sort((a,b)=>a.lcoh.total-b.lcoh.total)[0];
+  $('#bestName').textContent = best.name;
+  $('#bestVal').textContent  = `${best.lcoh.total.toFixed(1)} NOK/kg`;
+  const capMin = Math.min(...conf.map(x=>x.capexMNOK)), capMax = Math.max(...conf.map(x=>x.capexMNOK));
+  const opMin  = Math.min(...conf.map(x=>x.opexAnnualMNOK)), opMax = Math.max(...conf.map(x=>x.opexAnnualMNOK));
+  $('#capRange').textContent = `${fx(capMin).v.toFixed(0)}–${fx(capMax).v.toFixed(0)} ${fx(1).s}`;
+  $('#opRange').textContent  = `${fx(opMin).v.toFixed(0)}–${fx(opMax).v.toFixed(0)} ${fx(1).s}`;
+
+  // Δ vs “Market Median” LCOH (rough proxy using median capex + median opex, same elec as best)
+  const kgYr = annualKg(best); // kg/year (using best's kWh/kg)
+  const crf  = CRF(S.wacc, S.life);
+  const capexMedPerKg = ((S.bmCapexMed*SITE_MW*1e6)*crf)/kgYr;
+  const opexMedPerKg  = (S.bmOpexMed*1e6)/kgYr;
+  const medLCOH = best.lcoh.elec + capexMedPerKg + opexMedPerKg;
+  const delta = best.lcoh.total - medLCOH;
+  $('#deltaMed').textContent = `${delta>=0?'+':''}${delta.toFixed(1)} NOK/kg`;
+}
+
+/* ------- Events ------- */
+$('#btnApply').addEventListener('click', render);
+$('#btnReset').addEventListener('click', ()=>{ resetInputs(); render(); });
+$('#curSel').addEventListener('change', render);
+$('#fxUSD').addEventListener('input', render);
+$('#fxEUR').addEventListener('input', render);
+$('#btnCSV').addEventListener('click', ()=>{
+  readInputs();
+  const rows = compute().map(c=>({
+    ...c,
+    lcoh:c.lcoh, capexMNOK:c.capexMNOK, opexAnnualMNOK:c.opexAnnualMNOK
+  }));
+  exportCSV(rows);
+});
+
+/* ------- Boot ------- */
+render();
+</script>
+</body>
+</html>

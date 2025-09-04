@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — CAPEX Workbench</title>
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --blue:#74aeea; --pink:#ea7ad6;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
+       font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  .crumb{color:var(--muted);font-size:13px}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;max-width:1840px;margin:0 auto;padding:18px}
+  .left{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h1{margin:.2rem 0 .8rem;font-size:28px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  h3{margin:10px 0 6px;font-size:13px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  label{display:block;margin:8px 0 6px}
+  input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)}
+  textarea{min-height:64px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .btn-ghost{background:transparent}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
+  .muted{color:var(--muted)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--panel)}
+  tr:hover{background:rgba(25,197,190,.06)}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .k{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .k strong{display:block;font-size:18px}
+  .tag{display:inline-block;border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:2px 6px;font-size:11px;margin-right:4px}
+  .badge{padding:2px 6px;border-radius:999px;border:1px solid var(--line);font-size:11px}
+  .src-quote{background:rgba(116,174,234,.18)}
+  .src-bm{background:rgba(246,201,71,.18)}
+  .src-param{background:rgba(87,211,155,.18)}
+  .src-man{background:rgba(233,100,121,.18)}
+  .risk-high{background:rgba(239,140,122,.16)}
+  .risk-med{background:rgba(246,201,71,.12)}
+  .risk-low{background:rgba(87,211,155,.12)}
+  svg.chart{width:100%;height:320px;background:#0c141a;border-radius:12px}
+  .axis{stroke:#2b3b46;stroke-width:1}
+  .grid{stroke:#1a2530;stroke-width:.8}
+  .bar{rx:6;ry:6}
+  .reftext{fill:#a7b2bb;font-size:12px}
+  .rightGrid{display:grid;grid-template-rows:auto auto auto auto 1fr;gap:14px}
+  .sticky-actions{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,rgba(19,32,42,.98));
+                  padding-top:8px;margin-top:8px}
+  .search{display:flex;gap:8px}
+  .search input{flex:1}
+  @media (max-width:1300px){ .wrap{grid-template-columns:1fr} .kpi{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>SEIDR</strong> <span class="crumb">/ Project Builder / CAPEX Workbench</span></div>
+    <div class="stack">
+      <span class="pill">Site: Herøya North • 100 MW</span>
+      <a class="btn" href="./">Back</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- LEFT SIDEBAR -->
+    <div class="left">
+      <div class="card">
+        <h1>CAPEX Workbench</h1>
+        <div class="muted">Drill down by unit/WBS. Every line has a **source tag**, base year, FX & escalation, AACE class, and audit trail.</div>
+      </div>
+
+      <div class="card">
+        <h2>Assumptions</h2>
+        <div class="row"><label>Base year</label><input id="baseYear" value="2025"/></div>
+        <div class="row"><label>Escalation index (yr)</label><input id="escIdx" type="number" value="3.0" step="0.1"/></div>
+        <div class="row"><label>FX NOK→USD</label><input id="fxUSD" type="number" value="0.095"/></div>
+        <div class="row"><label>FX NOK→EUR</label><input id="fxEUR" type="number" value="0.088"/></div>
+        <div class="row"><label>Display currency</label>
+          <select id="cur"><option value="NOK" selected>NOK</option><option value="USD">USD</option><option value="EUR">EUR</option></select>
+        </div>
+        <div class="grid2">
+          <div class="row"><label>Contingency (by class)</label>
+            <select id="contMode"><option selected>Auto by AACE</option><option>Manual %</option></select>
+          </div>
+          <div class="row"><label id="contLbl">Manual %</label><input id="contPct" type="number" value="10" disabled/></div>
+        </div>
+        <div class="stack" style="margin-top:8px">
+          <button id="btnApply" class="btn">Apply</button>
+          <button id="btnReset" class="btn btn-ghost">Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Filters & Search</h2>
+        <div class="search">
+          <input id="search" placeholder="Search in item, notes, vendor, WBS, source id…" />
+          <button id="btnFind" class="btn">Find</button>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div><label>Unit</label>
+            <select id="fUnit"><option value="ALL" selected>All</option></select>
+          </div>
+          <div><label>Source</label>
+            <select id="fSource"><option>ALL</option><option>QUOTE</option><option>BENCH</option><option>PARAM</option><option>MANUAL</option></select>
+          </div>
+          <div><label>AACE Class</label>
+            <select id="fClass"><option>ALL</option><option>Class 5</option><option>Class 4</option><option>Class 3</option><option>Class 2</option><option>Class 1</option></select>
+          </div>
+        </div>
+        <div class="stack" style="margin-top:8px">
+          <button id="btnClearFilters" class="btn btn-ghost">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Exports</h2>
+        <div class="stack">
+          <button id="btnCSV" class="btn">Export CSV</button>
+          <button id="btnJSON" class="btn">Export JSON</button>
+          <button id="btnPrint" class="btn btn-ghost">Print / PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SUMMARY, CHARTS, TABLES -->
+    <div class="rightGrid">
+      <div class="card">
+        <h2>Summary</h2>
+        <div class="kpi">
+          <div class="k"><small class="muted">Base (Direct + Indirect)</small><strong id="kBase">—</strong><small class="muted">excl. contingency/escalation</small></div>
+          <div class="k"><small class="muted">Contingency</small><strong id="kCont">—</strong><small class="muted">method: <span id="kContMode">AACE</span></small></div>
+          <div class="k"><small class="muted">Escalation to FID</small><strong id="kEsc">—</strong><small class="muted">to base year + index</small></div>
+          <div class="k"><small class="muted">Total Installed CAPEX</small><strong id="kTIC">—</strong><small class="muted"><span id="kCur">NOK</span></small></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Breakdowns</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <svg id="byUnit" class="chart" aria-label="By Unit"></svg>
+          <svg id="byCostType" class="chart" aria-label="Direct vs Indirect"></svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Cashflow (S-curve)</h2>
+        <svg id="scurve" class="chart" aria-label="Cashflow S-curve"></svg>
+      </div>
+
+      <div class="card">
+        <h2>CAPEX Items (drill-down)</h2>
+        <div style="overflow:auto;max-height:360px">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th>#</th><th>WBS</th><th>Unit</th><th>Item</th><th>Qty</th><th>UoM</th>
+                <th>Unit Price</th><th>Base Cost</th><th>Type</th><th>Source</th><th>Ref</th>
+                <th>Vendor</th><th>Date</th><th>Class</th><th>Notes</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="sticky-actions">
+          <div class="stack">
+            <span class="pill">Types: Direct (D), Indirect (I)</span>
+            <span class="pill">Source: QUOTE • BENCH • PARAM • MANUAL</span>
+            <button id="btnAdd" class="btn">Add Item</button>
+            <button id="btnEdit" class="btn btn-ghost">Edit Selected</button>
+            <button id="btnDelete" class="btn btn-ghost">Delete Selected</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Audit Trail / References</h2>
+        <div style="overflow:auto;max-height:220px">
+          <table id="auditTbl">
+            <thead><tr><th>ID</th><th>Change</th><th>User</th><th>When</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+/* ---------------------- Mock dataset (edit or connect to backend) ---------------------- */
+const UNITS = ['ELX','RECT','COMP','DRY','STORE','LOAD','WTR','COOL','O2','BOP','CIVIL','ELECT','CTRL'];
+const ITEMS = [
+  // WBS, Unit, Item, Qty, UoM, UnitPrice(NOK), Type(D/I), Source, Ref, Vendor, Date, Class, Notes
+  r('1.1','ELX','PEM Stacks 5 MW x20',20,'ea', 55_000_000,'D','QUOTE','Q-ELX-2025-07','HydraCell','2025-07-10','Class 3','Incl. frames; ex-works'),
+  r('1.2','ELX','Power Electronics (rectifiers, DC bus)',1,'lot', 190_000_000,'D','QUOTE','Q-PE-2025-06','VoltSynth','2025-06-25','Class 3','Cooling included'),
+  r('1.3','ELX','ELX Hall E&I fitout',1,'lot', 85_000_000,'D','BENCH','BM-ELX-INTL-2024','—','2024-11-01','Class 4','m2 scaling'),
+  r('2.1','RECT','Grid Transformers 132/33kV',2,'ea', 22_000_000,'D','QUOTE','Q-TX-2025-05','ABB','2025-05-30','Class 2','DDP site'),
+  r('2.2','RECT','HV Switchgear & Protection',1,'lot', 48_000_000,'D','BENCH','BM-SW-2024','—','2024-10-01','Class 4','kV scaling'),
+  r('3.1','COMP','H2 Compressors 30→350 bar',4,'ea', 26_000_000,'D','QUOTE','Q-COMP-2025-07','Howden','2025-07-08','Class 3','Oil-free'),
+  r('4.1','DRY','Dryer/Deoxo skids',2,'ea', 12_000_000,'D','QUOTE','Q-DRY-2025-06','Parker','2025-06-15','Class 3','-'),
+  r('5.1','STORE','Storage Vessels 350 bar',12,'ea', 9_500_000,'D','QUOTE','Q-STORE-2025-07','Hexagon','2025-07-12','Class 3','Composite'),
+  r('6.1','LOAD','Trailer loading bays (2)',1,'lot', 14_000_000,'D','BENCH','BM-LOAD-2024','—','2024-09-01','Class 4','—'),
+  r('7.1','WTR','DI Water Plant (50 m3/h)',1,'lot', 18_000_000,'D','QUOTE','Q-WTR-2025-05','Evoqua','2025-05-22','Class 3','—'),
+  r('8.1','COOL','Cooling Towers 30 MWth',1,'lot', 28_000_000,'D','QUOTE','Q-COOL-2025-06','SPX','2025-06-28','Class 3','—'),
+  r('9.1','O2','O2 handling package',1,'lot', 10_000_000,'D','BENCH','BM-O2-2024','—','2024-08-15','Class 4','vent+silencer'),
+  r('10.1','CIVIL','Civils, earthworks, roads, drainage',1,'lot', 95_000_000,'D','BENCH','BM-CIV-2024','—','2024-09-10','Class 4','m2 x factor'),
+  r('11.1','ELECT','Cables & trays (sitewide)',1,'lot', 60_000_000,'D','PARAM','PWR-CBL-0.9%/MW','—','2025-03-15','Class 5','0.9% of TIC guess'),
+  r('12.1','CTRL','DCS/SIS/PLC',1,'lot', 22_000_000,'D','BENCH','BM-CTRL-2024','—','2024-11-20','Class 4','incl. licenses'),
+  // Indirects
+  r('90.1','INDIR','EPCM (8%)',1,'lot', 0.08,'I','PARAM','PCT-TIC','—','2025-07-01','Class 5','% of direct'),
+  r('90.2','INDIR','Owners Costs (3%)',1,'lot', 0.03,'I','PARAM','PCT-TIC','—','2025-07-01','Class 5','% of direct'),
+  r('90.3','INDIR','Insurances & Bonds (1.2%)',1,'lot', 0.012,'I','PARAM','PCT-TIC','—','2025-07-01','Class 5','% of direct')
+];
+
+function r(wbs,unit,item,qty,uom,unitPrice,type,source,ref,vendor,date,aaceClass,notes){
+  return {id:uid(), wbs, unit, item, qty, uom, unitPrice, type, source, ref, vendor, date, aaceClass, notes};
+}
+
+/* ---------------------- State & helpers ---------------------- */
+const $ = s=>document.querySelector(s);
+let rows = ITEMS.slice();
+let selectedId = null;
+
+function uid(){ return 'CX-' + Math.random().toString(36).slice(2,7).toUpperCase(); }
+
+function fxVal(nok){
+  const cur = $('#cur').value;
+  if(cur==='NOK') return {v:nok, s:'MNOK'};
+  const rate = cur==='USD' ? +$('#fxUSD').value : +$('#fxEUR').value;
+  return {v: nok*rate, s: 'M'+cur};
+}
+
+function formatMoneyMNOK(n){ return Math.round(n).toString(); } // simple, label carries unit
+
+/* AACE class → contingency band (rough) */
+function contForClass(cls){
+  const map = {'Class 5': 0.30,'Class 4':0.25,'Class 3':0.18,'Class 2':0.12,'Class 1':0.07};
+  return map[cls] ?? 0.20;
+}
+
+/* ---------------------- Calculations ---------------------- */
+function calcBaseDirect(){
+  // percent PARAM items under INDIR are applied later (% of direct)
+  const directRows = rows.filter(r=>r.type==='D');
+  return directRows.reduce((s,r)=> s + (r.unitPrice * r.qty)/1e6, 0); // MNOK
+}
+function calcIndirect(directMNOK){
+  // PARAM percentages multiply direct
+  const indirRows = rows.filter(r=>r.type==='I');
+  let fixedMNOK = indirRows.filter(r=>r.source!=='PARAM').reduce((s,r)=> s + (r.unitPrice*r.qty)/1e6, 0);
+  let pctMNOK = indirRows.filter(r=>r.source==='PARAM').reduce((s,r)=> s + (r.unitPrice*directMNOK), 0);
+  return fixedMNOK + pctMNOK;
+}
+function calcContingency(totalBaseMNOK){
+  if($('#contMode').value==='Manual %') return totalBaseMNOK * (+$('#contPct').value/100);
+  // weighted by AACE class across rows
+  const weights = rows.map(r=>{
+    const pct = contForClass(r.aaceClass);
+    const cost = (r.type==='D' ? (r.unitPrice*r.qty)/1e6 : 0); // only direct drives class-based cont
+    return {cost,pct};
+  }).filter(x=>x.cost>0);
+  const num = weights.reduce((s,x)=> s + x.cost*x.pct, 0);
+  const den = weights.reduce((s,x)=> s + x.cost, 0) || 1;
+  return (num/den) * totalBaseMNOK; // uses weighted % applied to total base for simplicity
+}
+function calcEscalation(totalBaseMNOK){
+  // naive: apply index % per year to FID at baseYear+1.5yrs (edit if needed)
+  const idx = +$('#escIdx').value/100; // e.g., 3%/yr
+  const years = 1.5;
+  return totalBaseMNOK * (Math.pow(1+idx, years) - 1);
+}
+
+/* ---------------------- Rendering KPIs & Charts ---------------------- */
+function renderKPIs(){
+  const directMNOK = calcBaseDirect();
+  const indirectMNOK = calcIndirect(directMNOK);
+  const baseMNOK = directMNOK + indirectMNOK;
+  const contMNOK = calcContingency(baseMNOK);
+  const escMNOK  = calcEscalation(baseMNOK + contMNOK);
+  const totalMNOK = baseMNOK + contMNOK + escMNOK;
+
+  const base = fxVal(baseMNOK); const cont = fxVal(contMNOK); const esc = fxVal(escMNOK); const tot = fxVal(totalMNOK);
+  $('#kBase').textContent = `${formatMoneyMNOK(base.v)} ${base.s}`;
+  $('#kCont').textContent = `${formatMoneyMNOK(cont.v)} ${cont.s}`;
+  $('#kEsc').textContent  = `${formatMoneyMNOK(esc.v)} ${esc.s}`;
+  $('#kTIC').textContent  = `${formatMoneyMNOK(tot.v)} ${tot.s}`;
+  $('#kCur').textContent  = base.s.replace('M','');
+  $('#kContMode').textContent = $('#contMode').value==='Manual %' ? `Manual ${$('#contPct').value}%` : 'AACE';
+}
+
+function byUnitData(){
+  const map = {};
+  rows.forEach(r=>{
+    if(r.type!=='D') return; // focus on direct for unit chart
+    map[r.unit] = (map[r.unit]||0) + (r.unitPrice*r.qty)/1e6;
+  });
+  return Object.entries(map).map(([unit,val])=>({name:unit,val}));
+}
+function byCostTypeData(){
+  const direct = calcBaseDirect();
+  const indirect = calcIndirect(direct);
+  return [{name:'Direct', val:direct},{name:'Indirect',val:indirect}];
+}
+
+function drawBars(svgId, items, title=''){
+  const svg = $(svgId); svg.innerHTML='';
+  const W=svg.clientWidth||800, H=svg.clientHeight||320, pad=48, bw=48, gap=26;
+  const maxVal = Math.max(1, ...items.map(x=>x.val))*1.18;
+  // axes/grid
+  const axis=(x1,y1,x2,y2)=>svg.insertAdjacentHTML('beforeend',`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="axis"/>`);
+  axis(pad,H-pad,W-pad,H-pad); axis(pad,pad,pad,H-pad);
+  for(let i=0;i<4;i++){
+    const y=pad + i*(H-2*pad)/3; svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+    const v=(maxVal*(1 - i/3)).toFixed(0);
+    svg.insertAdjacentHTML('beforeend', `<text x="8" y="${y+4}" class="reftext">${v} MNOK</text>`);
+  }
+  // bars
+  items.forEach((it,idx)=>{
+    const x = pad + 24 + idx*(bw+gap);
+    const h = (it.val/maxVal)*(H-2*pad);
+    const y = H-pad-h;
+    const col = it.name==='Indirect' ? '#74aeea' : '#19c5be';
+    svg.insertAdjacentHTML('beforeend', `<rect class="bar" x="${x}" y="${y}" width="${bw}" height="${h}" fill="${col}"/>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${H-pad+16}" text-anchor="middle" class="reftext">${it.name}</text>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" class="reftext">${Math.round(it.val)}</text>`);
+  });
+  if(title) svg.insertAdjacentHTML('beforeend', `<text x="${W/2}" y="${16}" text-anchor="middle" class="reftext">${title}</text>`);
+}
+function drawSCurve(){
+  const svg=$('#scurve'); svg.innerHTML='';
+  const W=svg.clientWidth||800, H=svg.clientHeight||320, pad=48;
+  // Simple time-phasing: months 1..24, with spend profile (front-loaded civils, mid OEM, back commissioning)
+  const months = 24;
+  const profile = Array.from({length:months}, (_,i)=>{
+    const t=i+1;
+    let w = 0.0;
+    if(t<=6) w = 2+t;           // ramp up
+    else if(t<=16) w = 10;      // plateau construction+OEM
+    else w = Math.max(3, 18 - (t-16)*2); // tail
+    return w;
+  });
+  const sumW = profile.reduce((a,b)=>a+b,0);
+  // total base + contingency only (typically escalation applies as delivered; but we include all for display)
+  const direct = calcBaseDirect(), indir=calcIndirect(direct), cont=calcContingency(direct+indir), esc=calcEscalation(direct+indir+cont);
+  const total = direct+indir+cont+esc;
+  const monthly = profile.map(w=> total * (w/sumW));
+  const cum = monthly.map((_,i)=> monthly.slice(0,i+1).reduce((a,b)=>a+b,0));
+
+  // axes
+  const axis = (x1,y1,x2,y2)=>svg.insertAdjacentHTML('beforeend',`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="axis"/>`);
+  axis(pad,H-pad,W-pad,H-pad); axis(pad,pad,pad,H-pad);
+  for(let i=0;i<4;i++){
+    const y=pad + i*(H-2*pad)/3; svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+    const v=(total*(1 - i/3)).toFixed(0);
+    svg.insertAdjacentHTML('beforeend', `<text x="8" y="${y+4}" class="reftext">${v} MNOK</text>`);
+  }
+  // lines: monthly (bars) + cumulative (line)
+  const maxY = total*1.05;
+  const bw=(W-2*pad)/months * 0.6;
+  monthly.forEach((val,i)=>{
+    const x = pad + (i+0.2)*(W-2*pad)/months;
+    const h = (val/maxY)*(H-2*pad);
+    const y = H-pad-h;
+    svg.insertAdjacentHTML('beforeend', `<rect x="${x}" y="${y}" width="${bw}" height="${h}" class="bar" fill="#74aeea"/>`);
+    if((i+1)%3===0) svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${H-pad+16}" text-anchor="middle" class="reftext">M${i+1}</text>`);
+  });
+  let d=''; cum.forEach((val,i)=>{
+    const x = pad + (i+0.5)*(W-2*pad)/months;
+    const y = H-pad - (val/maxY)*(H-2*pad);
+    d+=(i?' L ':'M ')+x+','+y;
+  });
+  svg.insertAdjacentHTML('beforeend', `<path d="${d}" stroke="#19c5be" fill="none" stroke-width="2.5"/>`);
+}
+
+/* ---------------------- CAPEX Table ---------------------- */
+const tb = $('#tbl tbody');
+function renderTable(){
+  tb.innerHTML='';
+  const q = $('#search').value.trim().toLowerCase();
+  const fUnit = $('#fUnit').value;
+  const fSource = $('#fSource').value;
+  const fClass = $('#fClass').value;
+
+  const filtered = rows.filter(r=>{
+    const text = [r.item,r.notes,r.vendor,r.wbs,r.ref,r.unit,r.aaceClass,r.source].join(' ').toLowerCase();
+    const passQ = q? text.includes(q) : true;
+    const passU = fUnit==='ALL' ? true : r.unit===fUnit || (fUnit==='INDIR' && r.type==='I');
+    const passS = fSource==='ALL' ? true : r.source===fSource;
+    const passC = fClass==='ALL' ? true : r.aaceClass===fClass;
+    return passQ && passU && passS && passC;
+  });
+
+  filtered.forEach((r,i)=>{
+    const baseMNOK = (r.type==='I' && r.source==='PARAM') ? 0 : (r.unitPrice*r.qty)/1e6;
+    const srcClass = r.source==='QUOTE'?'src-quote': r.source==='BENCH'?'src-bm': r.source==='PARAM'?'src-param':'src-man';
+    const tr=document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${r.wbs}</td>
+      <td><span class="tag">${r.unit}</span></td>
+      <td>${escapeHtml(r.item)}</td>
+      <td>${r.qty}</td>
+      <td>${r.uom}</td>
+      <td>${r.type==='I' && r.source==='PARAM' ? (r.unitPrice*100).toFixed(1)+'%' : Math.round(r.unitPrice/1e6)}</td>
+      <td><strong>${Math.round(baseMNOK)}</strong></td>
+      <td>${r.type}</td>
+      <td><span class="badge ${srcClass}">${r.source}</span></td>
+      <td>${escapeHtml(r.ref)}</td>
+      <td>${escapeHtml(r.vendor||'—')}</td>
+      <td>${r.date}</td>
+      <td>${r.aaceClass}</td>
+      <td>${escapeHtml(r.notes||'')}</td>
+    `;
+    tr.addEventListener('click', ()=>{ selectedId = r.id; highlightSelection(tr); });
+    tb.appendChild(tr);
+  });
+
+  renderKPIs();
+  drawBars('#byUnit', byUnitData().sort((a,b)=>b.val-a.val).slice(0,8), 'Top Units (MNOK, direct)');
+  drawBars('#byCostType', byCostTypeData(), 'Direct vs Indirect (MNOK)');
+  drawSCurve();
+}
+
+function highlightSelection(tr){
+  $('#tbl tbody tr.selected')?.classList.remove('selected');
+  tr.classList.add('selected');
+}
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ---------------------- Add / Edit / Delete ---------------------- */
+$('#btnAdd').addEventListener('click', ()=>{
+  const wbs = prompt('WBS (e.g., 1.1)'); if(!wbs) return;
+  const unit = prompt('Unit (e.g., ELX, COMP, INDIR)'); if(!unit) return;
+  const item = prompt('Item description'); if(!item) return;
+  const qty  = +prompt('Quantity', '1')||1;
+  const uom  = prompt('UoM','lot')||'lot';
+  const type = prompt('Type D/I','D')||'D';
+  const source=prompt('Source QUOTE/BENCH/PARAM/MANUAL','MANUAL')||'MANUAL';
+  const unitPrice = +prompt(source==='PARAM'&&type==='I' ? 'Enter fraction of direct (e.g., 0.08 for 8%)' : 'Unit price (NOK)','0')||0;
+  const ref = prompt('Reference (quote # / benchmark code / model id)','—')||'—';
+  const vendor = prompt('Vendor/Source','—')||'—';
+  const date = prompt('Date (YYYY-MM-DD)', new Date().toISOString().slice(0,10))||new Date().toISOString().slice(0,10);
+  const aaceClass = prompt('AACE Class (Class 1..5)','Class 4')||'Class 4';
+  const notes = prompt('Notes','')||'';
+  rows.push({id:uid(), wbs, unit, item, qty, uom, unitPrice, type, source, ref, vendor, date, aaceClass, notes});
+  addAudit(`Added ${item} (${unit})`);
+  ensureUnitFilterOptions();
+  renderTable();
+});
+
+$('#btnEdit').addEventListener('click', ()=>{
+  if(!selectedId){ alert('Select a row first.'); return; }
+  const it = rows.find(r=>r.id===selectedId);
+  const item = prompt('Edit item', it.item); if(item===null) return; it.item=item;
+  const unitPrice = +prompt('Edit unit price (NOK or fraction if PARAM+I)', it.unitPrice); if(!isNaN(unitPrice)) it.unitPrice=unitPrice;
+  const notes = prompt('Notes', it.notes||''); if(notes!==null) it.notes=notes;
+  addAudit(`Edited ${it.item} (${it.unit})`);
+  renderTable();
+});
+
+$('#btnDelete').addEventListener('click', ()=>{
+  if(!selectedId){ alert('Select a row first.'); return; }
+  const it = rows.find(r=>r.id===selectedId);
+  if(confirm(`Delete ${it.item}?`)){
+    rows = rows.filter(r=>r.id!==selectedId);
+    addAudit(`Deleted ${it.item} (${it.unit})`);
+    selectedId = null; renderTable();
+  }
+});
+
+/* ---------------------- Search & Filters ---------------------- */
+$('#btnFind').addEventListener('click', renderTable);
+$('#search').addEventListener('keydown', e=>{ if(e.key==='Enter') renderTable(); });
+$('#btnClearFilters').addEventListener('click', ()=>{
+  $('#search').value=''; $('#fUnit').value='ALL'; $('#fSource').value='ALL'; $('#fClass').value='ALL'; renderTable();
+});
+
+function ensureUnitFilterOptions(){
+  const sel=$('#fUnit'); const cur=sel.value;
+  sel.innerHTML='<option value="ALL">All</option>';
+  const units = Array.from(new Set(rows.map(r=>r.type==='I'?'INDIR':r.unit)));
+  units.forEach(u=>{ const op=document.createElement('option'); op.value=u; op.textContent=u; sel.appendChild(op); });
+  sel.value = units.includes(cur)? cur:'ALL';
+}
+
+/* ---------------------- Assumptions & Events ---------------------- */
+$('#btnApply').addEventListener('click', ()=>{ renderKPIs(); drawSCurve(); });
+$('#btnReset').addEventListener('click', ()=>{
+  $('#baseYear').value='2025'; $('#escIdx').value='3.0'; $('#fxUSD').value='0.095'; $('#fxEUR').value='0.088';
+  $('#cur').value='NOK'; $('#contMode').value='Auto by AACE'; $('#contPct').value='10'; $('#contPct').disabled=true; renderTable();
+});
+$('#contMode').addEventListener('change', ()=>{
+  const manual = $('#contMode').value==='Manual %';
+  $('#contPct').disabled = !manual;
+  $('#contLbl').textContent = manual ? 'Manual %' : 'Manual %';
+  renderKPIs(); drawSCurve();
+});
+$('#cur').addEventListener('change', ()=>{ renderKPIs(); });
+
+/* ---------------------- Exports & Print ---------------------- */
+$('#btnCSV').addEventListener('click', ()=>{
+  const headers = ['ID','WBS','Unit','Item','Qty','UoM','UnitPrice(NOK or frac)','Type','Source','Ref','Vendor','Date','AACE Class','Notes'];
+  const lines = [headers.join(',')].concat(rows.map(r=>[
+    r.id,r.wbs,escCSV(r.unit),escCSV(r.item),r.qty,r.uom,r.unitPrice,r.type,r.source,escCSV(r.ref),escCSV(r.vendor||''),r.date,r.aaceClass,escCSV(r.notes||'')
+  ].join(',')));
+  download(lines.join('\n'),'seidr_capex.csv','text/csv');
+});
+$('#btnJSON').addEventListener('click', ()=>{ download(JSON.stringify(rows,null,2),'seidr_capex.json','application/json'); });
+$('#btnPrint').addEventListener('click', ()=>{ window.print(); });
+function escCSV(s){ return `"${(s||'').replace(/"/g,'""')}"`; }
+function download(data,name,type){ const blob=new Blob([data],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url); }
+
+/* ---------------------- Audit Trail ---------------------- */
+const auditBody = $('#auditTbl tbody');
+function addAudit(msg){
+  const tr=document.createElement('tr');
+  const when = new Date().toISOString().replace('T',' ').slice(0,16);
+  tr.innerHTML = `<td>${uid()}</td><td>${escapeHtml(msg)}</td><td>user@seidr</td><td>${when}</td>`;
+  auditBody.appendChild(tr);
+}
+
+/* ---------------------- Boot ---------------------- */
+function boot(){
+  // populate unit filter
+  ensureUnitFilterOptions();
+  // fill items table
+  renderTable();
+  // seed audit
+  addAudit('Initial dataset loaded (mock)');
+}
+boot();
+</script>
+</body>
+</html>

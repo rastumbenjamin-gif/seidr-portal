@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — Gatekeeper: Portfolio Board & Scoring</title>
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --warn:#f59e52; --blue:#74aeea; --grey:#7f8b95;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
+       font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  .crumb{color:var(--muted);font-size:13px}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;max-width:1720px;margin:0 auto;padding:18px}
+  .left{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h1{margin:.2rem 0 .8rem;font-size:28px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+  .stack{display:flex;gap:8px;flex-wrap:wrap}
+  .muted{color:var(--muted)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
+  .legend{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;font-size:13px}
+  .lg{display:flex;align-items:center;gap:8px}
+  .sw{width:14px;height:14px;border-radius:4px;border:1px solid var(--line)}
+  .row{display:flex;gap:10px;align-items:center}
+  input[type="range"]{width:100%}
+  input[type="text"], select, input[type="number"]{width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)}
+  label{display:block;font-size:12px;color:var(--muted);margin:6px 0 4px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:4px 8px;font-size:12px}
+
+  /* right side */
+  .right{display:grid;grid-template-rows:auto auto 1fr;gap:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .panel-body{padding:10px 12px}
+
+  /* summary tiles */
+  .tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+  .tile{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px}
+  .tile .k{font-size:12px;color:var(--muted)}
+  .tile .v{font-size:22px;font-weight:800}
+
+  /* table */
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left;vertical-align:middle}
+  th{color:var(--muted);font-weight:600;user-select:none;cursor:pointer}
+  tr:hover{background:rgba(25,197,190,.06)}
+  .st{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
+  .st.red{color:#1b0d0b;background:rgba(239,140,122,.9)}
+  .st.amber{color:#1c1406;background:#f6c947}
+  .st.green{color:#0f2018;background:#57d39b}
+  .bar{height:8px;background:#1c2a33;border-radius:999px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,#19c5be,#57d39b)}
+  .prog{height:8px;background:#1c2330;border-radius:999px;overflow:hidden}
+  .prog>i{display:block;height:100%;background:#74aeea}
+  .tag{display:inline-block;margin:2px 4px 0 0;padding:3px 6px;border-radius:8px;background:#0e1820;border:1px solid var(--line);font-size:11px;color:var(--muted)}
+  .act{display:flex;gap:6px}
+
+  /* drawer */
+  dialog{border:none;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.55);padding:0;width:min(980px,96vw)}
+  dialog::backdrop{background:rgba(2,6,23,.6)}
+  .drawer{display:grid;grid-template-columns:380px 1fr}
+  .drawer .left{padding:14px;border-right:1px solid var(--line)}
+  .drawer .right{padding:14px}
+  .sec{margin-top:10px}
+  .sec h3{margin:0 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .radar{width:280px;height:220px}
+  .btn.small{padding:6px 10px;font-weight:700;border-radius:8px}
+  .warn{color:var(--warn)}
+  .ok{color:var(--green)}
+
+  @media (max-width:1200px){.wrap{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>SEIDR</strong> <span class="crumb">/ Gatekeeper / Portfolio Board</span></div>
+    <div class="stack"><a class="btn" href="#">Back to Map</a><button class="btn" onclick="exportCSV()">Export CSV</button></div>
+  </div>
+
+  <div class="wrap">
+    <!-- LEFT -->
+    <div class="left">
+      <div class="card">
+        <h1>Portfolio Board</h1>
+        <div class="muted">DG0/DG1 screening — evidence-backed R/A/G decisions</div>
+        <div class="legend">
+          <div class="lg"><span class="sw" style="background:#ef8c7a"></span><span>Red (No-Go)</span></div>
+          <div class="lg"><span class="sw" style="background:#f6c947"></span><span>Amber (Mitigate)</span></div>
+          <div class="lg"><span class="sw" style="background:#57d39b"></span><span>Green (Proceed)</span></div>
+          <div class="lg"><span class="sw" style="background:#19c5be"></span><span>Score weight</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Filters</h2>
+        <label>Search</label>
+        <input id="q" type="text" placeholder="Project, zone, tag…"/>
+        <div class="two">
+          <div>
+            <label>Zone</label>
+            <select id="zone">
+              <option value="">All</option>
+              <option>NO1</option>
+              <option>NO2</option>
+              <option>SE3</option>
+              <option>DK1</option>
+              <option>FI</option>
+            </select>
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="status">
+              <option value="">All</option>
+              <option value="red">Red</option>
+              <option value="amber">Amber</option>
+              <option value="green">Green</option>
+            </select>
+          </div>
+        </div>
+        <div class="two">
+          <div>
+            <label>Min evidence %</label>
+            <input id="minEv" type="range" min="0" max="100" value="0" oninput="this.nextElementSibling.textContent=this.value+'%'"/>
+            <div class="muted">0%</div>
+          </div>
+          <div>
+            <label>Min score</label>
+            <input id="minScore" type="range" min="0" max="100" value="0" oninput="this.nextElementSibling.textContent=this.value"/>
+            <div class="muted">0</div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <label class="chip"><input id="onlyMustPass" type="checkbox" style="accent-color:var(--teal)"/> Only MUST pass</label>
+          <label class="chip"><input id="mitigationOnly" type="checkbox" style="accent-color:var(--teal)"/> Ambers with mitigation</label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Score Weights</h2>
+        <div id="weights"></div>
+        <div class="muted" style="margin-top:6px">Weights auto-normalize to 100%. Power 30 • Site 25 • Logistics 20 • Water 15 • Compliance 10 (defaults)</div>
+      </div>
+
+      <div class="card">
+        <h2>ROI Baselines</h2>
+        <div class="two">
+          <div>
+            <label>DG0 late-kill baseline (€)</label>
+            <input id="blDG0" type="number" value="80000"/>
+          </div>
+          <div>
+            <label>Seidr proof cost/kill (€)</label>
+            <input id="proofCost" type="number" value="10000"/>
+          </div>
+        </div>
+        <div class="two">
+          <div>
+            <label>Loaded FTE rate (€/yr)</label>
+            <input id="fteRate" type="number" value="150000"/>
+          </div>
+          <div>
+            <label>Hours saved / kill</label>
+            <input id="hrsPerKill" type="number" value="200"/>
+          </div>
+        </div>
+        <div class="two">
+          <div>
+            <label>Capex for time value (€)</label>
+            <input id="capex" type="number" value="100000000"/>
+          </div>
+          <div>
+            <label>WACC (%)</label>
+            <input id="wacc" type="number" value="6"/>
+          </div>
+        </div>
+        <div class="two">
+          <div>
+            <label>Months pulled forward (per winner)</label>
+            <input id="months" type="number" value="2"/>
+          </div>
+          <div class="row" style="align-items:center;margin-top:22px">
+            <label class="chip"><input id="countTime" type="checkbox" checked style="accent-color:var(--teal)"/> Count time value</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Policy Profile</h2>
+        <div class="row">
+          <label class="chip"><input type="radio" name="pol" value="monthly" checked style="accent-color:var(--teal)"/> RFNBO — monthly</label>
+          <label class="chip"><input type="radio" name="pol" value="hourly" style="accent-color:var(--teal)"/> RFNBO — hourly</label>
+        </div>
+        <div class="muted" style="margin-top:6px">Compliance subscore tightens under hourly profile.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+      <div class="panel">
+        <div class="panel-head">
+          <div><strong>Portfolio Summary</strong> <span class="crumb">auto-updates with filters/decisions</span></div>
+          <div class="stack"><button class="btn" onclick="resetDecisions()">Reset decisions</button></div>
+        </div>
+        <div class="panel-body">
+          <div class="tiles" id="tiles"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><strong>Board</strong> <span class="crumb">Click a row for details • Click column to sort</span></div>
+          <div class="stack">
+            <button class="btn" onclick="bulkSet('kill')">Mark selected Kill</button>
+            <button class="btn" onclick="bulkSet('go')">Mark selected Go</button>
+            <button class="btn" onclick="bulkSet('defer')">Mark selected Defer</button>
+          </div>
+        </div>
+        <div class="panel-body" style="overflow:auto;max-height:520px">
+          <table id="board">
+            <thead>
+              <tr>
+                <th data-k="sel">▢</th>
+                <th data-k="status">Status</th>
+                <th data-k="name">Project</th>
+                <th data-k="score">Score</th>
+                <th data-k="must">MUST</th>
+                <th data-k="evidence">Evidence %</th>
+                <th data-k="grid">Grid</th>
+                <th data-k="hh">HH Route</th>
+                <th data-k="water">Water</th>
+                <th data-k="capex">CAPEX P50</th>
+                <th data-k="lcoh">LCOH P50</th>
+                <th data-k="t2">Time→DG2</th>
+                <th data-k="decision">Decision</th>
+                <th data-k="actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><strong>Decision Log (preview)</strong> <span class="crumb">immutable entries at conversion</span></div>
+          <div class="stack"><button class="btn" onclick="exportLog()">Export Log</button></div>
+        </div>
+        <div class="panel-body" style="max-height:240px;overflow:auto">
+          <table id="log"><thead><tr><th>When</th><th>Project</th><th>Decision</th><th>Codes</th><th>Rationale</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer modal -->
+  <dialog id="drawer">
+    <div class="drawer">
+      <div class="left">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><strong id="dTitle">Project</strong> <span id="dZone" class="pill"></span></div>
+          <button class="btn small" onclick="closeDrawer()">Close</button>
+        </div>
+        <div class="sec">
+          <h3>Score</h3>
+          <div class="row" style="gap:14px;align-items:center">
+            <div class="radar"><svg id="radar" viewBox="0 0 280 220"></svg></div>
+            <div>
+              <div class="row" style="gap:8px"><span class="chip">Power <b id="pwrV">—</b></span><span class="chip">Site <b id="siteV">—</b></span></div>
+              <div class="row" style="gap:8px;margin-top:6px"><span class="chip">Logistics <b id="logV">—</b></span><span class="chip">Water <b id="watV">—</b></span></div>
+              <div class="row" style="gap:8px;margin-top:6px"><span class="chip">Compliance <b id="cmpV">—</b></span></div>
+            </div>
+          </div>
+          <div class="bar" style="margin-top:8px"><i id="scoreBar" style="width:0%"></i></div>
+        </div>
+        <div class="sec">
+          <h3>Flags</h3>
+          <div id="flags"></div>
+        </div>
+        <div class="sec">
+          <h3>Evidence</h3>
+          <div id="evid"></div>
+          <div class="muted" style="margin-top:4px">Attach docs in real app; this mock toggles presence.</div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="two">
+          <div class="card" style="background:var(--panel-2)">
+            <div class="muted">Grid</div>
+            <div id="dGrid">—</div>
+          </div>
+          <div class="card" style="background:var(--panel-2)">
+            <div class="muted">Logistics</div>
+            <div id="dHH">—</div>
+          </div>
+          <div class="card" style="background:var(--panel-2)">
+            <div class="muted">Water</div>
+            <div id="dWater">—</div>
+          </div>
+          <div class="card" style="background:var(--panel-2)">
+            <div class="muted">Commercial</div>
+            <div id="dComm">—</div>
+          </div>
+        </div>
+        <div class="sec">
+          <h3>What adds +10</h3>
+          <ul id="adds10" class="muted"></ul>
+        </div>
+        <div class="sec">
+          <h3>Decision</h3>
+          <div class="row" style="gap:8px">
+            <button class="btn small" onclick="applyDecision('go')">Mark Go (Builder)</button>
+            <button class="btn small" onclick="applyDecision('defer')">Defer</button>
+            <button class="btn small" onclick="applyDecision('kill')">Kill</button>
+          </div>
+          <div class="muted" style="margin-top:6px">Decision will appear in the log and update ROI tiles.</div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+<script>
+/********************
+ * Demo Data
+ ********************/
+const data = [
+  {id:'NO1-Raven-SE-03', name:'Raven-SE-03', zone:'NO1', subs:{power:88,site:78,logistics:80,water:70,compliance:90}, must:[], evidence:92,
+    grid:{kv:132, distKm:3.8, queueMo:18, letter:true}, hh:{ok:true, note:'BK via E18'}, water:{src:'River', km:1.4, secured:true},
+    capex:595, lcoh:42, t2:9, tags:['port','brownfield'], offtake:'LOI draft', decision:null },
+  {id:'NO1-Fjord-N-11', name:'Fjord-N-11', zone:'NO1', subs:{power:76,site:60,logistics:68,water:85,compliance:75}, must:[], evidence:88,
+    grid:{kv:132, distKm:6.2, queueMo:28, letter:true}, hh:{ok:true, note:'Detour 12 km; bridge OK'}, water:{src:'Municipal', km:2.8, secured:false},
+    capex:640, lcoh:45, t2:10, tags:['greenfield'], offtake:'None', decision:null },
+  {id:'NO1-Valley-W-07', name:'Valley-W-07', zone:'NO1', subs:{power:52,site:40,logistics:20,water:62,compliance:55}, must:['HH bridge axle limit'], evidence:64,
+    grid:{kv:66, distKm:9.7, queueMo:36, letter:false}, hh:{ok:false, note:'BK limit on primary bridge'}, water:{src:'Wellfield', km:3.5, secured:false},
+    capex:670, lcoh:47, t2:null, tags:['inland'], offtake:'None', decision:'kill' },
+  {id:'NO1-Delta-E-02', name:'Delta-E-02', zone:'NO1', subs:{power:84,site:72,logistics:86,water:60,compliance:80}, must:[], evidence:91,
+    grid:{kv:132, distKm:2.2, queueMo:22, letter:true}, hh:{ok:true, note:'Port 9 km; no height limits'}, water:{src:'River', km:4.2, secured:true},
+    capex:610, lcoh:43, t2:8, tags:['port'], offtake:'MoU in progress', decision:'go' },
+  {id:'SE3-Baltic-04', name:'Baltic-04', zone:'SE3', subs:{power:72,site:65,logistics:58,water:52,compliance:78}, must:[], evidence:82,
+    grid:{kv:130, distKm:8.2, queueMo:24, letter:true}, hh:{ok:true, note:'Winter access risk'}, water:{src:'River', km:5.0, secured:false},
+    capex:630, lcoh:44, t2:12, tags:['cold'], offtake:'LOI', decision:null },
+  {id:'DK1-Jutland-09', name:'Jutland-09', zone:'DK1', subs:{power:69,site:64,logistics:75,water:66,compliance:72}, must:[], evidence:86,
+    grid:{kv:150, distKm:4.5, queueMo:20, letter:true}, hh:{ok:true, note:'No bridge limits'}, water:{src:'Municipal', km:2.1, secured:true},
+    capex:605, lcoh:43, t2:9, tags:['export'], offtake:'Term sheet', decision:null },
+  {id:'FI-Lake-12', name:'Lake-12', zone:'FI', subs:{power:58,site:55,logistics:44,water:90,compliance:68}, must:['Laydown shortfall'], evidence:70,
+    grid:{kv:110, distKm:7.5, queueMo:30, letter:false}, hh:{ok:true, note:'Seasonal road'}, water:{src:'Lake', km:0.8, secured:true},
+    capex:620, lcoh:46, t2:null, tags:['water-rich'], offtake:'None', decision:null },
+  {id:'NO2-Fjord-22', name:'Fjord-22', zone:'NO2', subs:{power:81,site:74,logistics:66,water:64,compliance:83}, must:[], evidence:89,
+    grid:{kv:132, distKm:3.1, queueMo:18, letter:true}, hh:{ok:true, note:'Tunnel route OK'}, water:{src:'River', km:2.2, secured:true},
+    capex:600, lcoh:42, t2:7, tags:['port'], offtake:'MoU', decision:null },
+  {id:'NO1-Inner-35', name:'Inner-35', zone:'NO1', subs:{power:61,site:59,logistics:52,water:58,compliance:60}, must:['RFNBO profile fail'], evidence:68,
+    grid:{kv:66, distKm:10.0, queueMo:34, letter:false}, hh:{ok:true, note:'Long detour'}, water:{src:'Ground', km:4.0, secured:false},
+    capex:650, lcoh:48, t2:null, tags:['rural'], offtake:'None', decision:null },
+  {id:'SE3-Coast-07', name:'Coast-07', zone:'SE3', subs:{power:83,site:77,logistics:74,water:81,compliance:85}, must:[], evidence:94,
+    grid:{kv:145, distKm:2.6, queueMo:16, letter:true}, hh:{ok:true, note:'Port 5 km'}, water:{src:'Sea', km:1.2, secured:true},
+    capex:590, lcoh:41, t2:8, tags:['export'], offtake:'LOI', decision:null },
+  {id:'DK1-Inland-02', name:'Inland-02', zone:'DK1', subs:{power:55,site:58,logistics:40,water:61,compliance:62}, must:['HH height limit'], evidence:60,
+    grid:{kv:110, distKm:9.0, queueMo:26, letter:false}, hh:{ok:false, note:'Height limit at bridge'}, water:{src:'River', km:1.9, secured:true},
+    capex:645, lcoh:47, t2:null, tags:['inland'], offtake:'None', decision:'kill' }
+];
+
+/********************
+ * Weights & Scoring
+ ********************/
+const defaultWeights = {power:30, site:25, logistics:20, water:15, compliance:10};
+let weights = {...defaultWeights};
+
+function renderWeights(){
+  const el = document.getElementById('weights');
+  el.innerHTML = '';
+  Object.keys(weights).forEach(k=>{
+    const wrap = document.createElement('div');
+    wrap.style.margin = '6px 0';
+    wrap.innerHTML = `<label style="display:flex;justify-content:space-between"><span>${k[0].toUpperCase()+k.slice(1)}</span><span><b id="w_${k}">${weights[k]}</b>%</span></label>
+    <input type="range" min="0" max="50" value="${weights[k]}" oninput="updateWeight('${k}', this.value)"/>`;
+    el.appendChild(wrap);
+  });
+}
+function updateWeight(k,v){
+  weights[k] = +v; // renormalize
+  const sum = Object.values(weights).reduce((a,b)=>a+b,0) || 1;
+  Object.keys(weights).forEach(key=>{
+    weights[key] = Math.round(weights[key] / sum * 100);
+    document.getElementById('w_'+key).textContent = weights[key];
+  });
+  refresh();
+}
+
+function totalScore(subs){
+  const pol = document.querySelector('input[name="pol"]:checked').value;
+  const adj = {...subs};
+  if(pol==='hourly') adj.compliance = Math.max(0, Math.round(adj.compliance * 0.9));
+  const wsum = Object.values(weights).reduce((a,b)=>a+b,0) || 100;
+  let s=0; Object.keys(adj).forEach(k=>{ s += (adj[k]||0) * (weights[k]/wsum); });
+  return Math.round(s);
+}
+
+/********************
+ * Filters & Sorting
+ ********************/
+let sortKey = 'score';
+let sortDir = -1; // desc
+
+function applyFilters(rows){
+  const q = document.getElementById('q').value.toLowerCase();
+  const zone = document.getElementById('zone').value;
+  const statusF = document.getElementById('status').value;
+  const minEv = +document.getElementById('minEv').value;
+  const minScore = +document.getElementById('minScore').value;
+  const onlyMust = document.getElementById('onlyMustPass').checked;
+  const mitOnly = document.getElementById('mitigationOnly').checked;
+
+  return rows.filter(r=>{
+    if(zone && r.zone!==zone) return false;
+    if(q && !(r.name.toLowerCase().includes(q) || (r.tags||[]).some(t=>t.includes(q)))) return false;
+    if(r.evidence < minEv) return false;
+    if(r.score < minScore) return false;
+    if(statusF && r.status!==statusF) return false;
+    if(onlyMust && r.must.length>0) return false;
+    if(mitOnly && !(r.mitigations && r.mitigations.length)) return false;
+    return true;
+  });
+}
+
+function sortRows(rows){
+  return rows.sort((a,b)=>{
+    let va=a[sortKey], vb=b[sortKey];
+    if(sortKey==='grid'){va=a.grid.queueMo; vb=b.grid.queueMo}
+    if(sortKey==='hh'){va=a.hh.ok?1:0; vb=b.hh.ok?1:0}
+    if(sortKey==='water'){va=a.water.km; vb=b.water.km}
+    if(va<vb) return -1*sortDir; if(va>vb) return 1*sortDir; return 0;
+  });
+}
+
+/********************
+ * Render Board
+ ********************/
+function statusFrom(row){
+  if(row.must.length>0) return 'red';
+  if(row.score>=75) return 'green';
+  if(row.score>=60) return 'amber';
+  return 'red';
+}
+
+let rows = [];
+function computeRows(){
+  rows = data.map(d=>{
+    const score = totalScore(d.subs);
+    const status = statusFrom({...d,score});
+    return {...d, score, status};
+  });
+}
+
+function renderBoard(){
+  const tbody = document.querySelector('#board tbody');
+  tbody.innerHTML='';
+  const filtered = sortRows(applyFilters(rows));
+  filtered.forEach((r,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" data-id="${r.id}"/></td>
+      <td><span class="st ${r.status}">${r.status.toUpperCase()}</span></td>
+      <td><div style="display:flex;flex-direction:column"><strong>${r.name}</strong><span class="muted">${r.zone} • ${r.tags?.join(', ')||''}</span></div></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px"><div class="bar" style="width:120px"><i style="width:${r.score}%"></i></div><b>${r.score}</b></div>
+      </td>
+      <td>${r.must.length? `<span class="warn">${r.must.length} fail</span>`: '<span class="ok">Pass</span>'}</td>
+      <td><div class="prog" style="width:100px"><i style="width:${r.evidence}%"></i></div> <span class="muted">${r.evidence}%</span></td>
+      <td><span class="muted">${r.grid.kv} kV</span> • ${r.grid.distKm} km • ${r.grid.queueMo} mo</td>
+      <td>${r.hh.ok? 'OK':'Risk'} <span class="muted">${r.hh.note}</span></td>
+      <td>${r.water.src} • ${r.water.km} km • ${r.water.secured? 'Secured':'Unsec'}</td>
+      <td>${r.capex} MNOK</td>
+      <td>${r.lcoh} NOK/kg</td>
+      <td>${r.t2? r.t2+' mo':'—'}</td>
+      <td>
+        <select data-id="${r.id}" onchange="setDecision(this)" style="background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:4px">
+          <option value="" ${!r.decision?'selected':''}>—</option>
+          <option value="go" ${r.decision==='go'?'selected':''}>Go</option>
+          <option value="defer" ${r.decision==='defer'?'selected':''}>Defer</option>
+          <option value="kill" ${r.decision==='kill'?'selected':''}>Kill</option>
+        </select>
+      </td>
+      <td class="act">
+        <button class="btn small" onclick="openDrawer('${r.id}')">View</button>
+        <button class="btn small" onclick="archive('${r.id}')">Archive</button>
+        <button class="btn small" onclick="toBuilder('${r.id}')">→ Builder</button>
+      </td>`;
+    tr.addEventListener('click',(e)=>{ if(e.target.tagName!=='SELECT' && e.target.type!=='checkbox' && !e.target.classList.contains('btn')) openDrawer(r.id); });
+    tbody.appendChild(tr);
+  });
+}
+
+/********************
+ * Summary Tiles & ROI
+ ********************/
+function sumTiles(){
+  const tiles = document.getElementById('tiles');
+  const filtered = applyFilters(rows);
+  const total = filtered.length;
+  const reds = filtered.filter(r=>r.status==='red').length;
+  const ambers = filtered.filter(r=>r.status==='amber').length;
+  const greens = filtered.filter(r=>r.status==='green').length;
+  const decisions = data.filter(d=>['kill','go','defer'].includes(d.decision));
+  const kills = decisions.filter(d=>d.decision==='kill').length;
+  const winners = decisions.filter(d=>d.decision==='go').length;
+
+  // ROI
+  const blDG0 = +document.getElementById('blDG0').value||0;
+  const proofCost = +document.getElementById('proofCost').value||0;
+  const fteRate = +document.getElementById('fteRate').value||0;
+  const hrsPerKill = +document.getElementById('hrsPerKill').value||0;
+  const capex = +document.getElementById('capex').value||0;
+  const wacc = (+document.getElementById('wacc').value||0)/100;
+  const months = +document.getElementById('months').value||0;
+  const countTime = document.getElementById('countTime').checked;
+
+  const hard = Math.max(0, kills * (blDG0 - proofCost));
+  const fte = (kills * hrsPerKill) * (fteRate/ (1600)); // 1600 h/yr approx
+  const time = countTime ? (winners * capex * wacc * (months/12)) : 0;
+
+  tiles.innerHTML = `
+    <div class="tile"><div class="k">Screens (filtered)</div><div class="v">${total}</div></div>
+    <div class="tile"><div class="k">Red / Amber / Green</div><div class="v">${reds} / ${ambers} / ${greens}</div></div>
+    <div class="tile"><div class="k">Decisions (Go/Defer/Kill)</div><div class="v">${winners} / ${decisions.filter(d=>d.decision==='defer').length} / ${kills}</div></div>
+    <div class="tile"><div class="k">Hard € saved</div><div class="v">€${fmt(hard)}</div></div>
+    <div class="tile"><div class="k">FTE value</div><div class="v">€${fmt(fte)}</div></div>
+    <div class="tile"><div class="k">Time value</div><div class="v">€${fmt(time)}</div></div>`;
+}
+
+function fmt(n){
+  try{ return new Intl.NumberFormat('en-GB',{maximumFractionDigits:0}).format(n);}catch(_){return n}
+}
+
+/********************
+ * Drawer (detail)
+ ********************/
+let current = null;
+function openDrawer(id){
+  current = rows.find(r=>r.id===id);
+  const d = current;
+  document.getElementById('dTitle').textContent = d.name;
+  const z=document.getElementById('dZone'); z.textContent=d.zone; z.style.display='inline-block';
+  // flags
+  const fl = document.getElementById('flags');
+  fl.innerHTML='';
+  if(d.must.length){ d.must.forEach(m=> fl.innerHTML+=`<span class="tag" style="border-color:#5b2b25;color:#ef8c7a">${m}</span>`); }
+  if(!d.must.length) fl.innerHTML='<span class="tag">No MUST fails</span>';
+  // evidence
+  const ev = document.getElementById('evid');
+  ev.innerHTML = `<label class="chip"><input type="checkbox" ${d.grid.letter?'checked':''} onchange="toggleEvidence('grid')" style="accent-color:var(--teal)"/> Grid letter</label>
+                 <label class="chip"><input type="checkbox" ${d.hh.ok?'checked':''} onchange="toggleEvidence('hh')" style="accent-color:var(--teal)"/> HH route</label>
+                 <label class="chip"><input type="checkbox" ${d.water.secured?'checked':''} onchange="toggleEvidence('water')" style="accent-color:var(--teal)"/> Water path</label>`;
+  // cards
+  document.getElementById('dGrid').textContent = `${d.grid.kv} kV • ${d.grid.distKm} km • Queue ${d.grid.queueMo} mo`;
+  document.getElementById('dHH').textContent = `${d.hh.ok?'OK':'Risk'} • ${d.hh.note}`;
+  document.getElementById('dWater').textContent = `${d.water.src} • ${d.water.km} km • ${d.water.secured?'Secured':'Unsecured'}`;
+  document.getElementById('dComm').textContent = `${d.offtake}`;
+
+  // what adds +10
+  const adds = document.getElementById('adds10'); adds.innerHTML='';
+  const recs = [];
+  if(!d.grid.letter) recs.push('Obtain TSO/DSO grid letter with queue ≤ 24–30 mo');
+  if(!d.water.secured) recs.push('Secure water MOU + permit path');
+  if(!d.hh.ok) recs.push('Alternative HH corridor / bridge class proof');
+  if(d.evidence<90) recs.push('Reach ≥90% evidence completeness on MUST');
+  if(!recs.length) recs.push('Attach RFNBO calc + zoning planner note');
+  recs.forEach(r=>{ const li=document.createElement('li'); li.textContent=r; adds.appendChild(li);});
+
+  // radar
+  drawRadar(d.subs);
+  document.getElementById('scoreBar').style.width = d.score+'%';
+  document.getElementById('pwrV').textContent=d.subs.power;
+  document.getElementById('siteV').textContent=d.subs.site;
+  document.getElementById('logV').textContent=d.subs.logistics;
+  document.getElementById('watV').textContent=d.subs.water;
+  document.getElementById('cmpV').textContent=d.subs.compliance;
+
+  document.getElementById('drawer').showModal();
+}
+function closeDrawer(){ document.getElementById('drawer').close();}
+
+function toggleEvidence(kind){
+  if(!current) return;
+  if(kind==='grid') current.grid.letter = !current.grid.letter;
+  if(kind==='hh') current.hh.ok = !current.hh.ok;
+  if(kind==='water') current.water.secured = !current.water.secured;
+  // evidence % naive change
+  current.evidence = Math.min(100, Math.max(0, current.evidence + (event.target.checked? +4 : -4)));
+  refresh();
+}
+
+function drawRadar(subs){
+  const svg = document.getElementById('radar');
+  svg.innerHTML='';
+  const cx=140, cy=110, r=80;
+  const axes=['power','site','logistics','water','compliance'];
+  const pts = axes.map((k,i)=>{
+    const ang=(Math.PI*2/axes.length)*i - Math.PI/2;
+    const rr = r*(subs[k]/100);
+    return [cx + rr*Math.cos(ang), cy + rr*Math.sin(ang)];
+  });
+  // grid rings
+  for(let i=1;i<=4;i++){
+    const rr=r*(i/4);
+    const ring = axes.map((k,idx)=>{
+      const ang=(Math.PI*2/axes.length)*idx - Math.PI/2;
+      return [cx + rr*Math.cos(ang), cy + rr*Math.sin(ang)];
+    }).map(p=>p.join(',')).join(' ');
+    const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    poly.setAttribute('points', ring); poly.setAttribute('fill','none'); poly.setAttribute('stroke','#20303b');
+    svg.appendChild(poly);
+  }
+  // shape
+  const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
+  poly.setAttribute('fill','rgba(25,197,190,.35)'); poly.setAttribute('stroke','#19c5be');
+  svg.appendChild(poly);
+  // axis labels
+  axes.forEach((k,i)=>{
+    const ang=(Math.PI*2/axes.length)*i - Math.PI/2; const rr=r+16;
+    const x=cx + rr*Math.cos(ang), y=cy + rr*Math.sin(ang);
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',x); t.setAttribute('y',y); t.setAttribute('fill','#a7b2bb'); t.setAttribute('font-size','12'); t.setAttribute('text-anchor','middle');
+    t.textContent=k[0].toUpperCase()+k.slice(1); svg.appendChild(t);
+  });
+}
+
+/********************
+ * Decisions & Log
+ ********************/
+const log = [];
+function setDecision(sel){
+  const id = sel.getAttribute('data-id');
+  const row = data.find(d=>d.id===id); row.decision = sel.value || null;
+  pushLog(row, row.decision);
+  refresh();
+}
+function bulkSet(kind){
+  document.querySelectorAll('#board tbody input[type="checkbox"]:checked').forEach(cb=>{
+    const id = cb.getAttribute('data-id');
+    const row = data.find(d=>d.id===id); row.decision = kind;
+    pushLog(row, kind);
+  });
+  refresh();
+}
+function pushLog(row, kind){
+  if(!kind) return;
+  const now=new Date();
+  const codes = kind==='kill' ? (row.must.length? ['MUST_FAIL'] : ['STRATEGIC']) : kind==='defer' ? ['AMBER_NOT_CLEARED'] : ['GO'];
+  const rationale = kind==='kill' ? (row.must[0]||'Portfolio decision') : kind==='defer' ? 'Awaiting mitigation evidence' : 'Meets policy profile & evidence ≥90%';
+  log.unshift({ts: now.toISOString(), name: row.name, decision: kind.toUpperCase(), codes: codes.join(','), why: rationale});
+  renderLog();
+}
+function renderLog(){
+  const tb = document.querySelector('#log tbody'); tb.innerHTML='';
+  log.slice(0,20).forEach(e=>{
+    const tr=document.createElement('tr'); tr.innerHTML=`<td class="muted">${e.ts.slice(0,19).replace('T',' ')}</td><td>${e.name}</td><td>${e.decision}</td><td class="muted">${e.codes}</td><td class="muted">${e.why}</td>`; tb.appendChild(tr);
+  });
+}
+function resetDecisions(){ data.forEach(d=>d.decision=null); log.length=0; renderLog(); refresh(); }
+
+/********************
+ * Actions (mock)
+ ********************/
+function archive(id){ alert('Archived '+id+' (mock)'); }
+function toBuilder(id){ const row=data.find(d=>d.id===id); row.decision='go'; pushLog(row,'go'); refresh(); alert('Sent '+id+' to Builder (mock)'); }
+function exportCSV(){
+  const header=['id','name','zone','status','score','evidence','decision'];
+  const rowsOut = rows.map(r=>[r.id,r.name,r.zone,r.status,r.score,r.evidence,r.decision||''].join(','));
+  const blob=new Blob([[header.join(',')].concat(rowsOut).join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='seidr_portfolio.csv'; a.click(); URL.revokeObjectURL(url);
+}
+function exportLog(){
+  const header=['ts','project','decision','codes','rationale'];
+  const rowsOut = log.map(e=>[e.ts,e.name,e.decision,e.codes,e.why].join(','));
+  const blob=new Blob([[header.join(',')].concat(rowsOut).join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='seidr_decision_log.csv'; a.click(); URL.revokeObjectURL(url);
+}
+
+/********************
+ * Wiring
+ ********************/
+function refresh(){ computeRows(); renderBoard(); sumTiles(); }
+['q','zone','status','minEv','minScore','onlyMustPass','mitigationOnly'].forEach(id=> document.getElementById(id).addEventListener('input', refresh));
+Array.from(document.querySelectorAll('input[name="pol"]')).forEach(r=> r.addEventListener('change', refresh));
+
+Array.from(document.querySelectorAll('#board thead th')).forEach(th=>{
+  th.addEventListener('click',()=>{
+    const k = th.getAttribute('data-k'); if(!k) return; sortKey=k; sortDir*=-1; renderBoard();
+  });
+});
+
+renderWeights();
+refresh();
+</script>
+</body>
+</html>

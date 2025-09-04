@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — Off-take Integration Studies</title>
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --blue:#74aeea; --pink:#ea7ad6;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
+       font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  .crumb{color:var(--muted);font-size:13px}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;max-width:1840px;margin:0 auto;padding:18px}
+  .left{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h1{margin:.2rem 0 .8rem;font-size:28px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  h3{margin:10px 0 6px;font-size:13px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  label{display:block;margin:8px 0 6px}
+  input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)}
+  textarea{min-height:64px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 140px;gap:8px;align-items:center}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .btn-ghost{background:transparent}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
+  .muted{color:var(--muted)}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);cursor:pointer;font-weight:700}
+  .tab.active{outline:1px solid rgba(25,197,190,.5)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--panel)}
+  tr:hover{background:rgba(25,197,190,.06)}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .k{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .k strong{display:block;font-size:18px}
+  .rightGrid{display:grid;grid-template-rows:auto auto auto 1fr;gap:14px}
+  svg.chart{width:100%;height:300px;background:#0c141a;border-radius:12px}
+  .axis{stroke:#2b3b46;stroke-width:1}
+  .grid{stroke:#1a2530;stroke-width:.8}
+  .bar{rx:6;ry:6}
+  .reftext{fill:#a7b2bb;font-size:12px}
+  .risk-high{background:rgba(239,140,122,.16)}
+  .risk-med{background:rgba(246,201,71,.12)}
+  .risk-low{background:rgba(87,211,155,.12)}
+  .badge{padding:2px 6px;border-radius:999px;border:1px solid var(--line);font-size:11px}
+  .status-open{background:rgba(246,201,71,.16)}
+  .status-closed{background:rgba(87,211,155,.16)}
+  @media (max-width:1300px){ .wrap{grid-template-columns:1fr} .kpi{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>SEIDR</strong> <span class="crumb">/ Project Builder / Off-take Integration Studies</span></div>
+    <div class="stack">
+      <span class="pill">Site: Herøya North</span>
+      <a class="btn" href="./">Back</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- LEFT: Assumptions + Tabs -->
+    <div class="left">
+      <div class="card">
+        <h1>Off-take Integration</h1>
+        <div class="muted">Evaluate **pipeline**, **truck loading**, and **port** routes for hydrogen off-take. Compare capacity, cost, operability, and permitting risk.</div>
+      </div>
+
+      <div class="card">
+        <h2>Global Assumptions</h2>
+        <div class="row"><label>H₂ production (t/day)</label><input id="prodTpd" type="number" value="40"/></div>
+        <div class="row"><label>Availability (%)</label><input id="avail" type="number" value="92"/></div>
+        <div class="row"><label>Display currency</label><select id="cur"><option>NOK</option><option selected>EUR</option><option>USD</option></select></div>
+        <div class="row2">
+          <div class="row"><label>Electricity price (€/MWh)</label><input id="pElec" type="number" value="65"/></div>
+          <div class="row"><label>Carbon price (€/tCO₂e)</label><input id="pCO2" type="number" value="90"/></div>
+        </div>
+        <div class="stack" style="margin-top:6px">
+          <button id="btnApplyAll" class="btn">Apply</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Mode</h2>
+        <div class="tabs">
+          <button class="tab active" data-tab="pipeline">Pipeline</button>
+          <button class="tab" data-tab="trucks">Truck Loading</button>
+          <button class="tab" data-tab="port">Port / Marine</button>
+        </div>
+      </div>
+
+      <!-- PIPELINE PANEL -->
+      <div class="card mode" id="mode-pipeline">
+        <h2>Pipeline — Inputs</h2>
+        <div class="row3">
+          <div class="row"><label>Length (km)</label><input id="plLen" type="number" value="22"/></div>
+          <div class="row"><label>Inner Ø (mm)</label><input id="plDia" type="number" value="200"/></div>
+          <div class="row"><label>Roughness (mm)</label><input id="plEps" type="number" value="0.05"/></div>
+        </div>
+        <div class="row3">
+          <div class="row"><label>Inlet P (bar)</label><input id="plPin" type="number" value="80"/></div>
+          <div class="row"><label>Outlet P min (bar)</label><input id="plPout" type="number" value="50"/></div>
+          <div class="row"><label>Gas T (°C)</label><input id="plT" type="number" value="15"/></div>
+        </div>
+        <div class="row3">
+          <div class="row"><label>Route CAPEX (€/km)</label><input id="plCapexKm" type="number" value="1200000"/></div>
+          <div class="row"><label>Stations (booster PRV/filters) (€)</label><input id="plStations" type="number" value="3000000"/></div>
+          <div class="row"><label>OPEX (€/yr)</label><input id="plOpex" type="number" value="500000"/></div>
+        </div>
+        <div class="stack" style="margin-top:8px"><button id="btnCalcPipe" class="btn">Calculate Pipeline</button></div>
+      </div>
+
+      <!-- TRUCK PANEL -->
+      <div class="card mode" id="mode-trucks" style="display:none">
+        <h2>Truck Loading — Inputs</h2>
+        <div class="row3">
+          <div class="row"><label>Trailer payload (kg H₂)</label><input id="tkPayload" type="number" value="1000"/></div>
+          <div class="row"><label>Fill time per trailer (min)</label><input id="tkFillMin" type="number" value="60"/></div>
+          <div class="row"><label>Load bays (#)</label><input id="tkBays" type="number" value="2"/></div>
+        </div>
+        <div class="row3">
+          <div class="row"><label>Avg round trip (km)</label><input id="tkKm" type="number" value="180"/></div>
+          <div class="row"><label>Avg speed (km/h)</label><input id="tkSpeed" type="number" value="60"/></div>
+          <div class="row"><label>Driver hrs / day</label><input id="tkDrvHrs" type="number" value="10"/></div>
+        </div>
+        <div class="row3">
+          <div class="row"><label>Truck cost (€/trip)</label><input id="tkTripCost" type="number" value="850"/></div>
+          <div class="row"><label>Loading OPEX (€/yr)</label><input id="tkOpex" type="number" value="350000"/></div>
+          <div class="row"><label>Bay CAPEX (€ each)</label><input id="tkBayCapex" type="number" value="1500000"/></div>
+        </div>
+        <div class="stack" style="margin-top:8px"><button id="btnCalcTrucks" class="btn">Calculate Trucking</button></div>
+      </div>
+
+      <!-- PORT PANEL -->
+      <div class="card mode" id="mode-port" style="display:none">
+        <h2>Port / Marine — Inputs</h2>
+        <div class="row3">
+          <div class="row"><label>Berth CAPEX (€)</label><input id="ptBerthCapex" type="number" value="12000000"/></div>
+          <div class="row"><label>Jetty pipeline (km)</label><input id="ptPipeKm" type="number" value="1.6"/></div>
+          <div class="row"><label>Jetty €/km</label><input id="ptPipeKmCost" type="number" value="3500000"/></div>
+        </div>
+        <div class="row3">
+          <div class="row"><label>Cargo type</label>
+            <select id="ptCargo"><option selected>Compressed H₂ (trailers)</option><option>LH₂ tanker</option><option>Ammonia (NH₃)</option><option>LOHC</option></select>
+          </div>
+          <div class="row"><label>Vessel size (t H₂ eq.)</label><input id="ptVesselT" type="number" value="50"/></div>
+          <div class="row"><label>Call duration (hrs)</label><input id="ptCallHrs" type="number" value="10"/></div>
+        </div>
+        <div class="row3">
+          <div class="row"><label>Harbor dues (€ / call)</label><input id="ptDues" type="number" value="8000"/></div>
+          <div class="row"><label>Port OPEX (€/yr)</label><input id="ptOpex" type="number" value="600000"/></div>
+          <div class="row"><label>Pumping/Boil-off €/call</label><input id="ptEnergy" type="number" value="3000"/></div>
+        </div>
+        <div class="stack" style="margin-top:8px"><button id="btnCalcPort" class="btn">Calculate Port</button></div>
+      </div>
+
+      <div class="card">
+        <h2>Exports</h2>
+        <div class="stack">
+          <button id="btnCSV" class="btn">Export CSV</button>
+          <button id="btnJSON" class="btn">Export JSON</button>
+          <button id="btnRFQ" class="btn btn-ghost">Draft RFQ Packages</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: KPIs, Charts, Tables -->
+    <div class="rightGrid">
+      <div class="card">
+        <h2>Key KPIs</h2>
+        <div class="kpi">
+          <div class="k"><small class="muted">Throughput</small><strong id="kTp">—</strong><small class="muted">t/yr delivered</small></div>
+          <div class="k"><small class="muted">Unit Logistics</small><strong id="kOps">—</strong><small class="muted">bays / trucks / calls</small></div>
+          <div class="k"><small class="muted">Specific Cost</small><strong id="kCost">—</strong><small class="muted">€/kg H₂ (opex + amort.)</small></div>
+          <div class="k"><small class="muted">Permitting Risk</small><strong id="kRisk">—</strong><small class="muted">low/med/high</small></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Scenario Comparison</h2>
+        <svg id="cmpChart" class="chart" aria-label="Cost comparison"></svg>
+      </div>
+
+      <div class="card">
+        <h2>Detailed Results</h2>
+        <div style="overflow:auto;max-height:340px">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th>Mode</th><th>Capacity (t/yr)</th><th>Bottleneck</th><th>CAPEX (M€)</th><th>OPEX (M€/yr)</th><th>Spec Cost (€/kg)</th>
+                <th>Notes</th><th>Permits</th><th>Risks</th><th>Refs</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Risks & Actions</h2>
+        <div style="overflow:auto;max-height:220px">
+          <table id="riskTbl">
+            <thead><tr><th>ID</th><th>Mode</th><th>Risk</th><th>P</th><th>I</th><th>Score</th><th>Response</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+/* ============================== Helpers & State ============================== */
+const $ = s=>document.querySelector(s);
+const cur = ()=>$('#cur').value;
+const fmt = (n,unit='')=> (isNaN(n)?'—': (Math.round(n*100)/100).toLocaleString()+ (unit?' '+unit:'')); // 2dp
+
+const S={ modes:[] }; // will hold pipeline/truck/port scenario results
+
+function hoursPerYear(){ return 8760 * (+$('#avail').value/100); }
+function prod_kg_h(){ return (+$('#prodTpd').value*1000)/24; }
+function prod_t_yr(){ return +$('#prodTpd').value * 365 * (+$('#avail').value/100); }
+function amort( capexEUR, yrs=20, wacc=0.08 ){
+  const i=wacc, n=yrs; return capexEUR * (i*Math.pow(1+i,n))/(Math.pow(1+i,n)-1);
+}
+
+/* ============================== PIPELINE (Darcy–Weisbach-ish) ============================== */
+/* Crude gas flow sizing for compressed H2. We approximate density using ideal gas and dynamic viscosity ~ 8.9e-6 Pa·s. */
+/* This is schematic for screening; for FEED, use full compressible models and code checks. */
+function calcPipeline(){
+  const Lkm=+$('#plLen').value, Dmm=+$('#plDia').value, epsmm=+$('#plEps').value;
+  const Pin=+$('#plPin').value*1e5, Pout=+$('#plPout').value*1e5, T=273.15 + (+$('#plT').value);
+  const D = Dmm/1000, L=Lkm*1000, eps=epsmm/1000;
+  const R=8.314, Mw=2.016e-3; // kg/mol
+  const Pavg=(Pin+Pout)/2;
+  const rho = (Pavg*Mw)/(R*T); // kg/m3
+  const mu = 8.9e-6; // Pa·s
+
+  // Solve for volumetric flow that matches ΔP via Darcy: ΔP = f*(L/D)*(ρ*v^2/2); friction factor via Haaland
+  // We iterate: start with guess from production mass flow
+  const m_target = prod_kg_h()/3600; // kg/s needed to evacuate production
+  let v = m_target/(rho * (Math.PI*D*D/4));
+  for(let it=0; it<12; it++){
+    const Re = (rho*v*D)/mu;
+    const f = Math.pow( -1.8*Math.log10( Math.pow(eps/(3.7*D),1.11) + 6.9/Re ), -2 );
+    const dP = f*(L/D)*(rho*v*v/2);
+    // adjust v slightly towards target ΔP = Pin-Pout
+    const err = (Pin-Pout) - dP;
+    v = v * (1 + 0.35 * err/Math.max(Pin-Pout,1));
+    if(Math.abs(err) < 1000) break;
+  }
+  const Q = v * (Math.PI*D*D/4);            // m3/s
+  const m = rho * Q;                         // kg/s
+  const cap_t_yr = (m*3600*24*365)/1000;    // t/yr
+  const deltaPbar = (Pin-Pout)/1e5;
+
+  // Costs
+  const capex = +$('#plCapexKm').value * Lkm + +$('#plStations').value; // EUR
+  const opex  = +$('#plOpex').value; // EUR/yr
+  const ann   = amort(capex);
+  const tp_kg_yr = cap_t_yr*1000;
+  const cost_eur_kg = (ann + opex) / Math.max(1,tp_kg_yr);
+
+  // Permits & risks (qualitative)
+  const permits = 'Right-of-way, construction permit, pressure system, H₂ safety distances, water/road crossings';
+  const risks = 'Route delays, geotech surprises, landowner objections, tie-in outages';
+  return {
+    mode:'Pipeline',
+    capacity_ty: cap_t_yr,
+    bottleneck: deltaPbar < 0 ? 'Back-pressure anomaly' : (cap_t_yr< prod_t_yr() ? 'Pressure drop limit' : 'None at nameplate'),
+    capex_M: capex/1e6, opex_Myr: opex/1e6,
+    spec_cost: cost_eur_kg, notes: `${fmt(deltaPbar,'bar ΔP')} • ρ≈${fmt(rho,'kg/m³')} • v≈${fmt(v,'m/s')}`,
+    permits, risks,
+    ops: `—`
+  };
+}
+
+/* ============================== TRUCKING ============================== */
+function calcTrucks(){
+  const payload = +$('#tkPayload').value; // kg
+  const fillMin = +$('#tkFillMin').value;
+  const bays = +$('#tkBays').value;
+  const km = +$('#tkKm').value;
+  const v = +$('#tkSpeed').value;
+  const drvHrs = +$('#tkDrvHrs').value;
+  const tripCost = +$('#tkTripCost').value;
+  const opex = +$('#tkOpex').value;
+  const bayCapex = +$('#tkBayCapex').value;
+
+  const fillPerHr = bays * (60/fillMin); // trailers per hour
+  const siteMax_kg_h = fillPerHr * payload;
+  const siteCap_t_yr = (siteMax_kg_h * hoursPerYear())/1000;
+
+  const tripHrs = (km/v) + (fillMin/60); // one-way distance? Use round trip km; already given "round trip"
+  const tripsPerDayPerTruck = Math.min( (drvHrs / tripHrs), 3.5); // practical cap
+  const daily_kg_needed = (+$('#prodTpd').value*1000) * (+$('#avail').value/100);
+  const trucksReq = Math.ceil( daily_kg_needed / (payload * tripsPerDayPerTruck) );
+
+  const capex = bays * bayCapex; // EUR
+  const variableYr = (daily_kg_needed/payload) * tripCost * 365; // €/yr
+  const ann = amort(capex, 15, 0.08);
+  const tp_kg_yr = Math.min(siteCap_t_yr*1000, prod_t_yr()*1000);
+  const spec_cost = (ann + opex + variableYr) / Math.max(1,tp_kg_yr);
+
+  const permits = 'Loading facility building permit, hazardous substance handling, traffic plan, ADR compliance';
+  const risks = 'Driver/asset availability, road closures, weather, bay downtime';
+  return {
+    mode:'Trucks',
+    capacity_ty: Math.min(siteCap_t_yr, prod_t_yr()),
+    bottleneck: siteCap_t_yr < prod_t_yr() ? 'Bay throughput' : 'Fleet availability',
+    capex_M: capex/1e6, opex_Myr: (opex + variableYr)/1e6,
+    spec_cost, notes:`req≈${trucksReq} trucks • trips/truck/day≈${fmt(tripsPerDayPerTruck)}`,
+    permits, risks,
+    ops: `bays:${bays} • trucks:~${trucksReq}`
+  };
+}
+
+/* ============================== PORT / MARINE ============================== */
+function calcPort(){
+  const berth = +$('#ptBerthCapex').value;
+  const pipeKm = +$('#ptPipeKm').value;
+  const pipeKmCost = +$('#ptPipeKmCost').value;
+  const cargo = $('#ptCargo').value;
+  const vesselT = +$('#ptVesselT').value;
+  const callHrs = +$('#ptCallHrs').value;
+  const dues = +$('#ptDues').value;
+  const opex = +$('#ptOpex').value;
+  const energy = +$('#ptEnergy').value;
+
+  // Calls needed per year to evacuate production:
+  const need_t_yr = prod_t_yr();
+  const calls = Math.ceil( need_t_yr / Math.max(1,vesselT) );
+
+  // Berth occupancy:
+  const occ = (calls * callHrs)/ (24*365); // fraction
+  const capacity_t_yr = calls * vesselT; // simple match to need; realistically berth can handle more if occ<0.6
+
+  const capex = berth + pipeKm*pipeKmCost;
+  const ann = amort(capex, 25, 0.08);
+  const perCall = dues + energy;
+  const varYr = calls * perCall;
+  const tp_kg_yr = capacity_t_yr*1000;
+  const spec_cost = (ann + opex + varYr) / Math.max(1,tp_kg_yr);
+
+  const permits = 'Harbor works permit, navigational safety assessment, jetty pipeline design approval, hazardous area classification';
+  const risks = 'Berth congestion, metocean limits, shipping program alignment, cargo compatibility';
+  return {
+    mode:'Port',
+    capacity_ty: capacity_t_yr,
+    bottleneck: occ>0.6 ? 'Berth occupancy' : 'Cargo handling chain',
+    capex_M: capex/1e6, opex_Myr: (opex + varYr)/1e6,
+    spec_cost, notes:`occ≈${Math.round(occ*100)}% • calls/yr≈${calls} • cargo:${cargo}`,
+    permits, risks,
+    ops: `calls:${calls}`
+  };
+}
+
+/* ============================== Rendering ============================== */
+function renderAll(){
+  // KPIs from best (lowest €/kg) mode
+  if(S.modes.length===0) return;
+  const best = S.modes.slice().sort((a,b)=>a.spec_cost-b.spec_cost)[0];
+  $('#kTp').textContent = fmt(prod_t_yr(),'t/yr');
+  $('#kOps').textContent = best.ops;
+  $('#kCost').textContent = fmt(best.spec_cost,'€/kg');
+  const r = riskRank(best.mode);
+  $('#kRisk').textContent = r.txt;
+
+  // Table
+  const tb = $('#tbl tbody'); tb.innerHTML='';
+  S.modes.forEach(m=>{
+    const tr=document.createElement('tr');
+    const riskB = riskRank(m.mode).badge;
+    tr.innerHTML = `<td>${m.mode}</td>
+      <td>${fmt(m.capacity_ty,'t/yr')}</td>
+      <td>${m.bottleneck}</td>
+      <td>${fmt(m.capex_M,'M€')}</td>
+      <td>${fmt(m.opex_Myr,'M€/yr')}</td>
+      <td><strong>${fmt(m.spec_cost,'€/kg')}</strong></td>
+      <td>${m.notes}</td>
+      <td>${m.permits}</td>
+      <td>${riskB}</td>
+      <td>Prelim models • quotes placeholder</td>`;
+    tb.appendChild(tr);
+  });
+
+  drawCompareChart(S.modes);
+  renderRisks();
+}
+
+function drawCompareChart(list){
+  const svg=$('#cmpChart'); svg.innerHTML='';
+  const W=svg.clientWidth||900, H=svg.clientHeight||300, pad=48, bw=56, gap=36;
+  const maxVal = Math.max(1, ...list.map(x=>x.spec_cost))*1.25;
+  // axes
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" class="axis"/>`);
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" class="axis"/>`);
+  for(let i=0;i<4;i++){
+    const y=pad + i*(H-2*pad)/3;
+    svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+    const v=(maxVal*(1-i/3)).toFixed(2);
+    svg.insertAdjacentHTML('beforeend', `<text x="8" y="${y+4}" class="reftext">${v} €/kg</text>`);
+  }
+  list.forEach((m,i)=>{
+    const x = pad + 24 + i*(bw+gap);
+    const h = (m.spec_cost/maxVal)*(H-2*pad);
+    const y = H-pad-h;
+    const col = m.mode==='Pipeline' ? '#19c5be' : (m.mode==='Trucks' ? '#74aeea' : '#f6c947');
+    svg.insertAdjacentHTML('beforeend', `<rect x="${x}" y="${y}" width="${bw}" height="${h}" class="bar" fill="${col}"/>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${H-pad+16}" text-anchor="middle" class="reftext">${m.mode}</text>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" class="reftext">${m.spec_cost.toFixed(2)}</text>`);
+  });
+}
+
+/* ============================== Risks & Permits ============================== */
+const RISK_DB = [
+  {mode:'Pipeline', risk:'Unknown ground conditions increase cost', P:3,I:3,resp:'Allow contingency; ground surveys', status:'OPEN'},
+  {mode:'Pipeline', risk:'Landowner consent delays ROW', P:3,I:4,resp:'Early engagement; alternate routing', status:'OPEN'},
+  {mode:'Trucks',   risk:'Driver/tractor shortages limit throughput', P:2,I:3,resp:'Framework contracts; flex fleet', status:'OPEN'},
+  {mode:'Trucks',   risk:'Bay outage causes queueing', P:2,I:3,resp:'Redundancy; preventive maintenance', status:'OPEN'},
+  {mode:'Port',     risk:'Berth not always available', P:2,I:4,resp:'Slot booking; alternative port MoU', status:'OPEN'},
+  {mode:'Port',     risk:'Weather downtime in winter', P:2,I:3,resp:'Weather windows; schedule buffer', status:'OPEN'}
+];
+function riskRank(mode){
+  const r = RISK_DB.filter(x=>x.mode===mode);
+  const avg = r.reduce((s,x)=>s+x.P*x.I,0)/Math.max(1,r.length);
+  if(avg>=12) return {txt:'high', badge:'<span class="badge" style="background:rgba(239,140,122,.25)">High</span>'};
+  if(avg>=7)  return {txt:'medium', badge:'<span class="badge" style="background:rgba(246,201,71,.25)">Medium</span>'};
+  return {txt:'low', badge:'<span class="badge" style="background:rgba(87,211,155,.25)">Low</span>'};
+}
+function renderRisks(){
+  const tb=$('#riskTbl tbody'); tb.innerHTML='';
+  RISK_DB.forEach((r,i)=>{
+    const sc=r.P*r.I, cls = sc>=12?'risk-high': sc>=7?'risk-med':'risk-low';
+    const tr=document.createElement('tr'); tr.className=cls;
+    tr.innerHTML = `<td>R${i+1}</td><td>${r.mode}</td><td>${r.risk}</td><td>${r.P}</td><td>${r.I}</td><td>${sc}</td><td>${r.resp}</td><td>${r.status}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/* ============================== Exports / RFQ ============================== */
+function exportCSV(){
+  const lines = ['Mode,Capacity t/yr,Bottleneck,CAPEX M€,OPEX M€/yr,Spec €/kg,Notes,Permits,Risks'];
+  S.modes.forEach(m=>{
+    lines.push([m.mode,m.capacity_ty,m.bottleneck,m.capex_M,m.opex_Myr,m.spec_cost.toFixed(3),m.notes,m.permits,m.risks].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  });
+  download(lines.join('\n'),'seidr_offtake.csv','text/csv');
+}
+function exportJSON(){
+  download(JSON.stringify(S.modes,null,2),'seidr_offtake.json','application/json');
+}
+function download(data,name,type){ const blob=new Blob([data],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url); }
+function rfqDraft(){
+  const txt = [
+    'RFQ — Off-take Integration Packages',
+    '',
+    '1) Pipeline: route survey, permitting, design codes (EN/ASME), materials, block valves, stations, tie-ins.',
+    '2) Truck Loading: bays, compressors/boosters, metering, safety systems, ADR facilities.',
+    '3) Port: jetty line, berth works, loading arms/hoses, custody transfer, mooring, nav safety.',
+    '',
+    'Please include: schedule, CAPEX, OPEX, assumptions, interfaces, construction sequencing, QA/QC, and commissioning.'
+  ].join('\n');
+  const blob=new Blob([txt],{type:'text/plain'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='RFQ_Offtake_Study.txt'; a.click(); URL.revokeObjectURL(url);
+}
+
+/* ============================== UI wiring ============================== */
+function recalcPipeline(){ const m=calcPipeline(); S.modes = S.modes.filter(x=>x.mode!=='Pipeline').concat(m); renderAll(); }
+function recalcTrucks(){ const m=calcTrucks(); S.modes = S.modes.filter(x=>x.mode!=='Trucks').concat(m); renderAll(); }
+function recalcPort(){ const m=calcPort(); S.modes = S.modes.filter(x=>x.mode!=='Port').concat(m); renderAll(); }
+
+$('#btnApplyAll').addEventListener('click', ()=>{ recalcPipeline(); recalcTrucks(); recalcPort(); });
+$('#btnCalcPipe').addEventListener('click', recalcPipeline);
+$('#btnCalcTrucks').addEventListener('click', recalcTrucks);
+$('#btnCalcPort').addEventListener('click', recalcPort);
+$('#btnCSV').addEventListener('click', exportCSV);
+$('#btnJSON').addEventListener('click', exportJSON);
+$('#btnRFQ').addEventListener('click', rfqDraft);
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const mode = t.getAttribute('data-tab');
+    document.querySelectorAll('.mode').forEach(m=>m.style.display='none');
+    $('#mode-'+mode).style.display='block';
+  });
+});
+
+/* ============================== Boot ============================== */
+function boot(){
+  recalcPipeline(); recalcTrucks(); recalcPort();
+}
+boot();
+</script>
+</body>
+</html>
