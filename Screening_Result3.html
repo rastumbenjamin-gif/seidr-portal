@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SEIDR — Site Review • GO (Raven-SE-03)</title>
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --warn:#f59e52; --blue:#74aeea; --grey:#7f8b95;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 28%,#0b141a);
+    color:var(--text);font:15.5px/1.55 Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif
+  }
+
+  /* Topbar */
+  .topbar{
+    position:sticky;top:0;z-index:40;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 20px;background:rgba(15,26,34,.9);
+    border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)
+  }
+  .crumb{color:var(--muted);font-size:13px}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);font-size:12px}
+  .chip-good{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(87,211,155,.12);border:1px solid #2a5f46;color:#cdecd9;font-weight:600;font-size:12px}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .btn:hover{outline:1px solid rgba(25,197,190,.35)}
+
+  /* Page wrap & grid */
+  .wrap{max-width:1400px;margin:0 auto;padding:18px}
+  .layout{display:grid;grid-template-columns:1fr 380px;gap:16px}
+  @media (max-width:1180px){.layout{grid-template-columns:1fr}}
+
+  /* Cards & sections */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .section{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+  .sec-head{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
+  .sec-title{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .sec-body{padding:12px}
+
+  h1{margin:.2rem 0 .4rem;font-size:26px}
+  .muted{color:var(--muted)}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* KPI bar & waterfall */
+  .bar-wrap{height:8px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);overflow:hidden}
+  .bar{height:100%;background:linear-gradient(90deg,var(--red),#ffb0a3);transition:width .35s ease}
+  .bar-ok{height:100%;background:linear-gradient(90deg,var(--green),#b7f0d4);transition:width .35s ease}
+  .bar-amber{height:100%;background:linear-gradient(90deg,var(--yellow),#ffe08a);transition:width .35s ease}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+  .ok{background:rgba(87,211,155,.12);border-color:#2a5f46;color:#cdecd9}
+  .warn{background:rgba(246,201,71,.14);border-color:#6f4c21;color:#ffe3a6}
+
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:12px;background:var(--panel-2);padding:4px}
+  .toggle button{padding:6px 10px;border-radius:8px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+  .toggle button.active{background:var(--panel);color:var(--text);box-shadow:0 0 0 1px var(--line) inset}
+
+  .divider{height:1px;background:var(--line);margin:10px 0}
+  .waterfall-row{display:flex;align-items:center;gap:10px}
+  .waterfall-row .lab{width:280px;color:var(--muted);font-size:12px}
+  .waterfall-row .val{width:120px;text-align:right;font-size:12px}
+
+  /* Sidebar facts + score */
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fact{padding:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px}
+  .fact .t{font-size:12px;color:var(--muted)}
+  .fact .v{font-weight:600}
+  .score-bar{height:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .score-fill{display:block;height:100%;background:linear-gradient(90deg,var(--green),#b7f0d4)}
+
+  /* Blockers */
+  .blocker{padding:12px 0;border-top:1px solid var(--line)}
+  .b-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .sev{padding:6px;border-radius:10px;font-size:12px;border:1px solid var(--line)}
+  .sev.high{background:rgba(239,140,122,.12);color:#efb4a8;border-color:#8b3f33}
+  .sev.med{background:rgba(245,158,82,.12);color:#ffd3a8;border-color:#6f4c21}
+  .sev.low{background:rgba(87,211,155,.12);color:#cdecd9;border-color:#2a5f46}
+  .b-title{font-weight:600}
+  .b-sub{color:var(--muted);font-size:14px}
+  .b-imp{color:#cdecd9;font-size:12px;margin-top:2px}
+  .link{font-size:12px;color:var(--text);background:var(--panel-2);border:1px solid var(--line);padding:6px 10px;border-radius:8px;cursor:pointer}
+  .link:hover{filter:brightness(1.08)}
+  .fixes{margin-top:10px;padding-left:46px}
+  .fix-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fix{border:1px solid var(--line);background:var(--panel-2);border-radius:10px;padding:10px}
+  .fix .meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .meta .cell{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px}
+  .meta .k{font-size:10px;color:var(--muted);text-transform:uppercase}
+
+  /* Actions */
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .a-btn{border-radius:10px;padding:10px;border:1px solid var(--line);cursor:pointer}
+  .a-btn.primary{background:var(--text);color:#0c1318}
+  .a-btn.ghost{background:var(--panel-2);color:var(--text)}
+  .foot{color:var(--muted);font-size:12px;margin-top:12px}
+</style>
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <!-- Top bar -->
+  <div class="topbar">
+    <div>
+      <strong>SEIDR</strong>
+      <span class="crumb">/ Site Review / GO (Raven-SE-03)</span>
+    </div>
+    <div class="stack">
+      <span class="chip-good"><i data-lucide="check-circle-2" class="w-4 h-4"></i> Passing</span>
+      <span class="pill">Data grade: A-</span>
+      <button class="btn" onclick="window.print()">Export PDF</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="layout">
+      <!-- MAIN -->
+      <div style="display:grid;gap:16px">
+        <!-- KPI + Waterfall -->
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title"><i data-lucide="gauge" class="w-4 h-4"></i> Levelized Cost vs Target <span id="unitsLabel">(€/kg)</span></div>
+            <div>
+              <div class="toggle">
+                <button class="active" data-fuel="H2">H2</button>
+                <button data-fuel="eMeOH">eMeOH</button>
+                <button data-fuel="eNH3">eNH3</button>
+              </div>
+            </div>
+          </div>
+          <div class="sec-body">
+            <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div id="p50Text" style="font-size:28px;font-weight:700">P50 2.72 €/kg</div>
+                  <div id="deltaChip" class="badge ok">
+                    <i data-lucide="trending-down" class="w-4 h-4"></i> −0.28 vs target 3.00
+                  </div>
+                </div>
+                <div class="bar-wrap" style="margin-top:10px">
+                  <div id="kpiBar" class="bar-ok" style="width:45%"></div>
+                </div>
+                <div id="p90Text" class="muted" style="font-size:12px;margin-top:8px">P90 2.95 €/kg · Threshold to pass ≤ 3.00 €/kg</div>
+              </div>
+              <div class="muted" style="font-size:12px;text-align:right">Switch fuel lens</div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="sec-title" style="color:var(--text);text-transform:none;letter-spacing:0;margin-bottom:6px;font-weight:600">
+              What gets us under target — cost deltas
+            </div>
+            <div id="waterfall"></div>
+          </div>
+        </div>
+
+        <!-- Residual risks -->
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Residual risks</div>
+            <button id="toggleFixes" class="link"><i data-lucide="chevron-down" class="w-4 h-4"></i> <span>Hide fixes</span></button>
+          </div>
+          <div class="sec-body" id="blockersWrap"></div>
+        </div>
+
+        <!-- Keep Green -->
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title"><i data-lucide="target" class="w-4 h-4"></i> What keeps this site green</div>
+          </div>
+          <div class="sec-body">
+            <ul id="wouldPassList" style="margin:0;padding-left:18px"></ul>
+          </div>
+        </div>
+
+        <div class="foot">All values are illustrative mock data to demonstrate the Seidr GO logic and UI. Not for real-world decision making.</div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="sec-title"><i data-lucide="map-pin" class="w-4 h-4"></i> Quick facts</div>
+          <div class="facts" style="margin-top:10px">
+            <div class="fact"><div class="t">Grid (firm)</div><div class="v">70 MW</div></div>
+            <div class="fact"><div class="t">Demand</div><div class="v">60 MW</div></div>
+            <div class="fact"><div class="t">Water avail.</div><div class="v">420 m³/h</div></div>
+            <div class="fact"><div class="t">Water need</div><div class="v">350 m³/h</div></div>
+            <div class="fact"><div class="t">CO₂ (nearest bio)</div><div class="v">40 km</div></div>
+            <div class="fact"><div class="t">Land</div><div class="v">72 ha / 2 parcels</div></div>
+          </div>
+          <div style="height:140px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;margin-top:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">
+            Map & grid overlays placeholder
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec-title"><i data-lucide="activity" class="w-4 h-4"></i> Score</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+            <div id="scoreVal" style="font-size:28px;font-weight:700">82</div>
+            <div class="muted">/ 100 · Threshold 70</div>
+          </div>
+          <div class="score-bar" style="margin-top:8px"><span id="scoreFill" class="score-fill" style="width:82%"></span></div>
+          <div class="divider"></div>
+          <div class="muted" style="font-size:12px">Weights: Grid & energy 30%, Permitting 20%, Site & logistics 20%, Utilities 15%, Market & offtake 15%</div>
+        </div>
+
+        <div class="card">
+          <div class="sec-title"><i data-lucide="check-square" class="w-4 h-4"></i> Gate checklist</div>
+          <div id="gateList" style="margin-top:8px;display:flex;flex-direction:column;gap:8px"></div>
+          <div class="actions" style="margin-top:12px">
+            <button class="a-btn primary">Save to Watchlist</button>
+            <button class="a-btn ghost">Export slide</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec-title"><i data-lucide="clock" class="w-4 h-4"></i> Data confidence</div>
+          <div class="muted" style="font-size:12px;margin-top:6px">Data grade: A- (utility letters; grid queue ID; water permit pre-consultation; CO₂ supply MoU drafts)</div>
+          <ul class="muted" style="font-size:12px;margin-top:6px;padding-left:18px">
+            <li>Grid: DSO letter (firm 70 MW); TSO plan alignment</li>
+            <li>Water: municipality intake register + capacity note</li>
+            <li>Permits: scoping meeting minutes; buffers mapped</li>
+            <li>CO₂: biogenic sources inventory; rail siding pre-design</li>
+          </ul>
+          <div class="muted" style="font-size:12px;margin-top:6px">Next: OEM LoIs, transport route survey, EIA program notice.</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+<script>
+  // ------- Data (Passing / Green) -------
+  const kpis = {
+    H2:    { target: 3.0, p50: 2.72, p90: 2.95, units: "€/kg" },
+    eMeOH: { target: 900, p50: 860,  p90: 910,  units: "€/t"  },
+    eNH3:  { target: 600, p50: 570,  p90: 620,  units: "€/t"  },
+  };
+
+  // Positive numbers represent contribution towards *lowering* cost vs target.
+  // tone: 'g' (green) or 'a' (amber)
+  const baseDeltas = {
+    H2: [
+      { label: "RES PPA & high CF grid mix", val: 0.24, tone:'g' },
+      { label: "Grid headroom (curtailment <1%)", val: 0.18, tone:'g' },
+      { label: "Heat integration to DH export", val: 0.08, tone:'g' },
+      { label: "Short site logistics & access", val: 0.05, tone:'g' },
+      { label: "Permitting fast-track (pre-consult)", val: 0.06, tone:'a' },
+    ],
+    eMeOH: [
+      { label: "CO₂ rail corridor (2026) locked", val: 40, tone:'g' },
+      { label: "RES PPA & grid headroom", val: 35, tone:'g' },
+      { label: "Onsite heat recovery", val: 12, tone:'g' },
+      { label: "Optimized storage/logistics", val: 6, tone:'g' },
+      { label: "Permitting fast-track", val: 8, tone:'a' },
+    ],
+    eNH3: [
+      { label: "Electrolyzer uptime & cheap power", val: 22, tone:'g' },
+      { label: "NH₃ loop heat integration", val: 10, tone:'g' },
+      { label: "Short port haul", val: 5, tone:'g' },
+      { label: "Permitting predictability", val: 4, tone:'a' },
+    ]
+  };
+
+  const blockers = [
+    {
+      key: "logistics",
+      icon: "truck",
+      title: "Abnormal load timing windows",
+      summary: "Seasonal road restrictions may affect 2 heavy moves",
+      impact: "Mitigation: night moves, escort booking",
+      severity: "medium",
+      fixes: [
+        { label: "Night-window permits", cost: "€15–25k", time: "−", residual: "Low residual risk" },
+        { label: "Alternate lay-down area", cost: "€0.2–0.4m", time: "+1–2 months", residual: "Removes peak conflict" },
+      ],
+      expanded: false
+    },
+    {
+      key: "permit",
+      icon: "shield-check",
+      title: "Seasonal biodiversity constraints",
+      summary: "Bird breeding window may cap piling to Oct–Feb",
+      impact: "Schedule guardrail; not on critical path",
+      severity: "low",
+      fixes: [
+        { label: "Method change (vibro where possible)", cost: "€+0.1–0.2m", time: "—", residual: "Very low" },
+      ],
+      expanded: false
+    },
+    {
+      key: "co2",
+      icon: "factory",
+      title: "CO₂ rail siding interface",
+      summary: "Civil interface & utility sleeves coordination",
+      impact: "Minor CAPEX; no LCOE impact",
+      severity: "low",
+      fixes: [
+        { label: "Early IFC with rail owner", cost: "€25–40k", time: "—", residual: "Clears interface risk" },
+      ],
+      expanded: false
+    }
+  ];
+
+  const keepGreen = [
+    "Lock 15-year RES PPA floor with curtailment <1.5%.",
+    "Freeze route survey & night-move plan by DG2.",
+    "Submit EIA program before summer to preserve piling window.",
+    "Finalize rail siding utility sleeves and drainage tie-ins.",
+    "Maintain ≥15% MWh buffer in power model vs OEM uptime."
+  ];
+
+  const gateChecklist = [
+    { label: "Firm ≥60 MW grid by ≤36 mo", pass: true },
+    { label: "Water ≥350 m³/h secured", pass: true },
+    { label: "CO₂ supply (≥200 kt/yr) ≤50 km or rail", pass: true },
+    { label: "Parcel control ≥60 ha", pass: true },
+    { label: "Noise/dust within limits", pass: true },
+    { label: "Heavy-transport gradient <8%", pass: true },
+    { label: "Permitting timeline ≤30 mo", pass: true },
+    { label: "Heat sink ≥8 MWth or export", pass: true },
+  ];
+
+  // ------- Helpers -------
+  const $ = s => document.querySelector(s);
+  const fmt = n => (typeof n==='number' ? (Math.round(n*100)/100).toFixed(2) : n);
+  const MINUS = '−';
+
+  function renderWaterfall(fuelKey){
+    const wrap = $('#waterfall'); wrap.innerHTML = '';
+    const units = kpis[fuelKey].units;
+    const rows = baseDeltas[fuelKey];
+    const denom = rows.reduce((a,b)=>a+b.val,0) || 1;
+
+    rows.forEach(r=>{
+      const row = document.createElement('div');
+      row.className='waterfall-row';
+      const pct = Math.min(100, (r.val/denom)*100);
+      const cls = r.tone==='a' ? 'bar-amber' : 'bar-ok';
+      row.innerHTML = `
+        <div class="lab">${r.label}</div>
+        <div class="bar-wrap" style="flex:1">
+          <div class="${cls}" style="width:${pct.toFixed(1)}%"></div>
+        </div>
+        <div class="val">${MINUS}${fmt(r.val)} ${units}</div>
+      `;
+      wrap.appendChild(row);
+    });
+  }
+
+  let showFixes = true;
+  function renderBlockers(){
+    const wrap = $('#blockersWrap'); wrap.innerHTML = '';
+    blockers.forEach((b, idx)=>{
+      const sevClass = b.severity==='high' ? 'high' : (b.severity==='medium'?'med':'low');
+      const detailsIcon = b.expanded ? 'chevron-down' : 'chevron-right';
+      const blk = document.createElement('div');
+      blk.className='blocker';
+      blk.innerHTML = `
+        <div class="b-head">
+          <div style="display:flex;gap:10px">
+            <div class="sev ${sevClass}"><i data-lucide="${b.icon}" class="w-4 h-4" style="vertical-align:-2px"></i></div>
+            <div>
+              <div class="b-title">${b.title}</div>
+              <div class="b-sub">${b.summary}</div>
+              <div class="b-imp">Impact: ${b.impact}</div>
+            </div>
+          </div>
+          <button class="link toggle-details" data-idx="${idx}">
+            <i data-lucide="${detailsIcon}" class="w-4 h-4"></i> Details
+          </button>
+        </div>
+
+        <div class="fixes" style="${showFixes && b.expanded ? '' : 'display:none'}">
+          <div class="muted" style="font-size:11px;margin-bottom:6px;text-transform:uppercase">Mitigations</div>
+          <div class="fix-grid">
+            ${b.fixes.map(f=>`
+              <div class="fix">
+                <div style="font-weight:600">${f.label}</div>
+                <div class="meta" style="margin-top:6px">
+                  <div class="cell"><div class="k">Cost</div><div>${f.cost}</div></div>
+                  <div class="cell"><div class="k">Time</div><div>${f.time}</div></div>
+                  <div class="cell"><div class="k">Residual</div><div>${f.residual}</div></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      wrap.appendChild(blk);
+    });
+
+    lucide.createIcons();
+    wrap.querySelectorAll('.toggle-details').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const i = +btn.dataset.idx;
+        blockers[i].expanded = !blockers[i].expanded;
+        renderBlockers();
+      });
+    });
+  }
+
+  function renderGates(){
+    const gl = $('#gateList'); gl.innerHTML = '';
+    gateChecklist.forEach(g=>{
+      const row = document.createElement('div');
+      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center';
+      row.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px">
+          <i data-lucide="check-circle-2" class="w-4 h-4" style="color: var(--green)"></i>
+          <span>${g.label}</span>
+        </div>
+        <span class="badge ok">PASS</span>
+      `;
+      gl.appendChild(row);
+    });
+    lucide.createIcons();
+  }
+
+  function renderKeepGreen(){
+    const ul = $('#wouldPassList'); ul.innerHTML='';
+    keepGreen.forEach(line=>{
+      const li = document.createElement('li');
+      li.textContent = line;
+      ul.appendChild(li);
+    });
+  }
+
+  function updateKPI(fuelKey){
+    const k = kpis[fuelKey];
+    const delta = k.p50 - k.target;
+    const good = delta <= 0;
+
+    $('#unitsLabel').textContent = `(${k.units})`;
+    $('#p50Text').textContent = `P50 ${fmt(k.p50)} ${k.units}`;
+    $('#p90Text').textContent = `P90 ${fmt(k.p90)} ${k.units} · Threshold to pass ≤ ${fmt(k.target)} ${k.units}`;
+
+    const chip = $('#deltaChip');
+    chip.className = `badge ${good?'ok':'warn'}`;
+    chip.innerHTML = `
+      <i data-lucide="${good ? 'trending-down' : 'trending-up'}" class="w-4 h-4"></i>
+      ${good?MINUS:''}${fmt(Math.abs(delta))} vs target ${fmt(k.target)}
+    `;
+
+    const bar = $('#kpiBar');
+    bar.className = good ? 'bar-ok' : 'bar';
+    const pct = Math.min(100, (k.p50 / (k.target * 2)) * 100);
+    bar.style.width = pct + '%';
+
+    renderWaterfall(fuelKey);
+    lucide.createIcons();
+  }
+
+  function initFuelToggle(){
+    document.querySelectorAll('.toggle button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.toggle button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        updateKPI(btn.dataset.fuel);
+      });
+    });
+  }
+
+  function initFixesToggle(){
+    const btn = $('#toggleFixes');
+    btn.addEventListener('click', ()=>{
+      showFixes = !showFixes;
+      btn.querySelector('span').textContent = showFixes ? 'Hide fixes' : 'Show fixes';
+      const icon = btn.querySelector('i');
+      icon.setAttribute('data-lucide', showFixes ? 'chevron-down' : 'chevron-right');
+      renderBlockers();
+      lucide.createIcons();
+    });
+  }
+
+  // ------- Init -------
+  renderWaterfall('H2');
+  renderBlockers();
+  renderGates();
+  renderKeepGreen();
+  initFuelToggle();
+  initFixesToggle();
+  updateKPI('H2');
+  lucide.createIcons();
+
+  // Score (already green-styled); values set in markup
+  document.getElementById('scoreVal').textContent = '82';
+  document.getElementById('scoreFill').style.width = '82%';
+</script>
+</body>
+</html>

@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>SEIDR — No-Go Review (Meråker)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SEIDR — Site Review • No-Go (Meråker)</title>
 <style>
   :root{
     --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
@@ -13,54 +13,56 @@
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0;
-    background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);
-    color:var(--text);
-    font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif
+    margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 28%,#0b141a);
+    color:var(--text);font:15.5px/1.55 Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif
   }
-  .wrap{max-width:1280px;margin:0 auto;padding:18px}
+
+  /* Topbar (unified) */
   .topbar{
+    position:sticky;top:0;z-index:40;
     display:flex;justify-content:space-between;align-items:center;
     padding:14px 20px;background:rgba(15,26,34,.9);
     border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)
   }
   .crumb{color:var(--muted);font-size:13px}
   .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
-        background:rgba(239,140,122,.12);border:1px solid #8b3f33;color:#efb4a8;font-weight:600;font-size:12px}
-  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
-        background:var(--panel-2);border:1px solid var(--line);color:var(--text);font-size:12px}
-  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);
-       border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
-  .btn:hover{filter:brightness(1.08)}
-  h1{margin:.2rem 0 .6rem;font-size:26px}
-  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-  h3{margin:8px 0 6px;font-size:16px}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);font-size:12px}
+  .chip-bad{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(239,140,122,.12);border:1px solid #8b3f33;color:#efb4a8;font-weight:600;font-size:12px}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .btn:hover{outline:1px solid rgba(25,197,190,.35)}
+
+  /* Page wrap & grid (unified widths) */
+  .wrap{max-width:1400px;margin:0 auto;padding:18px}
+  .layout{display:grid;grid-template-columns:1fr 380px;gap:16px}
+  @media (max-width:1180px){.layout{grid-template-columns:1fr}}
+
+  /* Cards & sections */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .section{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+  .sec-head{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
+  .sec-title{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .sec-body{padding:12px}
+
+  h1{margin:.2rem 0 .4rem;font-size:26px}
   .muted{color:var(--muted)}
   .num{font-variant-numeric:tabular-nums}
-  /* Grid layout */
-  .grid12{display:grid;grid-template-columns:1fr 360px;gap:16px}
-  .grid-main{display:grid;grid-template-columns:1fr;gap:16px}
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}
-  .panel-head{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
-  .panel-body{padding:12px}
+
+  /* KPI bar & waterfall */
   .bar-wrap{height:8px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);overflow:hidden}
   .bar{height:100%;background:linear-gradient(90deg,var(--red),#ffb0a3);transition:width .35s ease}
-  .bar-ok{background:linear-gradient(90deg,var(--green),#b7f0d4)}
-  .kv{display:flex;justify-content:space-between;gap:12px;margin:6px 0}
   .badge{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
   .ok{background:rgba(87,211,155,.12);border-color:#2a5f46;color:#cdecd9}
   .bad{background:rgba(239,140,122,.12);border-color:#8b3f33;color:#efb4a8}
-  .warn{background:rgba(245,158,82,.12);border-color:#6f4c21;color:#ffd3a8}
+
   .toggle{display:inline-flex;border:1px solid var(--line);border-radius:12px;background:var(--panel-2);padding:4px}
   .toggle button{padding:6px 10px;border-radius:8px;border:0;background:transparent;color:var(--muted);cursor:pointer}
   .toggle button.active{background:var(--panel);color:var(--text);box-shadow:0 0 0 1px var(--line) inset}
-  .waterfall-row{display:flex;align-items:center;gap:10px}
-  .waterfall-row .lab{width:240px;color:var(--muted);font-size:12px}
-  .waterfall-row .val{width:90px;text-align:right;font-size:12px}
+
   .divider{height:1px;background:var(--line);margin:10px 0}
+  .waterfall-row{display:flex;align-items:center;gap:10px}
+  .waterfall-row .lab{width:280px;color:var(--muted);font-size:12px}
+  .waterfall-row .val{width:100px;text-align:right;font-size:12px}
+
   /* Sidebar facts + score */
   .facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .fact{padding:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px}
@@ -68,6 +70,7 @@
   .fact .v{font-weight:600}
   .score-bar{height:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
   .score-bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--red),#ffb0a3)}
+
   /* Blockers */
   .blocker{padding:12px 0;border-top:1px solid var(--line)}
   .b-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
@@ -86,97 +89,97 @@
   .fix .meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
   .meta .cell{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px}
   .meta .k{font-size:10px;color:var(--muted);text-transform:uppercase}
+
   /* Actions */
   .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .a-btn{border-radius:10px;padding:10px;border:1px solid var(--line);cursor:pointer}
   .a-btn.primary{background:var(--text);color:#0c1318}
   .a-btn.ghost{background:var(--panel-2);color:var(--text)}
   .foot{color:var(--muted);font-size:12px;margin-top:12px}
-  @media (max-width:1100px){
-    .grid12{grid-template-columns:1fr}
-  }
 </style>
-<!-- Lucide (icons) -->
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+  <!-- Unified top bar -->
   <div class="topbar">
     <div>
       <strong>SEIDR</strong>
-      <span class="crumb">/ Meråker — No-Go Review</span>
+      <span class="crumb">/ Site Review / No-Go (Meråker)</span>
     </div>
     <div class="stack">
-      <span class="chip"><i data-lucide="x-circle" class="w-4 h-4"></i> Not Passing</span>
+      <span class="chip-bad"><i data-lucide="x-circle" class="w-4 h-4"></i> Not Passing</span>
       <span class="pill">Data grade: B-</span>
+      <button class="btn" onclick="window.print()">Export PDF</button>
     </div>
   </div>
 
   <div class="wrap">
-    <div class="grid12">
-      <!-- MAIN COLUMN -->
-      <div class="grid-main">
+    <div class="layout">
+      <!-- MAIN -->
+      <div style="display:grid;gap:16px">
         <!-- KPI + Waterfall -->
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
-            <div style="flex:1">
-              <div class="muted" style="font-size:12px">Levelized cost vs target <span id="unitsLabel">(€/kg)</span></div>
-              <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
-                <div id="p50Text" style="font-size:28px;font-weight:700">P50 4.10 €/kg</div>
-                <div id="deltaChip" class="badge bad">
-                  <i data-lucide="trending-up" class="w-4 h-4"></i>
-                  +1.10 vs target 3.00
-                </div>
-              </div>
-              <div class="bar-wrap" style="margin-top:10px">
-                <div id="kpiBar" class="bar" style="width:68%"></div>
-              </div>
-              <div id="p90Text" class="muted" style="font-size:12px;margin-top:8px">P90 4.70 €/kg · Threshold to pass ≤ 3.00 €/kg</div>
-            </div>
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title"><i data-lucide="gauge" class="w-4 h-4"></i> Levelized Cost vs Target <span id="unitsLabel">(€/kg)</span></div>
             <div>
               <div class="toggle">
                 <button class="active" data-fuel="H2">H2</button>
                 <button data-fuel="eMeOH">eMeOH</button>
                 <button data-fuel="eNH3">eNH3</button>
               </div>
-              <div class="muted" style="font-size:12px;margin-top:6px;text-align:right">Switch fuel lens</div>
             </div>
           </div>
+          <div class="sec-body">
+            <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div id="p50Text" style="font-size:28px;font-weight:700">P50 4.10 €/kg</div>
+                  <div id="deltaChip" class="badge bad">
+                    <i data-lucide="trending-up" class="w-4 h-4"></i> +1.10 vs target 3.00
+                  </div>
+                </div>
+                <div class="bar-wrap" style="margin-top:10px">
+                  <div id="kpiBar" class="bar" style="width:68%"></div>
+                </div>
+                <div id="p90Text" class="muted" style="font-size:12px;margin-top:8px">P90 4.70 €/kg · Threshold to pass ≤ 3.00 €/kg</div>
+              </div>
+              <div class="muted" style="font-size:12px;text-align:right">Switch fuel lens</div>
+            </div>
 
-          <div class="divider"></div>
-          <div style="font-weight:600;margin-bottom:6px">Why we miss the target — cost deltas</div>
-          <div id="waterfall" class="space"></div>
+            <div class="divider"></div>
+            <div class="sec-title" style="color:var(--text);text-transform:none;letter-spacing:0;margin-bottom:6px;font-weight:600">
+              Why we miss the target — cost deltas
+            </div>
+            <div id="waterfall"></div>
+          </div>
         </div>
 
         <!-- Blockers -->
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div style="font-weight:600;display:flex;align-items:center;gap:8px">
-              <i data-lucide="alert-triangle" class="w-4 h-4"></i> Top blockers
-            </div>
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Top blockers</div>
             <button id="toggleFixes" class="link"><i data-lucide="chevron-down" class="w-4 h-4"></i> <span>Hide fixes</span></button>
           </div>
-          <div id="blockersWrap"></div>
+          <div class="sec-body" id="blockersWrap"></div>
         </div>
 
         <!-- Would pass if -->
-        <div class="card">
-          <div style="font-weight:600;display:flex;align-items:center;gap:8px">
-            <i data-lucide="target" class="w-4 h-4"></i> What would make this site pass
+        <div class="section">
+          <div class="sec-head">
+            <div class="sec-title"><i data-lucide="target" class="w-4 h-4"></i> What would make this site pass</div>
           </div>
-          <ul id="wouldPassList" style="margin-top:8px;padding-left:18px">
-            <!-- populated by JS -->
-          </ul>
+          <div class="sec-body">
+            <ul id="wouldPassList" style="margin:0;padding-left:18px"></ul>
+          </div>
         </div>
 
-        <div class="foot">All values are illustrative mock data to demonstrate the Seidr no-go review logic and UI. Not for real-world decision making.</div>
+        <div class="foot">All values are illustrative mock data to demonstrate the Seidr No-Go logic and UI. Not for real-world decision making.</div>
       </div>
 
       <!-- SIDEBAR -->
-      <div style="display:flex;flex-direction:column;gap:16px">
+      <aside style="display:flex;flex-direction:column;gap:16px">
         <div class="card">
-          <div style="font-weight:600;display:flex;align-items:center;gap:8px">
-            <i data-lucide="map-pin" class="w-4 h-4"></i> Quick facts
-          </div>
+          <div class="sec-title"><i data-lucide="map-pin" class="w-4 h-4"></i> Quick facts</div>
           <div class="facts" style="margin-top:10px">
             <div class="fact"><div class="t">Grid (firm)</div><div class="v">15 MW</div></div>
             <div class="fact"><div class="t">Demand</div><div class="v">60 MW</div></div>
@@ -191,22 +194,18 @@
         </div>
 
         <div class="card">
-          <div style="font-weight:600;display:flex;align-items:center;gap:8px">
-            <i data-lucide="gauge" class="w-4 h-4"></i> Score
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+          <div class="sec-title"><i data-lucide="activity" class="w-4 h-4"></i> Score</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
             <div id="scoreVal" style="font-size:28px;font-weight:700">54</div>
             <div class="muted">/ 100 · Threshold 70</div>
           </div>
-          <div class="score-bar" style="margin-top:6px"><span style="width:54%"></span></div>
+          <div class="score-bar" style="margin-top:8px"><span style="width:54%"></span></div>
           <div class="divider"></div>
           <div class="muted" style="font-size:12px">Weights: Grid & energy 30%, Permitting 20%, Site & logistics 20%, Utilities 15%, Market & offtake 15%</div>
         </div>
 
         <div class="card">
-          <div style="font-weight:600;display:flex;align-items:center;gap:8px">
-            <i data-lucide="check-square" class="w-4 h-4"></i> Gate checklist
-          </div>
+          <div class="sec-title"><i data-lucide="check-square" class="w-4 h-4"></i> Gate checklist</div>
           <div id="gateList" style="margin-top:8px;display:flex;flex-direction:column;gap:8px"></div>
           <div class="actions" style="margin-top:12px">
             <button class="a-btn primary">Save to Watchlist</button>
@@ -215,9 +214,7 @@
         </div>
 
         <div class="card">
-          <div style="font-weight:600;display:flex;align-items:center;gap:8px">
-            <i data-lucide="clock" class="w-4 h-4"></i> Data confidence
-          </div>
+          <div class="sec-title"><i data-lucide="clock" class="w-4 h-4"></i> Data confidence</div>
           <div class="muted" style="font-size:12px;margin-top:6px">Data grade: B- (grid & permit desk research; water pre-screen; CO₂ logistics estimate)</div>
           <ul class="muted" style="font-size:12px;margin-top:6px;padding-left:18px">
             <li>Grid: TSO public plan (v2024), DNO capacity note (mock)</li>
@@ -227,7 +224,7 @@
           </ul>
           <div class="muted" style="font-size:12px;margin-top:6px">Upgrade path: add utility letters, OEM LoIs, transport survey, EIA scoping.</div>
         </div>
-      </div>
+      </aside>
     </div>
   </div>
 
@@ -379,7 +376,6 @@
 
   // ------- Helpers -------
   const $ = s => document.querySelector(s);
-  const $$ = s => Array.from(document.querySelectorAll(s));
   const fmt = n => (typeof n==='number' ? (Math.round(n*100)/100).toFixed(2) : n);
 
   function renderWaterfall(fuelKey){
