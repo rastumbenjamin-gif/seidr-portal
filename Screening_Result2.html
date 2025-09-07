@@ -4,6 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>SEIDR — Site Review • No-Go (Meråker)</title>
+<link rel="stylesheet" href="css/styles.css">
 <style>
   :root{
     --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
@@ -97,6 +98,8 @@
   .a-btn.ghost{background:var(--panel-2);color:var(--text)}
   .foot{color:var(--muted);font-size:12px;margin-top:12px}
 </style>
+<link rel="stylesheet" href="css/navigation.css">
+<script src="js/navigation.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
@@ -106,10 +109,13 @@
       <strong>SEIDR</strong>
       <span class="crumb">/ Site Review / No-Go (Meråker)</span>
     </div>
+    <nav id="main-nav">
+    </nav>
     <div class="stack">
       <span class="chip-bad"><i data-lucide="x-circle" class="w-4 h-4"></i> Not Passing</span>
       <span class="pill">Data grade: B-</span>
       <button class="btn" onclick="window.print()">Export PDF</button>
+      <nav id="main-nav">
     </div>
   </div>
 
