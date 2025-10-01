@@ -116,7 +116,7 @@
       if(reduce){ return; }
       if(mode === 'html'){
         const html = el.innerHTML;
-        typeHtml(el, html);
+        el.style.opacity = '0'; requestAnimationFrame(()=>{ el.style.transition = 'opacity .8s ease'; el.style.opacity = '1'; });
         return;
       }
       const hasTags = el.innerHTML.trim() !== el.textContent.trim();
