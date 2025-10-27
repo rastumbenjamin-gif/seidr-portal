@@ -299,12 +299,36 @@ function renderKPIs(){
   const totalMNOK = baseMNOK + contMNOK + escMNOK;
 
   const base = fxVal(baseMNOK); const cont = fxVal(contMNOK); const esc = fxVal(escMNOK); const tot = fxVal(totalMNOK);
-  $('#kBase').textContent = `${formatMoneyMNOK(base.v)} ${base.s}`;
-  $('#kCont').textContent = `${formatMoneyMNOK(cont.v)} ${cont.s}`;
-  $('#kEsc').textContent  = `${formatMoneyMNOK(esc.v)} ${esc.s}`;
-  $('#kTIC').textContent  = `${formatMoneyMNOK(tot.v)} ${tot.s}`;
-  $('#kCur').textContent  = base.s.replace('M','');
+  
+  // Animate KPI values with counting effect
+  animateValue($('#kBase'), 0, base.v, 1000, base.s);
+  animateValue($('#kCont'), 0, cont.v, 1200, cont.s);
+  animateValue($('#kEsc'), 0, esc.v, 1400, esc.s);
+  animateValue($('#kTIC'), 0, tot.v, 1600, tot.s);
+  
+  $('#kCur').textContent = base.s.replace('M','');
   $('#kContMode').textContent = $('#contMode').value==='Manual %' ? `Manual ${$('#contPct').value}%` : 'AACE';
+}
+
+// Animate number counting effect
+function animateValue(element, start, end, duration, suffix) {
+  const startTime = performance.now();
+  const animate = (currentTime) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const current = start + (end - start) * easeOutCubic(progress);
+    element.textContent = `${Math.round(current)} ${suffix}`;
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  };
+  requestAnimationFrame(animate);
+}
+
+// Easing function for smooth animation
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
 }
 
 function byUnitData(){
@@ -325,6 +349,22 @@ function drawBars(svgId, items, title=''){
   const svg = $(svgId); svg.innerHTML='';
   const W=svg.clientWidth||800, H=svg.clientHeight||320, pad=48, bw=48, gap=26;
   const maxVal = Math.max(1, ...items.map(x=>x.val))*1.18;
+  
+  // Add chart container class for animations
+  svg.classList.add('chart-container');
+  
+  // Remove existing tooltip if it exists
+  const existingTooltip = document.getElementById('tooltip-' + svgId.replace('#', ''));
+  if (existingTooltip) {
+    existingTooltip.remove();
+  }
+  
+  // Create tooltip element
+  const tooltip = document.createElement('div');
+  tooltip.className = 'chart-tooltip';
+  tooltip.id = 'tooltip-' + svgId.replace('#', '');
+  document.body.appendChild(tooltip);
+  
   // axes/grid
   const axis=(x1,y1,x2,y2)=>svg.insertAdjacentHTML('beforeend',`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="axis"/>`);
   axis(pad,H-pad,W-pad,H-pad); axis(pad,pad,pad,H-pad);
@@ -333,21 +373,76 @@ function drawBars(svgId, items, title=''){
     const v=(maxVal*(1 - i/3)).toFixed(0);
     svg.insertAdjacentHTML('beforeend', `<text x="8" y="${y+4}" class="reftext">${v} MNOK</text>`);
   }
-  // bars
+  
+  // bars with animations and hover effects
   items.forEach((it,idx)=>{
     const x = pad + 24 + idx*(bw+gap);
     const h = (it.val/maxVal)*(H-2*pad);
     const y = H-pad-h;
     const col = it.name==='Indirect' ? '#74aeea' : '#19c5be';
-    svg.insertAdjacentHTML('beforeend', `<rect class="bar" x="${x}" y="${y}" width="${bw}" height="${h}" fill="${col}"/>`);
+    
+    // Create bar with animation delay
+    const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bar.setAttribute('class', 'bar chart-bar');
+    bar.setAttribute('x', x);
+    bar.setAttribute('y', y);
+    bar.setAttribute('width', bw);
+    bar.setAttribute('height', h);
+    bar.setAttribute('fill', col);
+    bar.setAttribute('rx', 6);
+    bar.setAttribute('ry', 6);
+    bar.style.animationDelay = `${idx * 0.1}s`;
+    
+    // Add hover effects
+    bar.addEventListener('mouseenter', (e) => {
+      tooltip.innerHTML = `
+        <div class="tooltip-title">${it.name}</div>
+        <div class="tooltip-value">${Math.round(it.val)} MNOK</div>
+        <div class="tooltip-label">${it.name === 'Indirect' ? 'Indirect costs' : 'Direct costs'}</div>
+      `;
+      tooltip.classList.add('show');
+      
+      const rect = svg.getBoundingClientRect();
+      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+    });
+    
+    bar.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('show');
+    });
+    
+    bar.addEventListener('mousemove', (e) => {
+      const rect = svg.getBoundingClientRect();
+      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+    });
+    
+    svg.appendChild(bar);
     svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${H-pad+16}" text-anchor="middle" class="reftext">${it.name}</text>`);
     svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" class="reftext">${Math.round(it.val)}</text>`);
   });
+  
   if(title) svg.insertAdjacentHTML('beforeend', `<text x="${W/2}" y="${16}" text-anchor="middle" class="reftext">${title}</text>`);
 }
 function drawSCurve(){
   const svg=$('#scurve'); svg.innerHTML='';
   const W=svg.clientWidth||800, H=svg.clientHeight||320, pad=48;
+  
+  // Add chart container class for animations
+  svg.classList.add('chart-container');
+  
+  // Remove existing tooltip if it exists
+  const existingTooltip = document.getElementById('tooltip-scurve');
+  if (existingTooltip) {
+    existingTooltip.remove();
+  }
+  
+  // Create tooltip element
+  const tooltip = document.createElement('div');
+  tooltip.className = 'chart-tooltip';
+  tooltip.id = 'tooltip-scurve';
+  document.body.appendChild(tooltip);
+  
   // Simple time-phasing: months 1..24, with spend profile (front-loaded civils, mid OEM, back commissioning)
   const months = 24;
   const profile = Array.from({length:months}, (_,i)=>{
@@ -373,22 +468,116 @@ function drawSCurve(){
     const v=(total*(1 - i/3)).toFixed(0);
     svg.insertAdjacentHTML('beforeend', `<text x="8" y="${y+4}" class="reftext">${v} MNOK</text>`);
   }
+  
   // lines: monthly (bars) + cumulative (line)
   const maxY = total*1.05;
   const bw=(W-2*pad)/months * 0.6;
+  
+  // Create monthly bars with animations
   monthly.forEach((val,i)=>{
     const x = pad + (i+0.2)*(W-2*pad)/months;
     const h = (val/maxY)*(H-2*pad);
     const y = H-pad-h;
-    svg.insertAdjacentHTML('beforeend', `<rect x="${x}" y="${y}" width="${bw}" height="${h}" class="bar" fill="#74aeea"/>`);
+    
+    const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bar.setAttribute('class', 'bar chart-bar');
+    bar.setAttribute('x', x);
+    bar.setAttribute('y', y);
+    bar.setAttribute('width', bw);
+    bar.setAttribute('height', h);
+    bar.setAttribute('fill', '#74aeea');
+    bar.setAttribute('rx', 3);
+    bar.setAttribute('ry', 3);
+    bar.style.animationDelay = `${i * 0.05}s`;
+    
+    // Add hover effects for monthly bars
+    bar.addEventListener('mouseenter', (e) => {
+      tooltip.innerHTML = `
+        <div class="tooltip-title">Month ${i+1}</div>
+        <div class="tooltip-value">${Math.round(val)} MNOK</div>
+        <div class="tooltip-label">Monthly spend</div>
+      `;
+      tooltip.classList.add('show');
+      
+      const rect = svg.getBoundingClientRect();
+      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+    });
+    
+    bar.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('show');
+    });
+    
+    bar.addEventListener('mousemove', (e) => {
+      const rect = svg.getBoundingClientRect();
+      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+    });
+    
+    svg.appendChild(bar);
+    
     if((i+1)%3===0) svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${H-pad+16}" text-anchor="middle" class="reftext">M${i+1}</text>`);
   });
+  
+  // Create cumulative line with animation
   let d=''; cum.forEach((val,i)=>{
     const x = pad + (i+0.5)*(W-2*pad)/months;
     const y = H-pad - (val/maxY)*(H-2*pad);
     d+=(i?' L ':'M ')+x+','+y;
   });
-  svg.insertAdjacentHTML('beforeend', `<path d="${d}" stroke="#19c5be" fill="none" stroke-width="2.5"/>`);
+  
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  line.setAttribute('d', d);
+  line.setAttribute('stroke', '#19c5be');
+  line.setAttribute('fill', 'none');
+  line.setAttribute('stroke-width', '2.5');
+  line.setAttribute('class', 'line-path');
+  line.style.strokeDasharray = '1000';
+  line.style.strokeDashoffset = '1000';
+  line.style.animation = 'lineDraw 1.5s ease-out forwards';
+  line.style.animationDelay = '0.5s';
+  
+  svg.appendChild(line);
+  
+  // Add data points on the cumulative line
+  cum.forEach((val,i)=>{
+    const x = pad + (i+0.5)*(W-2*pad)/months;
+    const y = H-pad - (val/maxY)*(H-2*pad);
+    
+    const point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    point.setAttribute('cx', x);
+    point.setAttribute('cy', y);
+    point.setAttribute('r', 3);
+    point.setAttribute('fill', '#19c5be');
+    point.setAttribute('class', 'data-point');
+    point.style.animationDelay = `${(i * 0.05) + 1}s`;
+    
+    // Add hover effects for data points
+    point.addEventListener('mouseenter', (e) => {
+      tooltip.innerHTML = `
+        <div class="tooltip-title">Month ${i+1}</div>
+        <div class="tooltip-value">${Math.round(val)} MNOK</div>
+        <div class="tooltip-label">Cumulative spend</div>
+      `;
+      tooltip.classList.add('show');
+      
+      const rect = svg.getBoundingClientRect();
+      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+    });
+    
+    point.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('show');
+    });
+    
+    point.addEventListener('mousemove', (e) => {
+      const rect = svg.getBoundingClientRect();
+      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+    });
+    
+    svg.appendChild(point);
+  });
 }
 
 /* ---------------------- CAPEX Table ---------------------- */
