@@ -111,14 +111,8 @@
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
         <div>
-          <h1>Welcome back 👋</h1>
+          <h1>Welcome back</h1>
           <div class="muted">Move from screening → layout → costs → schedule in hours, not months.</div>
-          <div class="ticker" id="newsTicker" style="margin-top:8px">
-            <div class="tick">✨ New: AI Layout v0.9 — wind-aware siting & crane envelopes</div>
-            <div class="tick">📊 Benchmarks: 120+ electrolyzer quotes normalized</div>
-            <div class="tick">🛡️ HAZID templates refreshed (EN 60079 zones)</div>
-            <div class="tick">🌿 ESIA: Norwegian permitting checklist updated</div>
-          </div>
         </div>
         <div style="min-width:340px;flex:1">
           <div class="kpis">
@@ -126,13 +120,6 @@
             <div class="k"><small class="muted">Board packs ready</small><strong id="kPacks">—</strong></div>
             <div class="k"><small class="muted">Avg. Pre-FEED time</small><strong>−60–65%</strong></div>
             <div class="k"><small class="muted">Saved this month</small><strong id="kSaved">€—</strong></div>
-          </div>
-          <div class="quick">
-            <a class="q" href="/site-finder">🗺️ Site Finder</a>
-            <a class="q" href="/project-builder">🏗️ Project Builder</a>
-            <a class="q" href="/capex">💶 CAPEX</a>
-            <a class="q" href="/schedule">🗓️ Schedule</a>
-            <a class="q" href="/board-pack">📄 Board Pack</a>
           </div>
         </div>
       </div>
@@ -273,11 +260,11 @@ const projects = [
 ];
 
 const activity = [
-  {icon:'🗺️', text:'Updated site shortlist for Herøya North', when:'2h ago'},
-  {icon:'🏗️', text:'AI layout v0.9 re-run completed (wind shift 30°)', when:'5h ago'},
-  {icon:'💶', text:'CAPEX benchmark refreshed (electrolyzers −4%)', when:'Yesterday'},
-  {icon:'🗓️', text:'Schedule recalculated — critical path through E2', when:'2 days ago'},
-  {icon:'📄', text:'Board pack generated for Oslo CCUS Hub', when:'3 days ago'}
+  {icon:'', text:'Updated site shortlist for Herøya North', when:'2h ago'},
+  {icon:'', text:'AI layout v0.9 re-run completed (wind shift 30°)', when:'5h ago'},
+  {icon:'', text:'CAPEX benchmark refreshed (electrolyzers −4%)', when:'Yesterday'},
+  {icon:'', text:'Schedule recalculated — critical path through E2', when:'2 days ago'},
+  {icon:'', text:'Board pack generated for Oslo CCUS Hub', when:'3 days ago'}
 ];
 
 const notifs = [
@@ -329,11 +316,6 @@ const notifs = [
   document.getElementById('progBar').style.width = pct + '%';
 })();
 
-/* News ticker auto-scroll */
-(function tick(){
-  const sc=document.getElementById('newsTicker'); let i=0;
-  setInterval(()=>{ sc.scrollTo({left: (i++%sc.children.length)*260, behavior:'smooth'}); }, 3500);
-})();
 </script>
 </body>
 </html>
