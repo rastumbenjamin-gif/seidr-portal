@@ -74,6 +74,9 @@ function drawInteractiveBars(svgId, items, title = '', onBarClick = null) {
       bar.setAttribute('ry', 6);
       bar.setAttribute('fill', item.name === 'Indirect' ? '#74aeea' : '#19c5be');
       bar.style.transition = 'all 0.2s ease';
+      bar.style.transformOrigin = `${x + bw/2}px ${H - pad}px`;
+      bar.style.transform = 'scaleY(0)';
+      requestAnimationFrame(()=>{ bar.style.transition = 'transform .5s ease'; bar.style.transform = 'scaleY(1)'; });
       
       // Hover overlay for glow effect
       const hoverBar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -112,7 +115,7 @@ function drawInteractiveBars(svgId, items, title = '', onBarClick = null) {
       // Mouse events
       barGroup.addEventListener('mouseenter', (e) => {
         hoverBar.style.opacity = '0.6';
-        bar.style.transform = 'translateY(-2px)';
+        bar.style.transform = 'translateY(-2px) scaleY(1)';
         valueText.style.opacity = '1';
         valueText.style.fontWeight = 'bold';
         
@@ -132,7 +135,7 @@ function drawInteractiveBars(svgId, items, title = '', onBarClick = null) {
       
       barGroup.addEventListener('mouseleave', () => {
         hoverBar.style.opacity = '0';
-        bar.style.transform = 'translateY(0)';
+        bar.style.transform = 'translateY(0) scaleY(1)';
         valueText.style.opacity = '0.8';
         valueText.style.fontWeight = 'normal';
         tooltip.style.opacity = '0';
@@ -161,8 +164,60 @@ function drawInteractiveBars(svgId, items, title = '', onBarClick = null) {
     }
   }
   
-  // Interactive Table Enhancement
-  function makeTableInteractive(tableId) {
+  // Animate existing charts in a container
+  window.animateChartsIn = function(container){
+    if(!container) container = document;
+    
+    // Animate bars with stagger
+    const bars = container.querySelectorAll('svg rect.bar, svg.chart rect, svg rect[fill], svg rect[class*="bar"]');
+    bars.forEach((r, idx)=>{
+      const y = r.getAttribute('y') || 0;
+      const h = r.getAttribute('height') || 0;
+      const x = r.getAttribute('x') || 0;
+      const w = r.getAttribute('width') || 1;
+      r.style.transformOrigin = `${x*1 + w*0.5}px ${y*1 + h*1}px`;
+      r.style.transform = 'scaleY(0)';
+      r.style.opacity = '0';
+      setTimeout(()=>{
+        requestAnimationFrame(()=>{
+          r.style.transition='transform .6s cubic-bezier(.2,.8,.2,1), opacity .6s ease';
+          r.style.transform='scaleY(1)';
+          r.style.opacity='1';
+        });
+      }, idx * 40);
+    });
+    
+    // Animate paths (lines)
+    container.querySelectorAll('svg path[stroke], svg.chart path').forEach((p, idx)=>{
+      try{
+        const len = p.getTotalLength ? p.getTotalLength() : 1000;
+        p.style.strokeDasharray = `${len}`;
+        p.style.strokeDashoffset = `${len}`;
+        setTimeout(()=>{
+          requestAnimationFrame(()=>{
+            p.style.transition=`stroke-dashoffset ${Math.min(len/500, 2)}s ease`;
+            p.style.strokeDashoffset='0';
+          });
+        }, idx * 50 + 200);
+      }catch(e){}
+    });
+    
+    // Fade in cards
+    container.querySelectorAll('.card, .panel, .k, .kpi').forEach((n, idx)=>{
+      n.style.opacity = '0';
+      n.style.transform = 'translateY(8px)';
+      setTimeout(()=>{
+        requestAnimationFrame(()=>{
+          n.style.transition='opacity .5s ease, transform .5s ease';
+          n.style.opacity='1';
+          n.style.transform='translateY(0)';
+        });
+      }, idx * 30);
+    });
+  }
+
+// Interactive Table Enhancement
+function makeTableInteractive(tableId) {
     const table = document.querySelector(tableId);
     if (!table) return;
     

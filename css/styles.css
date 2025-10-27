@@ -91,3 +91,7 @@
     border-color: #19c5be;
     box-shadow: 0 2px 8px rgba(25, 197, 190, 0.3);
   }
+
+  /* Global readability constraints */
+  p, .muted { max-width: 72ch; overflow-wrap: anywhere; }
+  .wrap { width: 100%; }

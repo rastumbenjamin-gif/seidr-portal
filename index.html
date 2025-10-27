@@ -44,6 +44,47 @@
   h1{margin:.2rem 0;font-size:28px}
   h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
   .muted{color:var(--muted)}
+  /* Landing hero */
+  .hero-landing{position:relative;display:grid;place-items:center;text-align:center;min-height:66vh;padding:40px 12px}
+  .hero-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+  .hero-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));font-weight:800}
+  .hero-btn:hover{outline:1px solid rgba(25,197,190,.35)}
+  .hero-landing:before{content:'';position:absolute;inset:-10%;background:radial-gradient(800px 400px at 50% 0%, rgba(25,197,190,.08), transparent 60%), radial-gradient(600px 300px at 60% 20%, rgba(116,174,234,.08), transparent 60%);filter:blur(0.5px);pointer-events:none}
+  .hero-lead{font-size:clamp(18px,2.2vw,26px);line-height:1.7;color:var(--text);max-width:84ch;margin:12px auto 0}
+  .hero-lead a{color:inherit;text-decoration:none}
+  .hero-chip{display:inline;color:var(--teal);font-weight:700;text-decoration:underline;text-decoration-color:rgba(25,197,190,.4);text-underline-offset:3px;transition:all .2s ease}
+  .hero-chip:hover{color:var(--yellow);text-decoration-color:var(--yellow);transform:none;box-shadow:none}
+  .hero-lead{opacity:.95}
+  .hero-lead .hero-chip{opacity:1}
+  /* Layout: sticky hero + content */
+  .hero-layout{display:grid;grid-template-columns:1fr;gap:24px;align-items:start;justify-items:stretch;place-items:initial;max-width:1600px;margin:0 auto;padding:0 18px}
+  .hero-layout.active{grid-template-columns:420px minmax(900px, 1fr);align-items:start}
+  @media (max-width:1280px){.hero-layout.active{grid-template-columns:380px 1fr}}
+  @media (max-width:1080px){.hero-layout.active{grid-template-columns:1fr}}
+  /* SPA container */
+  #spa-content{padding:18px;min-width:900px}
+  #spa-content .wrap{max-width:none;margin:0;padding:24px 0 0}
+  #spa-content > * { grid-column: 2 }
+  #heroSection > div[style*="position:sticky"]{z-index:10}
+  #spa-content .wrap > *{margin-left:0;margin-right:0}
+  #spa-content .card, #spa-content .panel, #spa-content table{width:100%}
+  #spa-content svg.chart{width:100%}
+  #spa-content [style*="max-width:1840px"],
+  #spa-content [style*="max-width:1780px"],
+  #spa-content [style*="max-width:1760px"],
+  #spa-content [style*="max-width:1720px"]{max-width:none}
+  #spa-content .crumb, #spa-content footer{display:none}
+
+  /* Hide old sections and top nav on landing */
+  .wrap>.card, .wrap>.grid{display:none !important}
+  .topbar nav{display:none}
+
+  /* Hero emphasis */
+  .hero-title{font-weight:900;letter-spacing:.01em;line-height:1.2;margin:.2rem 0 .6rem;font-size:clamp(26px, 3.2vw, 44px)}
+  .hero-sub{font-size:clamp(14px, 1.4vw, 18px);color:var(--muted);max-width:68ch}
+  .ticker{opacity:.85;gap:8px}
+  .tick{font-size:12px;opacity:.85}
+  .quick{opacity:.92}
   .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   .k{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel-2)}
@@ -85,11 +126,12 @@
 </style>
 <script src="js/navigation.js"></script>
 <script src="js/interactive-charts.js"></script>
+<script src="js/main.js" defer></script>
 </head>
 <body>
   <div class="topbar">
     <div class="brand">
-      <div class="logo">SEIDR</div>
+      <a href="index.html" class="logo" style="color:inherit;text-decoration:none;cursor:pointer">SEIDR</a>
       <div class="crumb">/ Dashboard</div>
     </div>
     <nav id="main-nav">
@@ -125,130 +167,109 @@
       </div>
     </div>
 
-    <div class="grid" style="margin-top:12px">
-      <!-- LEFT COLUMN -->
-      <div class="card">
-        <h2>Segments / Services</h2>
-        <div style="height:1px;background:linear-gradient(90deg,rgba(25,197,190,.5),transparent);margin:6px 0"></div>
-        <div class="sections">
-          <div class="svc">
-            <h3>Hydrogen &amp; PtX</h3>
-            <span class="tag">Electrolyzers • Ammonia • eFuels</span>
-            <p>End-to-end Pre-FEED: screening, AI layout, CAPEX/OPEX, schedule, HAZID & ESIA. Off-take via pipeline, trucks or port.</p>
-            <div class="stack">
-              <span class="pill">LCOH</span><span class="pill">Grid &amp; Water</span><span class="pill">OEM DB</span><span class="pill">Board Pack</span>
-            </div>
-            <div class="cta"><a class="btn btn-teal" href="/projects/new?seg=ptx">Create PtX Project</a><a class="btn btn-ghost" href="/library/ptx">Templates</a></div>
-          </div>
-          <div class="svc">
-            <h3>CCUS</h3>
-            <span class="tag">Capture • Compression • Transport • Storage</span>
-            <p>Match emitters to capture tech, pipeline/ship sizing, storage options and permitting with risk & MRV paths.</p>
-            <div class="stack">
-              <span class="pill">Capture Tech</span><span class="pill">Pipeline</span><span class="pill">Ship/Port</span><span class="pill">MRV</span>
-            </div>
-            <div class="cta"><a class="btn btn-teal" href="/projects/new?seg=ccus">Create CCUS Project</a><a class="btn btn-ghost" href="/library/ccus">Templates</a></div>
-          </div>
-          <div class="svc">
-            <h3>Biogas &amp; Biomethane</h3>
-            <span class="tag">AD • Upgrading • Injection • Logistics</span>
-            <p>Feedstock mapping, AD sizing, upgrading options, grid injection or transport with cost, schedule & stakeholders.</p>
-            <div class="stack">
-              <span class="pill">Feedstock</span><span class="pill">Upgrading</span><span class="pill">Injection</span><span class="pill">Permits</span>
-            </div>
-            <div class="cta"><a class="btn btn-teal" href="/projects/new?seg=biogas">Create Biogas Project</a><a class="btn btn-ghost" href="/library/biogas">Templates</a></div>
-          </div>
-        </div>
-
-        <!-- Recent Projects -->
-        <div style="margin-top:14px">
-          <h2>Recent Projects</h2>
-          <div style="overflow:auto;max-height:320px">
-            <table id="tblProjects" aria-label="Recent projects">
-              <thead>
-                <tr>
-                  <th>Name</th><th>Segment</th><th>Status</th><th>Owner</th><th>Updated</th><th>Actions</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Activity Feed -->
-        <div style="margin-top:14px">
-          <h2>Activity</h2>
-          <div class="feed" id="activityFeed"></div>
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN -->
-      <div class="card">
-        <!-- What's New / Releases -->
-        <div class="card" style="padding:12px">
-          <h2>What’s New</h2>
-          <div class="release">
-            <div><strong>AI Layout v0.9</strong> <span class="badge b-gold">New</span><div class="muted">Wind-aware routing, crane reach envelopes, adjacency scoring</div></div>
-            <div class="pill">2025-08-01</div>
-          </div>
-          <div class="release">
-            <div><strong>Electrolyzer Benchmarks</strong> <span class="badge b-blue">Beta</span><div class="muted">120+ vendor quotes normalized, Market Median & Best-in-Class</div></div>
-            <div class="pill">2025-07-10</div>
-          </div>
-          <div class="release">
-            <div><strong>Norway ESIA checklist</strong> <span class="badge b-green">Improved</span><div class="muted">Storulykkeforskriften x-refs, noise & traffic templates</div></div>
-            <div class="pill">2025-06-22</div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-            <span class="pill">Uptime <b style="color:var(--green)">99.98%</b></span>
-            <span class="pill">API <span class="dot ok"></span></span>
-            <span class="pill">GIS Tiles <span class="dot ok"></span></span>
-            <span class="pill">Cost DB <span class="dot warn"></span></span>
-          </div>
-        </div>
-
-        <!-- Onboarding -->
-        <div class="card" style="padding:12px;margin-top:12px">
-          <h2>Onboarding Checklist</h2>
-          <ul class="muted" id="checklist" style="margin:8px 0 10px 18px;line-height:1.6">
-            <li><input type="checkbox" checked/> Create your first project</li>
-            <li><input type="checkbox" checked/> Run site screening & AI layout</li>
-            <li><input type="checkbox"/> Add vendor quotes (electrolyzers/BoP)</li>
-            <li><input type="checkbox"/> Build CAPEX drilldown & schedule</li>
-            <li><input type="checkbox"/> Generate board pack</li>
-          </ul>
-          <div class="progress" aria-label="Onboarding progress"><span id="progBar" style="width:60%"></span></div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <a class="btn btn-teal" href="/project-builder">Open Project Builder</a>
-            <a class="btn btn-ghost" href="/help/getting-started">Getting Started</a>
-          </div>
-        </div>
-
-        <!-- Notifications -->
-        <div class="card" style="padding:12px;margin-top:12px">
-          <h2>Notifications</h2>
-          <div id="notifList" class="feed"></div>
-        </div>
-
-        <!-- System Status / Links -->
-        <div class="card" style="padding:12px;margin-top:12px">
-          <h2>System</h2>
-          <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <span class="pill">Data Room: Connected</span>
-            <span class="pill">SSO: Enabled</span>
-            <span class="pill">Region: Nordics</span>
-            <a class="btn btn-ghost" href="/settings">Settings</a>
-            <a class="btn btn-ghost" href="/changelog">Changelog</a>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="crumb" style="margin-top:8px">© 2025 SEIDR — Internal preview</div>
   </div>
 
 <script>
+/* ---------- SPA loader ---------- */
+function spaLoad(page){
+  const el = document.getElementById('spa-content');
+  el.innerHTML = '<div class="card">Loading…</div>';
+  fetch(page).then(r=>r.text()).then(html=>{
+    // Clean up old SPA-injected content
+    document.querySelectorAll('style[data-spa], link[data-spa], script[data-spa-script]').forEach(n=>n.remove());
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const head = doc.querySelector('head');
+    const body = doc.querySelector('body');
+    
+    // Inject styles from head
+    if(head){
+      head.querySelectorAll('style').forEach(s=>{
+        const ns=document.createElement('style');
+        ns.setAttribute('data-spa','');
+        ns.textContent = s.textContent;
+        document.head.appendChild(ns);
+      });
+      head.querySelectorAll('link[rel="stylesheet"]').forEach(l=>{
+        const href = l.getAttribute('href');
+        if(href && !document.querySelector(`link[href="${href}"]`)){
+          const nl = document.createElement('link');
+          nl.rel='stylesheet';
+          nl.href=href;
+          nl.setAttribute('data-spa','');
+          document.head.appendChild(nl);
+        }
+      });
+    }
+
+    // Get main content
+    const main = body.querySelector('.wrap') || body;
+    
+    // Collect ALL scripts from body (not just from main)
+    const allScripts = Array.from(body.querySelectorAll('script')).filter(s=> !s.src && s.textContent.trim());
+    console.log(`Found ${allScripts.length} inline scripts in ${page}`);
+    
+    // Remove clutter
+    main.querySelectorAll('.topbar, nav, header').forEach(n=>n.remove());
+    if(main.classList.contains('wrap')){ 
+      main.style.padding = '0'; 
+      main.style.margin = '0'; 
+      main.style.maxWidth = 'none'; 
+    }
+
+    // Insert content
+    el.innerHTML = '';
+    Array.from(main.children).forEach(n=> el.appendChild(n));
+
+         // Execute scripts immediately after DOM insertion
+    setTimeout(()=>{
+      // Combine all script text and execute as one block
+      const combinedScript = allScripts.map(s => s.textContent).join('\n\n');
+      
+      try{
+        const script = document.createElement('script');
+        script.textContent = `
+          (function(){
+            console.log('Executing combined script for ${page}');
+            ${combinedScript}
+            console.log('Script execution complete for ${page}');
+            
+            // Force re-render if boot/render functions exist
+            setTimeout(()=>{
+              if(typeof boot === 'function') { console.log('Calling boot()'); boot(); }
+              if(typeof renderTable === 'function') { console.log('Calling renderTable()'); renderTable(); }
+              if(typeof renderKPIs === 'function') { console.log('Calling renderKPIs()'); renderKPIs(); }
+              if(typeof refresh === 'function') { console.log('Calling refresh()'); refresh(); }
+              
+              // Trigger animations
+              if(window.animateChartsIn) window.animateChartsIn(document.getElementById('spa-content'));
+              if(window.initializeInteractivity) window.initializeInteractivity();
+            }, 100);
+          })();
+        `;
+        script.setAttribute('data-spa-script', page);
+        document.body.appendChild(script);
+        console.log(`Executed combined script (${combinedScript.length} chars) from ${page}`);
+      }catch(e){ 
+        console.error('Script execution error:', e); 
+      }
+    }, 150);
+
+    // Activate layout and scroll
+    const hero = document.getElementById('heroSection');
+    if(hero) hero.classList.add('active');
+    setTimeout(()=>{
+      el.setAttribute('tabindex','-1');
+      el.focus({preventScroll:true});
+      el.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 50);
+  }).catch(err=>{
+    console.error('SPA load error:', err);
+    el.innerHTML = '<div class="card">Failed to load content.</div>';
+  });
+}
+
 /* ---------- Mock data ---------- */
 const projects = [
   {name:'Herøya North H2', seg:'Hydrogen & PtX', status:'Pre-FEED', owner:'L. Mikkelsen', updated:'2025-08-10'},

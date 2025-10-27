@@ -4,7 +4,6 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SEIDR — Gatekeeper: Portfolio Board & Scoring</title>
-<link rel="stylesheet" href="css/styles.css">
 <style>
   :root{
     --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
@@ -81,12 +80,15 @@
 
   @media (max-width:1200px){.wrap{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(3,1fr)}}
 </style>
-<link rel="stylesheet" href="css/navigation.css">
+<link rel="stylesheet" href="css/interactive-styles.css">
+<link rel="stylesheet" href="css/styles.css">
 <script src="js/navigation.js"></script>
+<script src="js/interactive-charts.js"></script>
+<script src="js/main.js" defer></script>
 </head>
 <body>
   <div class="topbar">
-    <div><strong>SEIDR</strong> <span class="crumb">/ Gatekeeper / Portfolio Board</span></div>
+    <div><a href="index.html" style="color:inherit;text-decoration:none;cursor:pointer"><strong>SEIDR</strong></a> <span class="crumb">/ Gatekeeper / Portfolio Board</span></div>
     <nav id="main-nav">
     </nav>
     <div class="stack"><a class="btn" href="#">Back to Map</a><button class="btn" onclick="exportCSV()">Export CSV</button></div>
