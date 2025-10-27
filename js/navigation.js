@@ -23,7 +23,7 @@ function insertNavigation() {
         
         // Get current page filename
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-        console.log('Current page:', currentPage); // Debug log
+        console.log('Current page:', currentPage, 'at', new Date().toISOString()); // Debug log
         
         pages.forEach(page => {
             const link = document.createElement('a');
