@@ -23,6 +23,7 @@ function insertNavigation() {
         
         // Get current page filename
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        console.log('Current page:', currentPage); // Debug log
         
         pages.forEach(page => {
             const link = document.createElement('a');
@@ -33,6 +34,7 @@ function insertNavigation() {
             // Add active class to current page
             if (page.file === currentPage) {
                 link.classList.add('active');
+                console.log('Active page:', page.name); // Debug log
             }
             
             nav.appendChild(link);
