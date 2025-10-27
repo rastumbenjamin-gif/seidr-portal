@@ -32,9 +32,9 @@
   }
   
   .seidr-nav .nav-link.active {
-    color: #ffffff;
-    background: linear-gradient(135deg, #19c5be, #16a8a2);
-    border-color: #19c5be;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #19c5be, #16a8a2) !important;
+    border-color: #19c5be !important;
     box-shadow: 0 2px 8px rgba(25, 197, 190, 0.3);
   }
   /* Fixed navigation positioning */
@@ -86,9 +86,9 @@
   }
   
   .seidr-nav .nav-link.active {
-    color: #ffffff;
-    background: linear-gradient(135deg, #19c5be, #16a8a2);
-    border-color: #19c5be;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #19c5be, #16a8a2) !important;
+    border-color: #19c5be !important;
     box-shadow: 0 2px 8px rgba(25, 197, 190, 0.3);
   }
 
