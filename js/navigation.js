@@ -1,16 +1,16 @@
 // Define your pages - matching your actual HTML files
 const pages = [
     { name: 'Home', file: 'index.html' },
-    { name: 'CAPEX', file: 'CAPEX.html' },
     { name: 'Comparison', file: 'comparison.html' },
-    { name: 'ESIA3', file: 'ESIA3.html' },
-    { name: 'LLI5', file: 'LLI5.html' },
-    { name: 'OEM Comparison', file: 'OEMcomparison.html' },
-    { name: 'Offtake', file: 'offtake.html' },
-    { name: 'Project Builder', file: 'projectbuilder.html' },
-    { name: 'Schedule', file: 'schedule.html' },
     { name: 'Screening R2', file: 'Screening_Result2.html' },
-    { name: 'Screening R3', file: 'Screening_Result3.html' }
+    { name: 'Screening R3', file: 'Screening_Result3.html' },
+    { name: 'Project Builder', file: 'projectbuilder.html' },
+    { name: 'OEM Comparison', file: 'OEMcomparison.html' },
+    { name: 'CAPEX', file: 'CAPEX.html' },
+    { name: 'LLI5', file: 'LLI5.html' },
+    { name: 'Schedule', file: 'schedule.html' },
+    { name: 'ESIA3', file: 'ESIA3.html' },
+    { name: 'Offtake', file: 'offtake.html' }
 ];
 
 // Function to insert navigation into nav container
