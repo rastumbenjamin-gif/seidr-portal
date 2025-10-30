@@ -242,6 +242,15 @@
 
   <!-- SPA: Create Project View (shown within Home) -->
   <div id="createProjectView" class="wrap" style="display:none">
+    <div class="card" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div class="muted">Create PtX Project</div>
+      <div class="stack-right">
+        <button class="btn" id="btnPreset">Load Example</button>
+        <button class="btn" id="btnImport">Import JSON</button>
+        <button class="btn" id="btnExport">Export JSON</button>
+        <button class="btn btn-teal" id="btnCreate">Create Project</button>
+      </div>
+    </div>
     <style>
       /* Scoped styles for Create Project view */
       #createProjectView .left,#createProjectView .right{display:flex;flex-direction:column;gap:12px}
@@ -882,6 +891,62 @@ document.getElementById('btnReset') && (document.getElementById('btnReset').oncl
 function createProjectAction(){ const json = collectJSON(); alert('Project created (mock). Next: Project Builder → Layout.'); }
 document.getElementById('btnCreate') && (document.getElementById('btnCreate').onclick = createProjectAction);
 document.getElementById('btnCreateBottom') && (document.getElementById('btnCreateBottom').onclick = createProjectAction);
+  // Top action bar hooks
+  const btnPreset = document.getElementById('btnPreset');
+  if(btnPreset){
+    btnPreset.onclick = ()=>{
+      document.getElementById('p_name').value = 'Ålesund H₂ Hub — 20 MW';
+      document.getElementById('p_owner').value = 'Norwegian Hydrogen';
+      document.getElementById('p_tag').value = 'NO-West / H₂ Mobility';
+      document.getElementById('s_name').value = 'Industripark West — Plot B';
+      document.getElementById('s_coords').value = '62.47, 6.15';
+      document.getElementById('s_plot').value = 14;
+      document.getElementById('s_zone').value = 'Industrial';
+      document.getElementById('t_tech').value = 'PEM';
+      document.getElementById('t_mw').value = 20;
+      document.getElementById('t_stack').value = 'OEM B — 10 MW skids';
+      document.getElementById('t_hours').value = 8200;
+      document.getElementById('t_eff').value = 50.5;
+      document.getElementById('t_avail').value = 95;
+      document.getElementById('u_kv').value = 220; document.getElementById('u_gdkm').value = 4; document.getElementById('u_wsrc').value = 'industrial'; document.getElementById('u_wkm').value = 1.5; document.getElementById('u_hh').value = 10; document.getElementById('u_q').value='confirmed';
+      document.getElementById('prod_primary').value='Hydrogen (compressed)'; document.getElementById('prod_bar').value=350; document.getElementById('prod_storage').value=30; document.getElementById('prod_status').value='LOI'; document.getElementById('prod_trucks').value=6;
+      document.getElementById('e_pack').value='Standard (grid+water+HH+zoning)';
+      const d=new Date(); d.setFullYear(2029); d.setMonth(5); d.setDate(1); document.getElementById('e_date').value = d.toISOString().slice(0,10);
+      document.getElementById('e_notes').value = 'Assume shared substation bay; water via industrial loop; HH route via E39; offtake LOI.';
+      renderParcel(AUTO_DEMO_SITES.find(x=>x.coords==='62.47, 6.15')?.parcel || null);
+      paint();
+    };
+  }
+  const btnExport = document.getElementById('btnExport');
+  if(btnExport){
+    btnExport.onclick = ()=>{
+      const blob = new Blob([JSON.stringify(collectJSON(),null,2)],{type:'application/json'});
+      const url = URL.createObjectURL(blob); const a=document.createElement('a');
+      a.href=url; a.download='seidr_project_'+Date.now()+'.json'; a.click(); URL.revokeObjectURL(url);
+    };
+  }
+  const btnImport = document.getElementById('btnImport');
+  if(btnImport){
+    btnImport.onclick = ()=>{
+      const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json';
+      inp.onchange = e=>{
+        const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+        r.onload = ()=>{ try{ const o=JSON.parse(r.result);
+          document.getElementById('p_name').value=o?.meta?.name||''; document.getElementById('p_owner').value=o?.meta?.owner||''; document.getElementById('p_tag').value=o?.meta?.tag||''; document.getElementById('p_conf').value=o?.meta?.confidentiality||'Confidential';
+          document.getElementById('s_name').value=o?.site?.name||''; document.getElementById('s_coords').value=o?.site?.coords||''; document.getElementById('s_plot').value=o?.site?.plot_ha||12; if(o?.site?.zoning) document.getElementById('s_zone').value=o.site.zoning; document.getElementById('s_flags').value=o?.site?.flags||'';
+          document.getElementById('t_tech').value=o?.tech?.type||'PEM'; document.getElementById('t_mw').value=o?.tech?.capacity_mw||20; document.getElementById('t_stack').value=o?.tech?.stack_config||''; document.getElementById('t_hours').value=o?.tech?.hours||8000; document.getElementById('t_eff').value=o?.tech?.efficiency_kwh_per_kg||51; document.getElementById('t_avail').value=o?.tech?.availability_pct||95;
+          document.getElementById('prod_primary').value=o?.product?.primary||'Hydrogen (compressed)'; document.getElementById('prod_bar').value=o?.product?.pressure_bar||350; document.getElementById('prod_storage').value=o?.product?.storage_t||20; document.getElementById('prod_status').value=o?.product?.offtake_status||'Exploration'; document.getElementById('prod_trucks').value=o?.product?.trucks_per_day||4;
+          document.getElementById('u_kv').value=o?.utilities?.grid_kv||132; document.getElementById('u_gdkm').value=o?.utilities?.grid_distance_km||5; document.getElementById('u_q').value=o?.utilities?.queue||'confirmed'; document.getElementById('u_wsrc').value=o?.utilities?.water_source||'industrial'; document.getElementById('u_wkm').value=o?.utilities?.water_distance_km||2; document.getElementById('u_hh').value=o?.utilities?.hh_route_km||12;
+          document.getElementById('e_pack').value=o?.evidence?.pack||'None'; document.getElementById('e_date').value=o?.evidence?.target_decision_date||''; document.getElementById('e_notes').value=o?.evidence?.notes||'';
+          selectedIndices.clear();
+          shortlist.splice(0,shortlist.length);
+          paint();
+        }catch(err){ alert('Invalid JSON'); }};
+        r.readAsText(f);
+      };
+      inp.click();
+    };
+  }
 // Seed defaults if view opened directly
 paint();
 }
