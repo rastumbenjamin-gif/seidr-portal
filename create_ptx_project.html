@@ -414,9 +414,225 @@
   </div>
 
 <script>
-// (Reuse the same JS from the Create Project SPA in index.html)
-// For brevity, load the logic by importing index.html's create view script would be ideal,
-// but we inline minimal hooks to avoid duplication here if needed.
+// ---- Minimal rulebook-ish constants (aligned with Gatekeeper demo) ----
+const FIT_HA_PER_MW = { PEM: 0.05, ALK: 0.06 };
+const EVIDENCE_TARGET_GREEN = 70; // %
+const EVIDENCE_AMBER_FLOOR = 30;  // %
+const COD_WINDOW = [2027, 2030];
+const GRID_MIN_KV = 132;
+
+// ---- Demo shortlist + parcel / ownership meta ----
+const AUTO_DEMO_SITES = [
+  {site:'R3-01 North Port', kv:220, gdkm:3, wkm:1.2, hh:9, score:0.84, coords:'62.47, 6.15',
+    parcel:{ gnr:'12', bnr:'48', muni:'Ålesund', areaHa:16.2, zoning:'Industrial', plan:'Regulated (ID 2019-23)',
+      lastSale:'2018-09-12', owners:[{name:'Kyst Eiendom KF', share:'100%'}],
+      easements:['Right-of-way for port cranes (north strip)','Power line corridor 132 kV (west edge)'] } },
+  {site:'R3-12 East Ridge', kv:145, gdkm:8, wkm:4.1, hh:14, score:0.78, coords:'62.41, 6.09',
+    parcel:{ gnr:'202', bnr:'3', muni:'Ålesund', areaHa:11.4, zoning:'Industrial/Logistics', plan:'Zoning in revision',
+      lastSale:'2022-05-03', owners:[{name:'Ridge Park AS', share:'85%'},{name:'Åkrene Utbygging AS', share:'15%'}],
+      easements:['Seasonal road restriction (spring thaw)','Protected ridge habitat buffer (east 50 m)'] } },
+  {site:'R3-07 Delta Park', kv:132, gdkm:5, wkm:6.0, hh:11, score:0.74, coords:'62.51, 6.20',
+    parcel:{ gnr:'55', bnr:'901', muni:'Giske', areaHa:13.0, zoning:'Industrial', plan:'Approved 2017',
+      lastSale:'2017-02-22', owners:[{name:'Delta Næringspark DA', share:'100%'}],
+      easements:['Floodway caution (Q200 fringe)','Fiber trunk line servitude (center)'] } },
+  {site:'R3-18 Fjordside', kv:110, gdkm:2, wkm:8.5, hh:26, score:0.62, coords:'62.49, 6.18',
+    parcel:{ gnr:'17', bnr:'56', muni:'Sula', areaHa:9.2, zoning:'Mixed industrial', plan:'Legacy (update due)',
+      lastSale:'2009-11-30', owners:[{name:'Fjordside Industrier ASA', share:'60%'},{name:'Privat: Solheim', share:'40%'}],
+      easements:['Shoreline protection zone','Public right-of-way to pier'] } },
+  {site:'R3-03 Inland Hub', kv:220, gdkm:18, wkm:2.2, hh:6, score:0.70, coords:'62.35, 6.05',
+    parcel:{ gnr:'301', bnr:'77', muni:'Sykkylven', areaHa:18.8, zoning:'Greenfield → Industrial (proposed)', plan:'Municipal plan only',
+      lastSale:'—', owners:[{name:'Kommunal grunn', share:'100%'}],
+      easements:['Agricultural lease (expires 2027)','Snow load/seasonal access constraint'] } }
+];
+
+// ---- Shortlist selection state for Comparison ----
+let selectedIndices = new Set();
+const shortlist = [];
+
+// ---- Helpers ----
+const $ = s => document.querySelector(s);
+const $all = s => [...document.querySelectorAll(s)];
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+function fmt(num, digits=0){ return Number(num).toLocaleString(undefined,{maximumFractionDigits:digits, minimumFractionDigits:digits}); }
+
+// ---- Mode switch ----
+$all('.tab').forEach(tab=>tab.addEventListener('click', ()=>{
+  $all('.tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  const mode = tab.dataset.mode;
+  document.querySelector('.mode-manual').classList.toggle('hidden', mode!=='manual');
+  document.querySelector('.mode-auto').classList.toggle('hidden', mode!=='auto');
+}));
+
+// ---- Render Parcel / Ownership card ----
+function renderParcel(p){
+  const cad = (p?.gnr && p?.bnr) ? `Gnr ${p.gnr} / Bnr ${p.bnr}` : '—';
+  $('#pv_cad').textContent = cad;
+  $('#pv_muni').textContent = p?.muni || '—';
+  $('#pv_area').textContent = p?.areaHa ? fmt(p.areaHa,2) : '—';
+  $('#pv_pzoning').textContent = p?.zoning || '—';
+  $('#pv_plan').textContent = p?.plan || '—';
+  $('#pv_sale').textContent = p?.lastSale || '—';
+  const ownWrap = $('#pv_owners'); ownWrap.innerHTML = '';
+  (p?.owners||[]).forEach(o=>{ const span = document.createElement('span'); span.className='owner-chip'; span.innerHTML = `<strong>${o.name}</strong><small>${o.share||''}</small>`; ownWrap.appendChild(span); });
+  if((p?.owners||[]).length===0){ const span = document.createElement('span'); span.className='pill'; span.textContent='—'; ownWrap.appendChild(span); }
+  const ul = $('#pv_ease'); ul.innerHTML='';
+  (p?.easements||[]).forEach(e=>{ const li = document.createElement('li'); li.textContent = e; ul.appendChild(li); });
+  if((p?.easements||[]).length===0){ const li = document.createElement('li'); li.textContent='—'; ul.appendChild(li); }
+}
+
+function refreshSelCount(){ const el=$('#selCount'); if(el) el.textContent = selectedIndices.size; }
+function renderShortlistChips(){ const holder=$('#shortlistChips'); if(!holder) return; holder.innerHTML=''; shortlist.forEach((s)=>{ const chip=document.createElement('span'); chip.className='owner-chip'; chip.innerHTML = `<strong>${s.site}</strong><small>${s.coords}</small>`; holder.appendChild(chip); }); }
+
+// ---- Auto shortlist table ----
+const btnPrev = document.getElementById('btnPreviewAuto'); if(btnPrev){ btnPrev.onclick = ()=>{
+  const tbody = document.getElementById('autoRows'); if(!tbody) return; tbody.innerHTML='';
+  AUTO_DEMO_SITES.forEach((s,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td><input type="checkbox" data-ix="${i}" class="rowSel"></td>
+      <td>${s.site}</td>
+      <td>${s.kv} kV / ${s.gdkm} km</td>
+      <td>${s.wkm} km</td>
+      <td>${s.hh} km</td>
+      <td>${(s.score*100|0)}%</td>
+      <td class="stack">
+        <button class="btn" data-i="${i}" data-role="use">Use</button>
+        <button class="btn" data-i="${i}" data-role="add">Add</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('autoTableWrap').classList.remove('hidden');
+  tbody.querySelectorAll('.rowSel').forEach(cb=>{ cb.onchange = ()=>{ const ix = +cb.dataset.ix; if(cb.checked) selectedIndices.add(ix); else selectedIndices.delete(ix); refreshSelCount(); }; });
+  tbody.querySelectorAll('button').forEach(btn=>btn.onclick = ()=>{
+    const ix = +btn.dataset.i; const s = AUTO_DEMO_SITES[ix];
+    if(btn.dataset.role==='use'){
+      $('#s_name').value = s.site; $('#s_coords').value = s.coords; $('#u_kv').value = s.kv; $('#u_gdkm').value = s.gdkm; $('#u_wkm').value = s.wkm; $('#u_hh').value = s.hh; $('#u_q').value = 'confirmed';
+      if(s.parcel?.areaHa) $('#s_plot').value = s.parcel.areaHa; if($('#s_zone') && s.parcel?.zoning) $('#s_zone').value = s.parcel.zoning; renderParcel(s.parcel); sync();
+    }
+    if(btn.dataset.role==='add'){
+      if(!shortlist.find(x=>x.site===s.site)){ shortlist.push({ site:s.site, coords:s.coords, kv:s.kv, gdkm:s.gdkm, wkm:s.wkm, hh:s.hh, score:s.score, parcel:s.parcel }); renderShortlistChips(); sync(); }
+    }
+  });
+  refreshSelCount();
+}; }
+
+document.getElementById('btnAddSelected') && (document.getElementById('btnAddSelected').onclick = ()=>{ selectedIndices.forEach(ix=>{ const s=AUTO_DEMO_SITES[ix]; if(!shortlist.find(x=>x.site===s.site)){ shortlist.push({ site:s.site, coords:s.coords, kv:s.kv, gdkm:s.gdkm, wkm:s.wkm, hh:s.hh, score:s.score, parcel:s.parcel }); } }); renderShortlistChips(); sync(); });
+document.getElementById('btnGoComparison') && (document.getElementById('btnGoComparison').onclick = ()=>{ if(shortlist.length===0){ alert('Select at least one site to compare.'); return; } alert('Sending '+shortlist.length+' site(s) to Comparison (mock).'); });
+document.getElementById('btnPickAuto') && (document.getElementById('btnPickAuto').onclick = ()=>{ const best=[...AUTO_DEMO_SITES].sort((a,b)=>b.score-a.score)[0]; $('#s_name').value=best.site; $('#s_coords').value=best.coords; $('#u_kv').value=best.kv; $('#u_gdkm').value=best.gdkm; $('#u_wkm').value=best.wkm; $('#u_hh').value=best.hh; $('#u_q').value='confirmed'; if(best.parcel?.areaHa) $('#s_plot').value=best.parcel.areaHa; if($('#s_zone') && best.parcel?.zoning) $('#s_zone').value=best.parcel.zoning; renderParcel(best.parcel); sync(); });
+
+// ---- Live sizing / evidence / class ----
+function compute(){
+  const tech = $('#t_tech')?.value || 'PEM';
+  const mw = +($('#t_mw')?.value||0);
+  const hours = +($('#t_hours')?.value||0);
+  const eff = +($('#t_eff')?.value||52);
+  const avail = clamp01((+($('#t_avail')?.value||0)/100));
+  const plot = +($('#s_plot')?.value||0);
+  const coords = $('#s_coords')?.value?.trim()||'';
+  const zone = $('#s_zone')? $('#s_zone').value : '—';
+  const flags = $('#s_flags')?.value?.trim()||'';
+  const kg = (mw*1000*hours*avail)/(eff||1);
+  const tpy = kg/1000;
+  const water_m3_day = (kg * 9 / 1000) / 365 * 1000;
+  const need_ha = (FIT_HA_PER_MW[tech]||0.055) * mw;
+  const fit_ratio = need_ha? Math.max(0, Math.min(1, plot/need_ha)) : 0;
+  const pack = $('#e_pack')?.value||'None';
+  const ev = pack==='None'?0: pack==='Minimal (grid+water)'?50: 80;
+  const gridOk = (+($('#u_kv')?.value||0) >= GRID_MIN_KV) && (['confirmed','fast-track','allocation'].includes($('#u_q')?.value||''));
+  const waterOk = (+($('#u_wkm')?.value||999) <= 5) && (['industrial','municipal','on-site'].includes($('#u_wsrc')?.value||''));
+  const hhOk = (+($('#u_hh')?.value||999) <= 25);
+  const mustFail = [];
+  if(!gridOk) mustFail.push('Grid intake/queue');
+  if(!waterOk) mustFail.push('Water distance/source');
+  if(!hhOk) mustFail.push('Heavy-haul route');
+  let cls='Amber', why='Score between thresholds';
+  if(mustFail.length) { cls='Red'; why='MUST fail: '+mustFail.join(', '); }
+  else if(ev < EVIDENCE_AMBER_FLOOR) { cls='Red'; why=`Evidence ${ev}% < floor ${EVIDENCE_AMBER_FLOOR}%`; }
+  else if(ev >= EVIDENCE_TARGET_GREEN && fit_ratio>=0.9) { cls='Green'; why=`Fit ≥90% & evidence ≥${EVIDENCE_TARGET_GREEN}%`; }
+  const capex = [
+    {pkg:'Electrolyzer + Rectifier', base: mw*9.5},
+    {pkg:'Balance of Plant (process)', base: mw*4.0},
+    {pkg:'Civil & Structural', base: mw*2.0*(1+Math.max(0,1-fit_ratio))},
+    {pkg:'Grid Connection', base: 60 + (Math.max(0,(+($('#u_gdkm')?.value||0)-3))*3)},
+    {pkg:'Water & Treatment', base: 20 + (+($('#u_wkm')?.value||0)*2)},
+    {pkg:'Compression/Storage/Loadout', base: 35 + (+($('#prod_storage')?.value||0)*0.6)}
+  ];
+  const cont = 0.25; const total = capex.reduce((a,c)=>a+c.base,0) * (1+cont);
+  const year = new Date($('#e_date')?.value||Date.now()).getFullYear() || new Date().getFullYear();
+  const withinCOD = year>=COD_WINDOW[0] && year<=COD_WINDOW[1];
+  const schPct = withinCOD? 80: 45;
+  return {tech,mw,hours,eff,avail,plot,coords,zone,flags,tpy,water_m3_day,need_ha,fit_ratio,ev,cls,why,capex,total,schPct};
+}
+function paint(){
+  const x = compute();
+  const set=(sel,v)=>{ const el=$(sel); if(el) el.textContent=v; };
+  set('#pv_coords', x.coords||'—'); set('#pv_zone', x.zone); set('#pv_flags', x.flags||'—');
+  set('#pv_h2', fmt(x.tpy,0)); set('#pv_mw', fmt(x.mw,0)); set('#pv_water', fmt(x.water_m3_day,0));
+  set('#pv_ha', fmt(x.need_ha,2)); set('#pv_fit', (x.fit_ratio*100|0)+'%');
+  const storeEl=$('#pv_store'); if(storeEl){ storeEl.textContent=( +($('#prod_storage')?.value||0) / ( (x.tpy/365)||1) ).toFixed(1); }
+  const bar=$('#pv_fitbar'); if(bar){ bar.style.width=(x.fit_ratio*100)+'%'; }
+  const evB=$('#pv_ev'); if(evB){ evB.className='scoreBubble'; if(x.ev<EVIDENCE_AMBER_FLOOR) evB.classList.add('red'); else if(x.ev<EVIDENCE_TARGET_GREEN) evB.classList.add('amber'); else evB.classList.add('green'); evB.textContent = x.ev+'%'; const help=$('#pv_ev_help'); if(help) help.textContent='Target ≥ '+EVIDENCE_TARGET_GREEN+'%'; }
+  const cB=$('#pv_class'); if(cB){ cB.className='scoreBubble'; cB.textContent=x.cls; cB.classList.add(x.cls.toLowerCase()); const h=$('#pv_class_help'); if(h) h.textContent=x.why; }
+  const tbody=document.getElementById('capexRows'); if(tbody){ tbody.innerHTML=''; x.capex.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.pkg}</td><td>${fmt(r.base,0)}</td>`; tbody.appendChild(tr); }); }
+  set('#capexTot', fmt(x.total,0));
+  const ms=[{name:'DG0',pct:10},{name:'DG1',pct:30},{name:'Permits 60%',pct:60},{name:'FID',pct:85},{name:'COD',pct:100}];
+  const ul=document.getElementById('msList'); if(ul){ ul.innerHTML=''; ms.forEach(m=>{ const li=document.createElement('li'); li.textContent=`${m.name}`; ul.appendChild(li); }); const sb=document.getElementById('schBar'); if(sb) sb.style.width=x.schPct+'%'; }
+  const jsonEl=document.getElementById('jsonOut'); if(jsonEl){ jsonEl.textContent=JSON.stringify(collectJSON(),null,2); }
+}
+function collectJSON(){ return { meta:{ name: $('#p_name')?.value, gate: $('#p_gate')?.value, owner: $('#p_owner')?.value, tag: $('#p_tag')?.value, confidentiality: $('#p_conf')?.value }, site:{ name: $('#s_name')?.value, coords: $('#s_coords')?.value, plot_ha: +($('#s_plot')?.value||0), zoning: $('#s_zone')? $('#s_zone').value: null, flags: $('#s_flags')?.value }, tech:{ type: $('#t_tech')?.value, capacity_mw: +($('#t_mw')?.value||0), stack_config: $('#t_stack')?.value, hours: +($('#t_hours')?.value||0), efficiency_kwh_per_kg: +($('#t_eff')?.value||0), availability_pct: +($('#t_avail')?.value||0) }, product:{ primary: $('#prod_primary')?.value, pressure_bar: +($('#prod_bar')?.value||0), storage_t: +($('#prod_storage')?.value||0), offtake_status: $('#prod_status')?.value, trucks_per_day: +($('#prod_trucks')?.value||0) }, utilities:{ grid_kv: +($('#u_kv')?.value||0), grid_distance_km: +($('#u_gdkm')?.value||0), queue: $('#u_q')?.value, water_source: $('#u_wsrc')?.value, water_distance_km: +($('#u_wkm')?.value||0), hh_route_km: +($('#u_hh')?.value||0) }, evidence:{ pack: $('#e_pack')?.value, target_decision_date: $('#e_date')?.value, notes: $('#e_notes')?.value }, comparison:{ shortlist: shortlist.map(s=>({ site:s.site, coords:s.coords, kv:s.kv, grid_km:s.gdkm, water_km:s.wkm, hh_km:s.hh, score:s.score, parcel: s.parcel ? { gnr:s.parcel.gnr, bnr:s.parcel.bnr, muni:s.parcel.muni, areaHa:s.parcel.areaHa, zoning:s.parcel.zoning, plan:s.parcel.plan, lastSale:s.parcel.lastSale, owners:s.parcel.owners, easements:s.parcel.easements } : null })) } }; }
+function sync(){ paint(); }
+$all('input,select,textarea').forEach(el=>{ if(el.type==='file') return; el.addEventListener('input', sync); el.addEventListener('change', sync); });
+
+// Reset / Preset / Export / Import / Create
+document.getElementById('btnReset') && (document.getElementById('btnReset').onclick = ()=>{ document.querySelectorAll('input,select,textarea').forEach(el=>{ if(el.id==='p_conf'){ el.value='Confidential'; return; } if(el.tagName==='TEXTAREA'){ el.value=''; return; } if(el.type==='number'){ el.value = el.id==='t_mw'?20: el.id==='t_hours'?8000: el.id==='t_eff'?51: el.id==='t_avail'?95: el.id==='s_plot'?12: el.id==='u_kv'?132: el.id==='u_gdkm'?5: el.id==='u_wkm'?2: el.id==='u_hh'?12: el.id==='prod_bar'?350: el.id==='prod_storage'?20: el.id==='prod_trucks'?4: 0; return; } if(el.tagName==='SELECT'){ el.selectedIndex=0; } else { el.value=''; } }); renderParcel(null); selectedIndices.clear(); refreshSelCount(); shortlist.splice(0,shortlist.length); renderShortlistChips(); paint(); });
+function createProjectAction(){ const json = collectJSON(); alert('Project created (mock). Next: Project Builder → Layout.'); }
+document.getElementById('btnCreate') && (document.getElementById('btnCreate').onclick = createProjectAction);
+document.getElementById('btnCreateBottom') && (document.getElementById('btnCreateBottom').onclick = createProjectAction);
+document.getElementById('btnPreset') && (document.getElementById('btnPreset').onclick = ()=>{
+  document.getElementById('p_name').value = 'Ålesund H₂ Hub — 20 MW';
+  document.getElementById('p_owner').value = 'Norwegian Hydrogen';
+  document.getElementById('p_tag').value = 'NO-West / H₂ Mobility';
+  document.getElementById('s_name').value = 'Industripark West — Plot B';
+  document.getElementById('s_coords').value = '62.47, 6.15';
+  document.getElementById('s_plot').value = 14;
+  document.getElementById('s_zone').value = 'Industrial';
+  document.getElementById('t_tech').value = 'PEM';
+  document.getElementById('t_mw').value = 20;
+  document.getElementById('t_stack').value = 'OEM B — 10 MW skids';
+  document.getElementById('t_hours').value = 8200;
+  document.getElementById('t_eff').value = 50.5;
+  document.getElementById('t_avail').value = 95;
+  document.getElementById('u_kv').value = 220; document.getElementById('u_gdkm').value = 4; document.getElementById('u_wsrc').value = 'industrial'; document.getElementById('u_wkm').value = 1.5; document.getElementById('u_hh').value = 10; document.getElementById('u_q').value='confirmed';
+  document.getElementById('prod_primary').value='Hydrogen (compressed)'; document.getElementById('prod_bar').value=350; document.getElementById('prod_storage').value=30; document.getElementById('prod_status').value='LOI'; document.getElementById('prod_trucks').value=6;
+  document.getElementById('e_pack').value='Standard (grid+water+HH+zoning)';
+  const d=new Date(); d.setFullYear(2029); d.setMonth(5); d.setDate(1); document.getElementById('e_date').value = d.toISOString().slice(0,10);
+  document.getElementById('e_notes').value = 'Assume shared substation bay; water via industrial loop; HH route via E39; off-take LOI.';
+  renderParcel(AUTO_DEMO_SITES.find(x=>x.coords==='62.47, 6.15')?.parcel || null);
+  paint();
+});
+document.getElementById('btnExport') && (document.getElementById('btnExport').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(collectJSON(),null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download='seidr_project_'+Date.now()+'.json'; a.click(); URL.revokeObjectURL(url);
+});
+document.getElementById('btnImport') && (document.getElementById('btnImport').onclick = ()=>{
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json';
+  inp.onchange = e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload = ()=>{ try{ const o=JSON.parse(r.result);
+    document.getElementById('p_name').value=o?.meta?.name||''; document.getElementById('p_owner').value=o?.meta?.owner||''; document.getElementById('p_tag').value=o?.meta?.tag||''; document.getElementById('p_conf').value=o?.meta?.confidentiality||'Confidential';
+    document.getElementById('s_name').value=o?.site?.name||''; document.getElementById('s_coords').value=o?.site?.coords||''; document.getElementById('s_plot').value=o?.site?.plot_ha||12; if(o?.site?.zoning) document.getElementById('s_zone').value=o.site.zoning; document.getElementById('s_flags').value=o?.site?.flags||'';
+    document.getElementById('t_tech').value=o?.tech?.type||'PEM'; document.getElementById('t_mw').value=o?.tech?.capacity_mw||20; document.getElementById('t_stack').value=o?.tech?.stack_config||''; document.getElementById('t_hours').value=o?.tech?.hours||8000; document.getElementById('t_eff').value=o?.tech?.efficiency_kwh_per_kg||51; document.getElementById('t_avail').value=o?.tech?.availability_pct||95;
+    document.getElementById('prod_primary').value=o?.product?.primary||'Hydrogen (compressed)'; document.getElementById('prod_bar').value=o?.product?.pressure_bar||350; document.getElementById('prod_storage').value=o?.product?.storage_t||20; document.getElementById('prod_status').value=o?.product?.offtake_status||'Exploration'; document.getElementById('prod_trucks').value=o?.product?.trucks_per_day||4;
+    document.getElementById('u_kv').value=o?.utilities?.grid_kv||132; document.getElementById('u_gdkm').value=o?.utilities?.grid_distance_km||5; document.getElementById('u_q').value=o?.utilities?.queue||'confirmed'; document.getElementById('u_wsrc').value=o?.utilities?.water_source||'industrial'; document.getElementById('u_wkm').value=o?.utilities?.water_distance_km||2; document.getElementById('u_hh').value=o?.utilities?.hh_route_km||12;
+    document.getElementById('e_pack').value=o?.evidence?.pack||'None'; document.getElementById('e_date').value=o?.evidence?.target_decision_date||''; document.getElementById('e_notes').value=o?.evidence?.notes||'';
+    selectedIndices.clear(); shortlist.splice(0,shortlist.length); paint();
+  }catch(err){ alert('Invalid JSON'); }}; r.readAsText(f); };
+  inp.click();
+});
+
+// Seed on load
+paint();
 </script>
 <script>
 // Prevent unfinished links from navigating to 404s
