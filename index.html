@@ -130,7 +130,7 @@
             <div class="stack">
               <span class="pill">LCOH</span><span class="pill">Grid &amp; Water</span><span class="pill">OEM DB</span><span class="pill">Board Pack</span>
             </div>
-            <div class="cta"><a class="btn btn-teal" href="/projects/new?seg=ptx">Create PtX Project</a><a class="btn btn-ghost" href="/library/ptx">Templates</a></div>
+            <div class="cta"><a class="btn btn-teal" href="create_ptx_project.html?seg=ptx">Create PtX Project</a><a class="btn btn-ghost" href="/library/ptx">Templates</a></div>
           </div>
           <div class="svc">
             <h3>CCUS</h3>
@@ -139,7 +139,7 @@
             <div class="stack">
               <span class="pill">Capture Tech</span><span class="pill">Pipeline</span><span class="pill">Ship/Port</span><span class="pill">MRV</span>
             </div>
-            <div class="cta"><a class="btn btn-teal" href="/projects/new?seg=ccus">Create CCUS Project</a><a class="btn btn-ghost" href="/library/ccus">Templates</a></div>
+            <div class="cta"><a class="btn btn-teal" href="create_ptx_project.html?seg=ccus">Create CCUS Project</a><a class="btn btn-ghost" href="/library/ccus">Templates</a></div>
           </div>
           <div class="svc">
             <h3>Biogas &amp; Biomethane</h3>
@@ -148,7 +148,7 @@
             <div class="stack">
               <span class="pill">Feedstock</span><span class="pill">Upgrading</span><span class="pill">Injection</span><span class="pill">Permits</span>
             </div>
-            <div class="cta"><a class="btn btn-teal" href="/projects/new?seg=biogas">Create Biogas Project</a><a class="btn btn-ghost" href="/library/biogas">Templates</a></div>
+            <div class="cta"><a class="btn btn-teal" href="create_ptx_project.html?seg=biogas">Create Biogas Project</a><a class="btn btn-ghost" href="/library/biogas">Templates</a></div>
           </div>
         </div>
 
@@ -263,7 +263,8 @@
       #createProjectView .stack-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
       #createProjectView .kv{display:grid;grid-template-columns:1fr auto;gap:10px;margin:6px 0}
       #createProjectView .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-      #createProjectView .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+      #createProjectView .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+      #createProjectView label{display:block;margin:8px 0 6px;white-space:nowrap}
       #createProjectView .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
       #createProjectView input[type="text"],#createProjectView input[type="number"],#createProjectView input[type="date"],#createProjectView select,#createProjectView textarea{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:8px}
       #createProjectView textarea{min-height:70px}
@@ -699,6 +700,8 @@ const notifs = [
   const homeView = document.getElementById('homeView');
   const createView = document.getElementById('createProjectView');
   if(!homeView || !createView) return;
+  const enableCreateSPA = false;
+  if(!enableCreateSPA){ return; }
 
   function showCreate(){ homeView.style.display='none'; createView.style.display='grid'; window.scrollTo(0,0); }
   function showHome(){ createView.style.display='none'; homeView.style.display='block'; window.scrollTo(0,0); }

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — Create PtX Project</title>
+<link rel="stylesheet" href="css/styles.css?v=5">
+<link rel="stylesheet" href="css/interactive-styles.css?v=5">
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --warn:#f59e52; --blue:#74aeea; --grey:#7f8b95;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  .crumb{color:var(--muted);font-size:13px}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+  .btn.primary{background:#14333a;border-color:#275e5d}
+  .btn.warn{background:#352613;border-color:#5c471f}
+  .wrap{max-width:1800px;margin:0 auto;padding:18px;display:grid;grid-template-columns:520px 1fr;gap:16px}
+  .left,.right{display:flex;flex-direction:column;gap:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h1{margin:.2rem 0 .6rem;font-size:26px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  h3{margin:.2rem 0 .4rem;font-size:16px}
+  .muted{color:var(--muted)}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .stack-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+  .kv{display:grid;grid-template-columns:1fr auto;gap:10px;margin:6px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .row{display:flex;gap:10px;align-items:center}
+  label{display:block;margin:8px 0 6px;white-space:nowrap}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
+  input[type="text"], input[type="number"], input[type="date"], select, textarea{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:8px}
+  input[type="range"]{width:100%}
+  textarea{min-height:70px}
+  .help{font-size:12px;color:var(--muted)}
+  .bar{height:10px;border-radius:6px;background:#13242f;overflow:hidden;border:1px solid var(--line)}
+  .bar>span{display:block;height:100%;background:linear-gradient(90deg,#2cc0b9,#57d39b)}
+  .sectionTabs{display:flex;gap:6px;margin-bottom:8px}
+  .tab{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);cursor:pointer}
+  .tab.active{outline:2px solid #275e5d}
+  .hidden{display:none}
+  .map{height:280px;border-radius:12px;border:1px solid var(--line);background:repeating-linear-gradient(45deg,#0e1820,#0e1820 10px,#0c151c 10px,#0c151c 20px)}
+  .mini{height:160px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  tr:hover{background:rgba(25,197,190,.06)}
+  .scoreBubble{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-weight:700}
+  .scoreBubble.red{background:rgba(239,140,122,.12);border-color:rgba(239,140,122,.5)}
+  .scoreBubble.amber{background:rgba(245,158,82,.12);border-color:rgba(245,158,82,.5)}
+  .scoreBubble.green{background:rgba(87,211,155,.12);border-color:rgba(87,211,155,.5)}
+  .code{font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px;white-space:pre-wrap;max-height:220px;overflow:auto}
+  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .owner-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);padding:4px 8px;border-radius:999px}
+  .owner-chip small{color:var(--muted)}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:#0f1f25;font-size:12px}
+  .list-tight li{margin:2px 0}
+  @media (max-width:1400px){ .wrap{grid-template-columns:1fr} }
+</style>
+<script src="js/navigation.js?v=5"></script>
+</head>
+<body>
+  <div class="topbar">
+    <div><a href="seidr_homepage_landing.html" style="color:inherit;text-decoration:none;cursor:pointer"><strong>SEIDR</strong></a> <span class="crumb">/ Projects / Create PtX Project</span></div>
+    <nav id="main-nav"></nav>
+    <div class="stack">
+      <button class="btn" id="btnPreset">Load Example</button>
+      <button class="btn" id="btnImport">Import JSON</button>
+      <button class="btn" id="btnExport">Export JSON</button>
+      <button class="btn primary" id="btnCreate">Create Project</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="left">
+      <div class="card">
+        <h1>Create PtX Project</h1>
+        <div class="muted">Choose <strong>Manual Site</strong> or let <strong>SEIDR Auto-Screen</strong> propose the optimal site. Adjust technology, size, products, utilities and evidence in one place. Live preview on the right.</div>
+        <div class="sectionTabs" role="tablist">
+          <div class="tab active" data-mode="manual" role="tab">Manual Site</div>
+          <div class="tab" data-mode="auto" role="tab">Auto — from Screening</div>
+        </div>
+        <div class="grid2">
+          <div>
+            <label class="muted">Project name</label>
+            <input id="p_name" placeholder="e.g., Ålesund H₂ Hub — 20 MW"/>
+          </div>
+          <div>
+            <label class="muted">Confidentiality</label>
+            <select id="p_conf"><option>Internal</option><option selected>Confidential</option><option>Public (demo)</option></select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Decision Gate</label>
+            <select id="p_gate"><option>DG0 — Opportunity</option><option selected>DG1 — Pre-FEED</option><option>DG2 — FEED</option></select>
+          </div>
+          <div>
+            <label class="muted">Owner</label>
+            <input id="p_owner" placeholder="e.g., Norwegian Hydrogen"/>
+          </div>
+          <div>
+            <label class="muted">Portfolio tag</label>
+            <input id="p_tag" placeholder="Region / Client / Segment"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mode-manual">
+        <h2>Site (Manual)</h2>
+        <div class="grid2">
+          <div>
+            <label class="muted">Coordinates</label>
+            <input id="s_coords" placeholder="Lat, Lng (e.g., 62.47, 6.15)"/>
+          </div>
+          <div>
+            <label class="muted">Address / Site name</label>
+            <input id="s_name" placeholder="e.g., Industripark West — Plot B"/>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Plot area (ha)</label>
+            <input id="s_plot" type="number" value="12" min="0">
+          </div>
+          <div>
+            <label class="muted">Zoning</label>
+            <select id="s_zone"><option>Industrial</option><option>Commercial</option><option>Greenfield</option></select>
+          </div>
+          <div>
+            <label class="muted">Proximity flags</label>
+            <input id="s_flags" placeholder="protected-area, heritage"/>
+          </div>
+        </div>
+        <div class="help">Tip: Use the map on the right to place a pin and auto-fill coordinates.</div>
+      </div>
+
+      <div class="card mode-auto hidden">
+        <h2>Auto Site (from Screening)</h2>
+        <div class="grid2">
+          <div>
+            <label class="muted">Shortlist source</label>
+            <select id="auto_source"><option>Latest Screening R3</option><option>Saved shortlist</option><option>Upload CSV</option></select>
+          </div>
+          <div>
+            <label class="muted">Pick strategy</label>
+            <select id="auto_pick"><option>Highest score</option><option>Best grid</option><option>Least capex</option><option>Balanced</option></select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Min grid kV</label>
+            <input id="auto_kv" type="number" value="132">
+          </div>
+          <div>
+            <label class="muted">Max water distance (km)</label>
+            <input id="auto_wkm" type="number" value="5">
+          </div>
+          <div>
+            <label class="muted">Max HH route (km)</label>
+            <input id="auto_hh" type="number" value="25">
+          </div>
+        </div>
+        <div class="stack" style="margin-top:8px">
+          <button class="btn" id="btnPreviewAuto">Preview top 5</button>
+          <button class="btn primary" id="btnPickAuto">Auto-select best</button>
+        </div>
+        <div id="autoTableWrap" class="hidden" style="margin-top:8px">
+          <div class="stack" style="justify-content:space-between;margin-bottom:6px">
+            <div class="muted">Select multiple to send to <strong>Comparison</strong>.</div>
+            <div class="stack-right">
+              <span class="badge">Selected: <strong id="selCount">0</strong></span>
+              <button class="btn" id="btnAddSelected">Add selected</button>
+              <button class="btn primary" id="btnGoComparison">Proceed to Comparison</button>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>#</th><th></th><th>Site</th><th>Grid</th><th>Water</th><th>HH</th><th>Score</th><th></th></tr>
+            </thead>
+            <tbody id="autoRows"></tbody>
+          </table>
+          <div id="shortlistChips" class="stack" style="margin-top:8px"></div>
+        </div>
+        <div class="help">Uses Gatekeeper rulebook weights/thresholds for scoring (demo logic).</div>
+      </div>
+
+      <div class="card">
+        <h2>Technology & Scale</h2>
+        <div class="grid3">
+          <div>
+            <label class="muted">Electrolyzer tech</label>
+            <select id="t_tech"><option>PEM</option><option>ALK</option></select>
+          </div>
+          <div>
+            <label class="muted">Capacity (MW EL)</label>
+            <input id="t_mw" type="number" value="20" min="1">
+          </div>
+          <div>
+            <label class="muted">Stack config</label>
+            <select id="t_stack"><option>OEM A — 5 MW skids</option><option>OEM B — 10 MW skids</option><option>OEM C — 20 MW blocks</option></select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Operating hours (h/yr)</label>
+            <input id="t_hours" type="number" value="8000" min="0" max="8760">
+          </div>
+          <div>
+            <label class="muted">Efficiency (kWh/kg H₂)</label>
+            <input id="t_eff" type="number" value="51" step="0.1">
+          </div>
+          <div>
+            <label class="muted">Availability (%)</label>
+            <input id="t_avail" type="number" value="95" min="0" max="100">
+          </div>
+        </div>
+        <div class="help">Adjusts footprint, power draw, water demand and expected annual H₂ output in the live preview.</div>
+      </div>
+
+      <div class="card">
+        <h2>Products & Offtake</h2>
+        <div class="grid2">
+          <div>
+            <label class="muted">Primary product</label>
+            <select id="prod_primary"><option>Hydrogen (compressed)</option><option>Ammonia (NH₃)</option><option>Methanol (MeOH)</option></select>
+          </div>
+          <div>
+            <label class="muted">Delivery pressure (bar)</label>
+            <input id="prod_bar" type="number" value="350">
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Storage (t H₂ eq.)</label>
+            <input id="prod_storage" type="number" value="20">
+          </div>
+          <div>
+            <label class="muted">Offtake status</label>
+            <select id="prod_status"><option>Exploration</option><option>LOI</option><option>Term sheet</option></select>
+          </div>
+          <div>
+            <label class="muted">Truck loads / day</label>
+            <input id="prod_trucks" type="number" value="4">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Utilities & Access</h2>
+        <div class="grid3">
+          <div>
+            <label class="muted">Grid kV</label>
+            <input id="u_kv" type="number" value="132">
+          </div>
+          <div>
+            <label class="muted">Grid distance (km)</label>
+            <input id="u_gdkm" type="number" value="5">
+          </div>
+          <div>
+            <label class="muted">Queue status</label>
+            <select id="u_q"><option>confirmed</option><option>fast-track</option><option>allocation</option><option>queued</option></select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Water source</label>
+            <select id="u_wsrc"><option>industrial</option><option>municipal</option><option>on-site</option></select>
+          </div>
+          <div>
+            <label class="muted">Water distance (km)</label>
+            <input id="u_wkm" type="number" value="2">
+          </div>
+          <div>
+            <label class="muted">HH route length (km)</label>
+            <input id="u_hh" type="number" value="12">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Evidence & Governance</h2>
+        <div class="grid2">
+          <div>
+            <label class="muted">Evidence pack</label>
+            <select id="e_pack"><option>None</option><option>Minimal (grid+water)</option><option>Standard (grid+water+HH+zoning)</option></select>
+          </div>
+          <div>
+            <label class="muted">Target decision date</label>
+            <input id="e_date" type="date">
+          </div>
+        </div>
+        <div style="margin-top:6px">
+          <label class="muted">Notes / assumptions</label>
+          <textarea id="e_notes" placeholder="Key assumptions, constraints, and sources..."></textarea>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="muted">JSON preview updates live</div>
+        <div class="stack">
+          <button class="btn" id="btnReset">Reset</button>
+          <button class="btn primary" id="btnCreateBottom">Create Project</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="card">
+        <h2>Map / Site Placement</h2>
+        <div class="map" id="mapBox" title="Map placeholder (demo)"></div>
+        <div class="grid3" style="margin-top:8px">
+          <div class="kv"><span>Coords</span><strong id="pv_coords">—</strong></div>
+          <div class="kv"><span>Zoning</span><strong id="pv_zone">—</strong></div>
+          <div class="kv"><span>Proximity flags</span><strong id="pv_flags">—</strong></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Parcel / Ownership</h2>
+        <div class="grid3">
+          <div class="kv"><span>Cadastre (Gnr/Bnr)</span><strong id="pv_cad">—</strong></div>
+          <div class="kv"><span>Municipality</span><strong id="pv_muni">—</strong></div>
+          <div class="kv"><span>Area (ha)</span><strong id="pv_area">—</strong></div>
+        </div>
+        <div class="grid3" style="margin-top:6px">
+          <div class="kv"><span>Zoning</span><strong id="pv_pzoning">—</strong></div>
+          <div class="kv"><span>Plan status</span><strong id="pv_plan">—</strong></div>
+          <div class="kv"><span>Last sale</span><strong id="pv_sale">—</strong></div>
+        </div>
+        <div style="margin-top:6px">
+          <div class="muted">Owners</div>
+          <div id="pv_owners" class="stack" style="margin-top:4px"></div>
+        </div>
+        <div style="margin-top:6px">
+          <div class="muted">Easements / Remarks</div>
+          <ul id="pv_ease" class="list-tight" style="margin-top:4px;padding-left:18px"></ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Sizing & Outputs</h2>
+        <div class="grid3">
+          <div class="kv"><span>H₂ output (t/yr)</span><strong id="pv_h2">—</strong></div>
+          <div class="kv"><span>Elec draw (MW)</span><strong id="pv_mw">—</strong></div>
+          <div class="kv"><span>Water demand (m³/day)</span><strong id="pv_water">—</strong></div>
+        </div>
+        <div class="grid3" style="margin-top:6px">
+          <div class="kv"><span>Footprint need (ha)</span><strong id="pv_ha">—</strong></div>
+          <div class="kv"><span>Plot fit</span><strong id="pv_fit">—</strong></div>
+          <div class="kv"><span>Storage days</span><strong id="pv_store">—</strong></div>
+        </div>
+        <div class="bar" style="margin-top:6px"><span id="pv_fitbar" style="width:0%"></span></div>
+        <div class="help">Footprint model: PEM 0.05 ha/MW, ALK 0.06 ha/MW (illustrative).</div>
+      </div>
+
+      <div class="card">
+        <h2>Readiness & Gate Class</h2>
+        <div class="grid2">
+          <div>
+            <div class="muted">Evidence</div>
+            <div id="pv_ev" class="scoreBubble">—</div>
+            <div class="help" id="pv_ev_help">—</div>
+          </div>
+          <div>
+            <div class="muted">Gatekeeper class</div>
+            <div id="pv_class" class="scoreBubble">—</div>
+            <div class="help" id="pv_class_help">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Quick CAPEX & Schedule (mock)</h2>
+        <div class="grid2">
+          <div>
+            <table>
+              <thead><tr><th>Package</th><th>Base (MNOK)</th></tr></thead>
+              <tbody id="capexRows"></tbody>
+              <tfoot><tr><th>Total (Class-4)</th><th id="capexTot">—</th></tr></tfoot>
+            </table>
+          </div>
+          <div>
+            <div class="muted">Milestones</div>
+            <ul id="msList" style="margin-top:6px"></ul>
+            <div class="bar" style="margin-top:6px"><span id="schBar" style="width:0%"></span></div>
+            <div class="help">Timeline sanity vs COD window.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>JSON (project)</h2>
+        <div id="jsonOut" class="code">—</div>
+      </div>
+
+      <div class="card">
+        <h2>Dev Notes</h2>
+        <ul style="margin-top:6px">
+          <li>Mode switch: Manual vs Auto from Screening. Auto uses demo shortlist + Gatekeeper-like scoring.</li>
+          <li><strong>New:</strong> Parcel / Ownership fills when choosing Auto Site “Use”.</li>
+          <li><strong>New:</strong> Multi-select → “Proceed to Comparison”. Also added to JSON under <code>comparison.shortlist</code>.</li>
+          <li>Live sizing & evidence compute mirrors Gatekeeper envelopes.</li>
+          <li>Wire the Create/Comparison actions to your real routes in the app.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+<script>
+// (Reuse the same JS from the Create Project SPA in index.html)
+// For brevity, load the logic by importing index.html's create view script would be ideal,
+// but we inline minimal hooks to avoid duplication here if needed.
+</script>
+</body>
+</html>
+

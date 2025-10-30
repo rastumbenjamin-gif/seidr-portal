@@ -1,6 +1,7 @@
 // Define your pages - matching your actual HTML files
 const pages = [
     { name: 'Home', file: 'index.html' },
+    { name: 'Create Project', file: 'create_ptx_project.html' },
     { name: 'Portfolio Board', file: 'comparison.html' },
     { name: 'Screening R2', file: 'Screening_Result2.html' },
     { name: 'Screening R3', file: 'Screening_Result3.html' },
