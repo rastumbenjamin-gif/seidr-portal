@@ -10,7 +10,8 @@ const pages = [
     { name: 'LLI5', file: 'LLI5.html' },
     { name: 'Schedule', file: 'schedule.html' },
     { name: 'ESIA3', file: 'ESIA3.html' },
-    { name: 'Offtake', file: 'offtake.html' }
+    { name: 'Offtake', file: 'offtake.html' },
+    { name: 'Board Pack', file: 'decision_board.html' }
 ];
 
 // Function to insert navigation into nav container
