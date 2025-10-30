@@ -105,7 +105,7 @@
     </div>
   </div>
 
-  <div class="wrap">
+  <div class="wrap" id="homeView">
 
     <!-- Header / KPIs / Quick actions -->
     <div class="card">
@@ -248,6 +248,383 @@
     <div class="crumb" style="margin-top:8px">© 2025 SEIDR — Internal preview</div>
   </div>
 
+  <!-- SPA: Create Project View (shown within Home) -->
+  <div id="createProjectView" class="wrap" style="display:none">
+    <style>
+      /* Scoped styles for Create Project view */
+      #createProjectView .left,#createProjectView .right{display:flex;flex-direction:column;gap:12px}
+      #createProjectView .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+      #createProjectView h1{margin:.2rem 0 .6rem;font-size:26px}
+      #createProjectView h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+      #createProjectView h3{margin:.2rem 0 .4rem;font-size:16px}
+      #createProjectView .muted{color:var(--muted)}
+      #createProjectView .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+      #createProjectView .stack-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+      #createProjectView .kv{display:grid;grid-template-columns:1fr auto;gap:10px;margin:6px 0}
+      #createProjectView .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      #createProjectView .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+      #createProjectView .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
+      #createProjectView input[type="text"],#createProjectView input[type="number"],#createProjectView input[type="date"],#createProjectView select,#createProjectView textarea{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:8px}
+      #createProjectView textarea{min-height:70px}
+      #createProjectView .bar{height:10px;border-radius:6px;background:#13242f;overflow:hidden;border:1px solid var(--line)}
+      #createProjectView .bar>span{display:block;height:100%;background:linear-gradient(90deg,#2cc0b9,#57d39b)}
+      #createProjectView .sectionTabs{display:flex;gap:6px;margin-bottom:8px}
+      #createProjectView .tab{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);cursor:pointer}
+      #createProjectView .tab.active{outline:2px solid #275e5d}
+      #createProjectView .hidden{display:none}
+      #createProjectView .map{height:280px;border-radius:12px;border:1px solid var(--line);background:repeating-linear-gradient(45deg,#0e1820,#0e1820 10px,#0c151c 10px,#0c151c 20px)}
+      #createProjectView .mini{height:160px}
+      #createProjectView table{width:100%;border-collapse:collapse}
+      #createProjectView th,#createProjectView td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left}
+      #createProjectView th{color:var(--muted);font-weight:600}
+      #createProjectView tr:hover{background:rgba(25,197,190,.06)}
+      #createProjectView .scoreBubble{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-weight:700}
+      #createProjectView .scoreBubble.red{background:rgba(239,140,122,.12);border-color:rgba(239,140,122,.5)}
+      #createProjectView .scoreBubble.amber{background:rgba(245,158,82,.12);border-color:rgba(245,158,82,.5)}
+      #createProjectView .scoreBubble.green{background:rgba(87,211,155,.12);border-color:rgba(87,211,155,.5)}
+      #createProjectView .code{font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px;white-space:pre-wrap;max-height:220px;overflow:auto}
+      #createProjectView .footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+      #createProjectView .owner-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);padding:4px 8px;border-radius:999px}
+      #createProjectView .owner-chip small{color:var(--muted)}
+      #createProjectView .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:#0f1f25;font-size:12px}
+      #createProjectView .list-tight li{margin:2px 0}
+    </style>
+
+    <div class="left">
+      <div class="card">
+        <h1>Create PtX Project</h1>
+        <div class="muted">Choose <strong>Manual Site</strong> or let <strong>SEIDR Auto-Screen</strong> propose the optimal site. Adjust technology, size, products, utilities and evidence in one place. Live preview on the right.</div>
+        <div class="sectionTabs" role="tablist">
+          <div class="tab active" data-mode="manual" role="tab">Manual Site</div>
+          <div class="tab" data-mode="auto" role="tab">Auto — from Screening</div>
+        </div>
+        <div class="grid2">
+          <div>
+            <label class="muted">Project name</label>
+            <input id="p_name" placeholder="e.g., Ålesund H₂ Hub — 20 MW"/>
+          </div>
+          <div>
+            <label class="muted">Confidentiality</label>
+            <select id="p_conf"><option>Internal</option><option selected>Confidential</option><option>Public (demo)</option></select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Decision Gate</label>
+            <select id="p_gate"><option>DG0 — Opportunity</option><option selected>DG1 — Pre-FEED</option><option>DG2 — FEED</option></select>
+          </div>
+          <div>
+            <label class="muted">Owner</label>
+            <input id="p_owner" placeholder="e.g., Norwegian Hydrogen"/>
+          </div>
+          <div>
+            <label class="muted">Portfolio tag</label>
+            <input id="p_tag" placeholder="Region / Client / Segment"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mode-manual">
+        <h2>Site (Manual)</h2>
+        <div class="grid2">
+          <div>
+            <label class="muted">Coordinates</label>
+            <input id="s_coords" placeholder="Lat, Lng (e.g., 62.47, 6.15)"/>
+          </div>
+          <div>
+            <label class="muted">Address / Site name</label>
+            <input id="s_name" placeholder="e.g., Industripark West — Plot B"/>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Plot area (ha)</label>
+            <input id="s_plot" type="number" value="12" min="0">
+          </div>
+          <div>
+            <label class="muted">Zoning</label>
+            <select id="s_zone"><option>Industrial</option><option>Commercial</option><option>Greenfield</option></select>
+          </div>
+          <div>
+            <label class="muted">Proximity flags</label>
+            <input id="s_flags" placeholder="protected-area, heritage"/>
+          </div>
+        </div>
+        <div class="help">Tip: Use the map on the right to place a pin and auto-fill coordinates.</div>
+      </div>
+
+      <div class="card mode-auto hidden">
+        <h2>Auto Site (from Screening)</h2>
+        <div class="grid2">
+          <div>
+            <label class="muted">Shortlist source</label>
+            <select id="auto_source"><option>Latest Screening R3</option><option>Saved shortlist</option><option>Upload CSV</option></select>
+          </div>
+          <div>
+            <label class="muted">Pick strategy</label>
+            <select id="auto_pick"><option>Highest score</option><option>Best grid</option><option>Least capex</option><option>Balanced</option></select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Min grid kV</label>
+            <input id="auto_kv" type="number" value="132">
+          </div>
+          <div>
+            <label class="muted">Max water distance (km)</label>
+            <input id="auto_wkm" type="number" value="5">
+          </div>
+          <div>
+            <label class="muted">Max HH route (km)</label>
+            <input id="auto_hh" type="number" value="25">
+          </div>
+        </div>
+        <div class="stack" style="margin-top:8px">
+          <button class="btn" id="btnPreviewAuto">Preview top 5</button>
+          <button class="btn primary" id="btnPickAuto">Auto-select best</button>
+        </div>
+        <div id="autoTableWrap" class="hidden" style="margin-top:8px">
+          <div class="stack" style="justify-content:space-between;margin-bottom:6px">
+            <div class="muted">Select multiple to send to <strong>Comparison</strong>.</div>
+            <div class="stack-right">
+              <span class="badge">Selected: <strong id="selCount">0</strong></span>
+              <button class="btn" id="btnAddSelected">Add selected</button>
+              <button class="btn primary" id="btnGoComparison">Proceed to Comparison</button>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>#</th><th></th><th>Site</th><th>Grid</th><th>Water</th><th>HH</th><th>Score</th><th></th></tr>
+            </thead>
+            <tbody id="autoRows"></tbody>
+          </table>
+          <div id="shortlistChips" class="stack" style="margin-top:8px"></div>
+        </div>
+        <div class="help">Uses Gatekeeper rulebook weights/thresholds for scoring (demo logic).</div>
+      </div>
+
+      <div class="card">
+        <h2>Technology & Scale</h2>
+        <div class="grid3">
+          <div>
+            <label class="muted">Electrolyzer tech</label>
+            <select id="t_tech"><option>PEM</option><option>ALK</option></select>
+          </div>
+          <div>
+            <label class="muted">Capacity (MW EL)</label>
+            <input id="t_mw" type="number" value="20" min="1">
+          </div>
+          <div>
+            <label class="muted">Stack config</label>
+            <select id="t_stack"><option>OEM A — 5 MW skids</option><option>OEM B — 10 MW skids</option><option>OEM C — 20 MW blocks</option></select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Operating hours (h/yr)</label>
+            <input id="t_hours" type="number" value="8000" min="0" max="8760">
+          </div>
+          <div>
+            <label class="muted">Efficiency (kWh/kg H₂)</label>
+            <input id="t_eff" type="number" value="51" step="0.1">
+          </div>
+          <div>
+            <label class="muted">Availability (%)</label>
+            <input id="t_avail" type="number" value="95" min="0" max="100">
+          </div>
+        </div>
+        <div class="help">Adjusts footprint, power draw, water demand and expected annual H₂ output in the live preview.</div>
+      </div>
+
+      <div class="card">
+        <h2>Products & Offtake</h2>
+        <div class="grid2">
+          <div>
+            <label class="muted">Primary product</label>
+            <select id="prod_primary"><option>Hydrogen (compressed)</option><option>Ammonia (NH₃)</option><option>Methanol (MeOH)</option></select>
+          </div>
+          <div>
+            <label class="muted">Delivery pressure (bar)</label>
+            <input id="prod_bar" type="number" value="350">
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Storage (t H₂ eq.)</label>
+            <input id="prod_storage" type="number" value="20">
+          </div>
+          <div>
+            <label class="muted">Offtake status</label>
+            <select id="prod_status"><option>Exploration</option><option>LOI</option><option>Term sheet</option></select>
+          </div>
+          <div>
+            <label class="muted">Truck loads / day</label>
+            <input id="prod_trucks" type="number" value="4">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Utilities & Access</h2>
+        <div class="grid3">
+          <div>
+            <label class="muted">Grid kV</label>
+            <input id="u_kv" type="number" value="132">
+          </div>
+          <div>
+            <label class="muted">Grid distance (km)</label>
+            <input id="u_gdkm" type="number" value="5">
+          </div>
+          <div>
+            <label class="muted">Queue status</label>
+            <select id="u_q"><option>confirmed</option><option>fast-track</option><option>allocation</option><option>queued</option></select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:8px">
+          <div>
+            <label class="muted">Water source</label>
+            <select id="u_wsrc"><option>industrial</option><option>municipal</option><option>on-site</option></select>
+          </div>
+          <div>
+            <label class="muted">Water distance (km)</label>
+            <input id="u_wkm" type="number" value="2">
+          </div>
+          <div>
+            <label class="muted">HH route length (km)</label>
+            <input id="u_hh" type="number" value="12">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Evidence & Governance</h2>
+        <div class="grid2">
+          <div>
+            <label class="muted">Evidence pack</label>
+            <select id="e_pack"><option>None</option><option>Minimal (grid+water)</option><option>Standard (grid+water+HH+zoning)</option></select>
+          </div>
+          <div>
+            <label class="muted">Target decision date</label>
+            <input id="e_date" type="date">
+          </div>
+        </div>
+        <div style="margin-top:6px">
+          <label class="muted">Notes / assumptions</label>
+          <textarea id="e_notes" placeholder="Key assumptions, constraints, and sources..."></textarea>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="muted">JSON preview updates live</div>
+        <div class="stack">
+          <button class="btn" id="btnReset">Reset</button>
+          <button class="btn primary" id="btnCreateBottom">Create Project</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="card">
+        <h2>Map / Site Placement</h2>
+        <div class="map" id="mapBox" title="Map placeholder (demo)"></div>
+        <div class="grid3" style="margin-top:8px">
+          <div class="kv"><span>Coords</span><strong id="pv_coords">—</strong></div>
+          <div class="kv"><span>Zoning</span><strong id="pv_zone">—</strong></div>
+          <div class="kv"><span>Proximity flags</span><strong id="pv_flags">—</strong></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Parcel / Ownership</h2>
+        <div class="grid3">
+          <div class="kv"><span>Cadastre (Gnr/Bnr)</span><strong id="pv_cad">—</strong></div>
+          <div class="kv"><span>Municipality</span><strong id="pv_muni">—</strong></div>
+          <div class="kv"><span>Area (ha)</span><strong id="pv_area">—</strong></div>
+        </div>
+        <div class="grid3" style="margin-top:6px">
+          <div class="kv"><span>Zoning</span><strong id="pv_pzoning">—</strong></div>
+          <div class="kv"><span>Plan status</span><strong id="pv_plan">—</strong></div>
+          <div class="kv"><span>Last sale</span><strong id="pv_sale">—</strong></div>
+        </div>
+        <div style="margin-top:6px">
+          <div class="muted">Owners</div>
+          <div id="pv_owners" class="stack" style="margin-top:4px"></div>
+        </div>
+        <div style="margin-top:6px">
+          <div class="muted">Easements / Remarks</div>
+          <ul id="pv_ease" class="list-tight" style="margin-top:4px;padding-left:18px"></ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Sizing & Outputs</h2>
+        <div class="grid3">
+          <div class="kv"><span>H₂ output (t/yr)</span><strong id="pv_h2">—</strong></div>
+          <div class="kv"><span>Elec draw (MW)</span><strong id="pv_mw">—</strong></div>
+          <div class="kv"><span>Water demand (m³/day)</span><strong id="pv_water">—</strong></div>
+        </div>
+        <div class="grid3" style="margin-top:6px">
+          <div class="kv"><span>Footprint need (ha)</span><strong id="pv_ha">—</strong></div>
+          <div class="kv"><span>Plot fit</span><strong id="pv_fit">—</strong></div>
+          <div class="kv"><span>Storage days</span><strong id="pv_store">—</strong></div>
+        </div>
+        <div class="bar" style="margin-top:6px"><span id="pv_fitbar" style="width:0%"></span></div>
+        <div class="help">Footprint model: PEM 0.05 ha/MW, ALK 0.06 ha/MW (illustrative).</div>
+      </div>
+
+      <div class="card">
+        <h2>Readiness & Gate Class</h2>
+        <div class="grid2">
+          <div>
+            <div class="muted">Evidence</div>
+            <div id="pv_ev" class="scoreBubble">—</div>
+            <div class="help" id="pv_ev_help">—</div>
+          </div>
+          <div>
+            <div class="muted">Gatekeeper class</div>
+            <div id="pv_class" class="scoreBubble">—</div>
+            <div class="help" id="pv_class_help">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Quick CAPEX & Schedule (mock)</h2>
+        <div class="grid2">
+          <div>
+            <table>
+              <thead><tr><th>Package</th><th>Base (MNOK)</th></tr></thead>
+              <tbody id="capexRows"></tbody>
+              <tfoot><tr><th>Total (Class-4)</th><th id="capexTot">—</th></tr></tfoot>
+            </table>
+          </div>
+          <div>
+            <div class="muted">Milestones</div>
+            <ul id="msList" style="margin-top:6px"></ul>
+            <div class="bar" style="margin-top:6px"><span id="schBar" style="width:0%"></span></div>
+            <div class="help">Timeline sanity vs COD window.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>JSON (project)</h2>
+        <div id="jsonOut" class="code">—</div>
+      </div>
+
+      <div class="card">
+        <h2>Dev Notes</h2>
+        <ul style="margin-top:6px">
+          <li>Mode switch: Manual vs Auto from Screening. Auto uses demo shortlist + Gatekeeper-like scoring.</li>
+          <li><strong>New:</strong> Parcel / Ownership fills when choosing Auto Site “Use”.</li>
+          <li><strong>New:</strong> Multi-select → “Proceed to Comparison”. Also added to JSON under <code>comparison.shortlist</code>.</li>
+          <li>Live sizing & evidence compute mirrors Gatekeeper envelopes.</li>
+          <li>Wire the Create/Comparison actions to your real routes in the app.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
 <script>
 /* ---------- Mock data ---------- */
 const projects = [
@@ -315,6 +692,207 @@ const notifs = [
   const pct = Math.round(done / checks.length * 100);
   document.getElementById('progBar').style.width = pct + '%';
 })();
+
+/* ---------- SPA: Create Project View toggling ---------- */
+(function spaInit(){
+  const homeView = document.getElementById('homeView');
+  const createView = document.getElementById('createProjectView');
+  if(!homeView || !createView) return;
+
+  function showCreate(){ homeView.style.display='none'; createView.style.display='grid'; window.scrollTo(0,0); }
+  function showHome(){ createView.style.display='none'; homeView.style.display='block'; window.scrollTo(0,0); }
+
+  // Intercept "Create .. Project" buttons on cards
+  document.querySelectorAll('.svc .cta a.btn.btn-teal').forEach(a=>{
+    a.addEventListener('click', e=>{ e.preventDefault(); showCreate(); });
+  });
+
+  // Intercept Home link in nav to return to dashboard without reload
+  document.addEventListener('click', (e)=>{
+    const t = e.target.closest('a'); if(!t) return;
+    const href = t.getAttribute('href')||'';
+    if(href.endsWith('index.html') || href==='index.html' || href==='#home'){ e.preventDefault(); showHome(); }
+  });
+})();
+
+/* ---------- Create Project logic (from standalone page) ---------- */
+// Guard: only run if create view exists
+if(document.getElementById('createProjectView')){
+// ---- Minimal rulebook-ish constants (aligned with Gatekeeper demo) ----
+const FIT_HA_PER_MW = { PEM: 0.05, ALK: 0.06 };
+const EVIDENCE_TARGET_GREEN = 70; // %
+const EVIDENCE_AMBER_FLOOR = 30;  // %
+const COD_WINDOW = [2027, 2030];
+const GRID_MIN_KV = 132;
+
+// ---- Demo shortlist + parcel / ownership meta ----
+const AUTO_DEMO_SITES = [
+  {site:'R3-01 North Port', kv:220, gdkm:3, wkm:1.2, hh:9, score:0.84, coords:'62.47, 6.15',
+    parcel:{ gnr:'12', bnr:'48', muni:'Ålesund', areaHa:16.2, zoning:'Industrial', plan:'Regulated (ID 2019-23)',
+      lastSale:'2018-09-12', owners:[{name:'Kyst Eiendom KF', share:'100%'}],
+      easements:['Right-of-way for port cranes (north strip)','Power line corridor 132 kV (west edge)'] } },
+  {site:'R3-12 East Ridge', kv:145, gdkm:8, wkm:4.1, hh:14, score:0.78, coords:'62.41, 6.09',
+    parcel:{ gnr:'202', bnr:'3', muni:'Ålesund', areaHa:11.4, zoning:'Industrial/Logistics', plan:'Zoning in revision',
+      lastSale:'2022-05-03', owners:[{name:'Ridge Park AS', share:'85%'},{name:'Åkrene Utbygging AS', share:'15%'}],
+      easements:['Seasonal road restriction (spring thaw)','Protected ridge habitat buffer (east 50 m)'] } },
+  {site:'R3-07 Delta Park', kv:132, gdkm:5, wkm:6.0, hh:11, score:0.74, coords:'62.51, 6.20',
+    parcel:{ gnr:'55', bnr:'901', muni:'Giske', areaHa:13.0, zoning:'Industrial', plan:'Approved 2017',
+      lastSale:'2017-02-22', owners:[{name:'Delta Næringspark DA', share:'100%'}],
+      easements:['Floodway caution (Q200 fringe)','Fiber trunk line servitude (center)'] } },
+  {site:'R3-18 Fjordside', kv:110, gdkm:2, wkm:8.5, hh:26, score:0.62, coords:'62.49, 6.18',
+    parcel:{ gnr:'17', bnr:'56', muni:'Sula', areaHa:9.2, zoning:'Mixed industrial', plan:'Legacy (update due)',
+      lastSale:'2009-11-30', owners:[{name:'Fjordside Industrier ASA', share:'60%'},{name:'Privat: Solheim', share:'40%'}],
+      easements:['Shoreline protection zone','Public right-of-way to pier'] } },
+  {site:'R3-03 Inland Hub', kv:220, gdkm:18, wkm:2.2, hh:6, score:0.70, coords:'62.35, 6.05',
+    parcel:{ gnr:'301', bnr:'77', muni:'Sykkylven', areaHa:18.8, zoning:'Greenfield → Industrial (proposed)', plan:'Municipal plan only',
+      lastSale:'—', owners:[{name:'Kommunal grunn', share:'100%'}],
+      easements:['Agricultural lease (expires 2027)','Snow load/seasonal access constraint'] } }
+];
+
+// ---- Shortlist selection state for Comparison ----
+let selectedIndices = new Set();
+const shortlist = [];
+
+// ---- Helpers ----
+const $ = s => document.querySelector(s);
+const $all = s => [...document.querySelectorAll(s)];
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+function fmt(num, digits=0){ return Number(num).toLocaleString(undefined,{maximumFractionDigits:digits, minimumFractionDigits:digits}); }
+
+// ---- Mode switch ----
+$all('#createProjectView .tab').forEach(tab=>tab.addEventListener('click', ()=>{
+  $all('#createProjectView .tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  const mode = tab.dataset.mode;
+  document.querySelector('#createProjectView .mode-manual').classList.toggle('hidden', mode!=='manual');
+  document.querySelector('#createProjectView .mode-auto').classList.toggle('hidden', mode!=='auto');
+}));
+
+function renderParcel(p){
+  const cad = (p?.gnr && p?.bnr) ? `Gnr ${p.gnr} / Bnr ${p.bnr}` : '—';
+  $('#pv_cad').textContent = cad;
+  $('#pv_muni').textContent = p?.muni || '—';
+  $('#pv_area').textContent = p?.areaHa ? fmt(p.areaHa,2) : '—';
+  $('#pv_pzoning').textContent = p?.zoning || '—';
+  $('#pv_plan').textContent = p?.plan || '—';
+  $('#pv_sale').textContent = p?.lastSale || '—';
+  const ownWrap = $('#pv_owners'); ownWrap.innerHTML = '';
+  (p?.owners||[]).forEach(o=>{ const span = document.createElement('span'); span.className='owner-chip'; span.innerHTML = `<strong>${o.name}</strong><small>${o.share||''}</small>`; ownWrap.appendChild(span); });
+  if((p?.owners||[]).length===0){ const span = document.createElement('span'); span.className='pill'; span.textContent='—'; ownWrap.appendChild(span); }
+  const ul = $('#pv_ease'); ul.innerHTML='';
+  (p?.easements||[]).forEach(e=>{ const li = document.createElement('li'); li.textContent = e; ul.appendChild(li); });
+  if((p?.easements||[]).length===0){ const li = document.createElement('li'); li.textContent='—'; ul.appendChild(li); }
+}
+
+function refreshSelCount(){ const el=$('#selCount'); if(el) el.textContent = selectedIndices.size; }
+function renderShortlistChips(){ const holder=$('#shortlistChips'); if(!holder) return; holder.innerHTML=''; shortlist.forEach((s)=>{ const chip=document.createElement('span'); chip.className='owner-chip'; chip.innerHTML = `<strong>${s.site}</strong><small>${s.coords}</small>`; holder.appendChild(chip); }); }
+
+// Preview Auto table
+const btnPrev = document.getElementById('btnPreviewAuto'); if(btnPrev){ btnPrev.onclick = ()=>{
+  const tbody = document.getElementById('autoRows'); if(!tbody) return; tbody.innerHTML='';
+  AUTO_DEMO_SITES.forEach((s,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td><input type="checkbox" data-ix="${i}" class="rowSel"></td>
+      <td>${s.site}</td>
+      <td>${s.kv} kV / ${s.gdkm} km</td>
+      <td>${s.wkm} km</td>
+      <td>${s.hh} km</td>
+      <td>${(s.score*100|0)}%</td>
+      <td class="stack">
+        <button class="btn" data-i="${i}" data-role="use">Use</button>
+        <button class="btn" data-i="${i}" data-role="add">Add</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('autoTableWrap').classList.remove('hidden');
+  tbody.querySelectorAll('.rowSel').forEach(cb=>{ cb.onchange = ()=>{ const ix = +cb.dataset.ix; if(cb.checked) selectedIndices.add(ix); else selectedIndices.delete(ix); refreshSelCount(); }; });
+  tbody.querySelectorAll('button').forEach(btn=>btn.onclick = ()=>{
+    const ix = +btn.dataset.i; const s = AUTO_DEMO_SITES[ix];
+    if(btn.dataset.role==='use'){
+      $('#s_name').value = s.site; $('#s_coords').value = s.coords; $('#u_kv').value = s.kv; $('#u_gdkm').value = s.gdkm; $('#u_wkm').value = s.wkm; $('#u_hh').value = s.hh; $('#u_q').value = 'confirmed';
+      if(s.parcel?.areaHa) $('#s_plot').value = s.parcel.areaHa; if($('#s_zone') && s.parcel?.zoning) $('#s_zone').value = s.parcel.zoning; renderParcel(s.parcel); sync();
+    }
+    if(btn.dataset.role==='add'){
+      if(!shortlist.find(x=>x.site===s.site)){ shortlist.push({ site:s.site, coords:s.coords, kv:s.kv, gdkm:s.gdkm, wkm:s.wkm, hh:s.hh, score:s.score, parcel:s.parcel }); renderShortlistChips(); sync(); }
+    }
+  });
+  refreshSelCount();
+}; }
+
+document.getElementById('btnAddSelected') && (document.getElementById('btnAddSelected').onclick = ()=>{ selectedIndices.forEach(ix=>{ const s=AUTO_DEMO_SITES[ix]; if(!shortlist.find(x=>x.site===s.site)){ shortlist.push({ site:s.site, coords:s.coords, kv:s.kv, gdkm:s.gdkm, wkm:s.wkm, hh:s.hh, score:s.score, parcel:s.parcel }); } }); renderShortlistChips(); sync(); });
+document.getElementById('btnGoComparison') && (document.getElementById('btnGoComparison').onclick = ()=>{ if(shortlist.length===0){ alert('Select at least one site to compare.'); return; } alert('Sending '+shortlist.length+' site(s) to Comparison (mock).'); });
+document.getElementById('btnPickAuto') && (document.getElementById('btnPickAuto').onclick = ()=>{ const best=[...AUTO_DEMO_SITES].sort((a,b)=>b.score-a.score)[0]; $('#s_name').value=best.site; $('#s_coords').value=best.coords; $('#u_kv').value=best.kv; $('#u_gdkm').value=best.gdkm; $('#u_wkm').value=best.wkm; $('#u_hh').value=best.hh; $('#u_q').value='confirmed'; if(best.parcel?.areaHa) $('#s_plot').value=best.parcel.areaHa; if($('#s_zone') && best.parcel?.zoning) $('#s_zone').value=best.parcel.zoning; renderParcel(best.parcel); sync(); });
+
+function compute(){
+  const tech = $('#t_tech')?.value || 'PEM';
+  const mw = +($('#t_mw')?.value||0);
+  const hours = +($('#t_hours')?.value||0);
+  const eff = +($('#t_eff')?.value||52);
+  const avail = clamp01((+($('#t_avail')?.value||0)/100));
+  const plot = +($('#s_plot')?.value||0);
+  const coords = $('#s_coords')?.value?.trim()||'';
+  const zone = $('#s_zone')? $('#s_zone').value : '—';
+  const flags = $('#s_flags')?.value?.trim()||'';
+  const kg = (mw*1000*hours*avail)/(eff||1);
+  const tpy = kg/1000;
+  const water_m3_day = (kg * 9 / 1000) / 365 * 1000;
+  const need_ha = (FIT_HA_PER_MW[tech]||0.055) * mw;
+  const fit_ratio = need_ha? Math.max(0, Math.min(1, plot/need_ha)) : 0;
+  const pack = $('#e_pack')?.value||'None';
+  const ev = pack==='None'?0: pack==='Minimal (grid+water)'?50: 80;
+  const gridOk = (+($('#u_kv')?.value||0) >= GRID_MIN_KV) && (['confirmed','fast-track','allocation'].includes($('#u_q')?.value||''));
+  const waterOk = (+($('#u_wkm')?.value||999) <= 5) && (['industrial','municipal','on-site'].includes($('#u_wsrc')?.value||''));
+  const hhOk = (+($('#u_hh')?.value||999) <= 25);
+  const mustFail = [];
+  if(!gridOk) mustFail.push('Grid intake/queue');
+  if(!waterOk) mustFail.push('Water distance/source');
+  if(!hhOk) mustFail.push('Heavy-haul route');
+  let cls='Amber', why='Score between thresholds';
+  if(mustFail.length) { cls='Red'; why='MUST fail: '+mustFail.join(', '); }
+  else if(ev < EVIDENCE_AMBER_FLOOR) { cls='Red'; why=`Evidence ${ev}% < floor ${EVIDENCE_AMBER_FLOOR}%`; }
+  else if(ev >= EVIDENCE_TARGET_GREEN && fit_ratio>=0.9) { cls='Green'; why=`Fit ≥90% & evidence ≥${EVIDENCE_TARGET_GREEN}%`; }
+  const capex = [
+    {pkg:'Electrolyzer + Rectifier', base: mw*9.5},
+    {pkg:'Balance of Plant (process)', base: mw*4.0},
+    {pkg:'Civil & Structural', base: mw*2.0*(1+Math.max(0,1-fit_ratio))},
+    {pkg:'Grid Connection', base: 60 + (Math.max(0,(+($('#u_gdkm')?.value||0)-3))*3)},
+    {pkg:'Water & Treatment', base: 20 + (+($('#u_wkm')?.value||0)*2)},
+    {pkg:'Compression/Storage/Loadout', base: 35 + (+($('#prod_storage')?.value||0)*0.6)}
+  ];
+  const cont = 0.25; const total = capex.reduce((a,c)=>a+c.base,0) * (1+cont);
+  const year = new Date($('#e_date')?.value||Date.now()).getFullYear() || new Date().getFullYear();
+  const withinCOD = year>=COD_WINDOW[0] && year<=COD_WINDOW[1];
+  const schPct = withinCOD? 80: 45;
+  return {tech,mw,hours,eff,avail,plot,coords,zone,flags,tpy,water_m3_day,need_ha,fit_ratio,ev,cls,why,capex,total,schPct};
+}
+function paint(){
+  const x = compute();
+  const set=(sel,v)=>{ const el=$(sel); if(el) el.textContent=v; };
+  set('#pv_coords', x.coords||'—'); set('#pv_zone', x.zone); set('#pv_flags', x.flags||'—');
+  set('#pv_h2', fmt(x.tpy,0)); set('#pv_mw', fmt(x.mw,0)); set('#pv_water', fmt(x.water_m3_day,0));
+  set('#pv_ha', fmt(x.need_ha,2)); set('#pv_fit', (x.fit_ratio*100|0)+'%');
+  const storeEl=$('#pv_store'); if(storeEl){ storeEl.textContent=( +($('#prod_storage')?.value||0) / ( (x.tpy/365)||1) ).toFixed(1); }
+  const bar=$('#pv_fitbar'); if(bar){ bar.style.width=(x.fit_ratio*100)+'%'; }
+  const evB=$('#pv_ev'); if(evB){ evB.className='scoreBubble'; if(x.ev<EVIDENCE_AMBER_FLOOR) evB.classList.add('red'); else if(x.ev<EVIDENCE_TARGET_GREEN) evB.classList.add('amber'); else evB.classList.add('green'); evB.textContent = x.ev+'%'; const help=$('#pv_ev_help'); if(help) help.textContent='Target ≥ '+EVIDENCE_TARGET_GREEN+'%'; }
+  const cB=$('#pv_class'); if(cB){ cB.className='scoreBubble'; cB.textContent=x.cls; cB.classList.add(x.cls.toLowerCase()); const h=$('#pv_class_help'); if(h) h.textContent=x.why; }
+  const tbody=document.getElementById('capexRows'); if(tbody){ tbody.innerHTML=''; x.capex.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.pkg}</td><td>${fmt(r.base,0)}</td>`; tbody.appendChild(tr); }); }
+  set('#capexTot', fmt(x.total,0));
+  const ms=[{name:'DG0',pct:10},{name:'DG1',pct:30},{name:'Permits 60%',pct:60},{name:'FID',pct:85},{name:'COD',pct:100}];
+  const ul=document.getElementById('msList'); if(ul){ ul.innerHTML=''; ms.forEach(m=>{ const li=document.createElement('li'); li.textContent=`${m.name}`; ul.appendChild(li); }); const sb=document.getElementById('schBar'); if(sb) sb.style.width=x.schPct+'%'; }
+  const jsonEl=document.getElementById('jsonOut'); if(jsonEl){ jsonEl.textContent=JSON.stringify(collectJSON(),null,2); }
+}
+function collectJSON(){ return { meta:{ name: $('#p_name')?.value, gate: $('#p_gate')?.value, owner: $('#p_owner')?.value, tag: $('#p_tag')?.value, confidentiality: $('#p_conf')?.value }, site:{ name: $('#s_name')?.value, coords: $('#s_coords')?.value, plot_ha: +($('#s_plot')?.value||0), zoning: $('#s_zone')? $('#s_zone').value: null, flags: $('#s_flags')?.value }, tech:{ type: $('#t_tech')?.value, capacity_mw: +($('#t_mw')?.value||0), stack_config: $('#t_stack')?.value, hours: +($('#t_hours')?.value||0), efficiency_kwh_per_kg: +($('#t_eff')?.value||0), availability_pct: +($('#t_avail')?.value||0) }, product:{ primary: $('#prod_primary')?.value, pressure_bar: +($('#prod_bar')?.value||0), storage_t: +($('#prod_storage')?.value||0), offtake_status: $('#prod_status')?.value, trucks_per_day: +($('#prod_trucks')?.value||0) }, utilities:{ grid_kv: +($('#u_kv')?.value||0), grid_distance_km: +($('#u_gdkm')?.value||0), queue: $('#u_q')?.value, water_source: $('#u_wsrc')?.value, water_distance_km: +($('#u_wkm')?.value||0), hh_route_km: +($('#u_hh')?.value||0) }, evidence:{ pack: $('#e_pack')?.value, target_decision_date: $('#e_date')?.value, notes: $('#e_notes')?.value }, comparison:{ shortlist: shortlist.map(s=>({ site:s.site, coords:s.coords, kv:s.kv, grid_km:s.gdkm, water_km:s.wkm, hh_km:s.hh, score:s.score, parcel: s.parcel ? { gnr:s.parcel.gnr, bnr:s.parcel.bnr, muni:s.parcel.muni, areaHa:s.parcel.areaHa, zoning:s.parcel.zoning, plan:s.parcel.plan, lastSale:s.parcel.lastSale, owners:s.parcel.owners, easements:s.parcel.easements } : null })) } }; }
+function sync(){ paint(); }
+$all('#createProjectView input,#createProjectView select,#createProjectView textarea').forEach(el=>{ if(el.type==='file') return; el.addEventListener('input', sync); el.addEventListener('change', sync); });
+document.getElementById('btnReset') && (document.getElementById('btnReset').onclick = ()=>{ document.querySelectorAll('#createProjectView input,#createProjectView select,#createProjectView textarea').forEach(el=>{ if(el.id==='p_conf'){ el.value='Confidential'; return; } if(el.tagName==='TEXTAREA'){ el.value=''; return; } if(el.type==='number'){ el.value = el.id==='t_mw'?20: el.id==='t_hours'?8000: el.id==='t_eff'?51: el.id==='t_avail'?95: el.id==='s_plot'?12: el.id==='u_kv'?132: el.id==='u_gdkm'?5: el.id==='u_wkm'?2: el.id==='u_hh'?12: el.id==='prod_bar'?350: el.id==='prod_storage'?20: el.id==='prod_trucks'?4: 0; return; } if(el.tagName==='SELECT'){ el.selectedIndex=0; } else { el.value=''; } }); renderParcel(null); selectedIndices.clear(); refreshSelCount(); shortlist.splice(0,shortlist.length); renderShortlistChips(); paint(); });
+function createProjectAction(){ const json = collectJSON(); alert('Project created (mock). Next: Project Builder → Layout.'); }
+document.getElementById('btnCreate') && (document.getElementById('btnCreate').onclick = createProjectAction);
+document.getElementById('btnCreateBottom') && (document.getElementById('btnCreateBottom').onclick = createProjectAction);
+// Seed defaults if view opened directly
+paint();
+}
 
 </script>
 </body>
