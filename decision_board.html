@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — Decision Gate • Board Pack</title>
+<link rel="stylesheet" href="css/styles.css?v=5">
+<link rel="stylesheet" href="css/interactive-styles.css?v=5">
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --warn:#f59e52; --blue:#74aeea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+    radial-gradient(1200px 600px at 80% -10%, #153244 0%, transparent 60%),
+    radial-gradient(1000px 700px at -10% 10%, #11232e 0%, transparent 60%),
+    linear-gradient(180deg, #0d1820 0%, var(--bg) 35%, #0b141a 100%);
+    color:var(--text);font:15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif}
+  a{color:inherit;text-decoration:none}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(15,26,34,.9);backdrop-filter:saturate(120%) blur(6px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+  .logo{font-weight:900;letter-spacing:.24em}
+  .crumb{color:var(--muted);font-size:13px;margin-left:6px}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+  .btn:hover{outline:1px solid rgba(25,197,190,.35)}
+  .btn-teal{background:linear-gradient(180deg,rgba(25,197,190,.18),rgba(25,197,190,.1))}
+  .wrap{max-width:1600px;margin:0 auto;padding:18px;display:grid;gap:16px}
+
+  /* HERO STRIP like Screening_Result */
+  .hero{display:grid;gap:12px;grid-template-columns:1fr auto auto}
+  .hero-left{display:grid;gap:10px}
+  .grade{display:flex;align-items:center;gap:10px}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px;color:var(--muted)}
+  .h1{font-size:26px;font-weight:800;letter-spacing:.02em}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;align-self:center}
+
+  /* THREE COLUMN CORE like other tabs */
+  .grid-main{display:grid;grid-template-columns:1.1fr .9fr .7fr;gap:16px}
+  @media (max-width:1280px){.grid-main{grid-template-columns:1fr}}
+
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:16px;padding:14px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  h3{margin:.2rem 0 .4rem;font-size:16px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  tr:hover{background:rgba(25,197,190,.06)}
+  .status{font-size:12px;padding:2px 6px;border-radius:6px;border:1px solid var(--line);background:var(--panel-2)}
+  .status-not{color:var(--red)} .status-partial{color:var(--warn)} .status-done{color:var(--green)}
+  .muted{color:var(--muted)}
+  .divider{height:1px;background:linear-gradient(90deg,rgba(25,197,190,.5),transparent);margin:8px 0}
+
+  /* Mini KPI tiles */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .k{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel-2)}
+  .k small{color:var(--muted)} .k strong{display:block;font-size:20px;margin-top:2px}
+
+  /* SVG blocks */
+  .viz{display:flex;align-items:center;justify-content:center;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:8px}
+  .note{font-size:12px;color:var(--muted)}
+
+  /* Quick facts grid */
+  .facts{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .fact{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px}
+  .fact small{display:block;color:var(--muted)}
+
+  /* Checklist */
+  .checklist{display:grid;gap:8px}
+  .check{display:flex;gap:8px;align-items:flex-start}
+  .bullet{width:9px;height:9px;border-radius:50%;background:var(--teal);margin-top:6px}
+
+  /* two-up and three-up sections */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.facts{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}}
+</style>
+<script src="js/navigation.js?v=5"></script>
+</head>
+<body>
+  <div class="topbar">
+    <div><a href="index.html" style="color:inherit;text-decoration:none;cursor:pointer"><span class="logo">SEIDR</span></a><span class="crumb"> / Decision Gate / Board Pack</span></div>
+    <nav id="main-nav">
+    </nav>
+  </div>
+
+  <div class="wrap">
+    <!-- HERO strip -->
+    <div class="hero">
+      <div class="hero-left">
+        <div class="h1">Herøya North Hydrogen — Decision Gate</div>
+        <div class="grade">
+          <span class="pill">Passing Data grade: <strong style="color:var(--text)">B+</strong></span>
+          <span class="pill">Segment: Hydrogen & PtX</span>
+          <span class="pill">Technology: PEM (screening)</span>
+          <span class="pill">Capacity: 100 MW (expandable)</span>
+        </div>
+      </div>
+      <div class="viz" style="min-width:280px">
+        <!-- LCOH vs Target Gauge (SVG) -->
+        <svg viewBox="0 0 220 120" width="260" height="120" aria-label="LCOH vs target" class="chart">
+          <defs>
+            <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--teal)"/><stop offset="1" stop-color="var(--yellow)"/></linearGradient>
+          </defs>
+          <!-- arc track -->
+          <path d="M20,100 A90,90 0 0 1 200,100" fill="none" stroke="#0c141a" stroke-width="14"/>
+          <!-- arc fill proportional to ratio 38/40 (target 40 NOK/kg visual) -->
+          <path d="M20,100 A90,90 0 0 1 190,65" fill="none" stroke="url(#g)" stroke-width="14" stroke-linecap="round" class="line-path"/>
+          <!-- needle -->
+          <circle cx="110" cy="100" r="4" fill="#223" class="data-point"/>
+          <text x="110" y="56" text-anchor="middle" font-size="22" fill="var(--text)"><tspan>38</tspan> <tspan font-size="12">NOK/kg</tspan></text>
+          <text x="110" y="74" text-anchor="middle" font-size="12" fill="var(--muted)">P50 LCOH · Target 40</text>
+          <text x="110" y="92" text-anchor="middle" font-size="12" fill="var(--muted)">P90: 40.1 · Pass ≤ 40</text>
+        </svg>
+      </div>
+      <div class="btn-row" style="align-self:center">
+        <button class="btn btn-teal" id="btnGo">Decision: Proceed to Pre‑FEED (Go)</button>
+        <button class="btn" id="btnRework">Rework scope</button>
+        <button class="btn" id="btnHold">Hold / Stop</button>
+      </div>
+    </div>
+
+    <!-- KPI strip like other tabs have headline metrics -->
+    <div class="kpis" aria-label="Key performance indicators">
+      <div class="k"><small>Total CAPEX</small><strong>3.25 B NOK</strong></div>
+      <div class="k"><small>OPEX / yr</small><strong>185 M NOK</strong></div>
+      <div class="k"><small>LCOH</small><strong>38 NOK/kg</strong></div>
+      <div class="k"><small>CO₂ abatement</small><strong>180 kt/yr</strong></div>
+    </div>
+
+    <!-- MAIN 3-column layout following Screening page rhythm -->
+    <div class="grid-main">
+      <!-- COL 1: Cost lens & deltas -->
+      <section class="card">
+        <h2>Levelized Cost vs Target (NOK/kg)</h2>
+        <div class="viz" style="height:220px">
+          <!-- simple columns for H2 / deltas -->
+          <svg viewBox="0 0 520 220" width="100%" height="200" preserveAspectRatio="xMidYMid meet" class="chart">
+            <rect x="0" y="0" width="520" height="220" rx="10" ry="10" fill="none"/>
+            <!-- target line -->
+            <line x1="30" y1="60" x2="500" y2="60" stroke="var(--yellow)" stroke-dasharray="6,6" class="line-path"/>
+            <text x="34" y="52" font-size="12" fill="var(--muted)">Target 40</text>
+            <!-- bar P50 38 -->
+            <rect x="80" y="80" width="40" height="100" fill="var(--teal)" class="bar"/>
+            <text x="100" y="76" text-anchor="middle" font-size="12" fill="var(--text)">P50 38</text>
+            <!-- bar P90 40.1 -->
+            <rect x="160" y="70" width="40" height="110" fill="var(--blue)" class="bar"/>
+            <text x="180" y="66" text-anchor="middle" font-size="12" fill="var(--text)">P90 40.1</text>
+            <!-- captions -->
+            <text x="260" y="200" font-size="12" fill="var(--muted)">All values are screening-level mock data.</text>
+          </svg>
+        </div>
+        <div class="divider"></div>
+        <h3>What gets us under target — cost deltas</h3>
+        <div class="viz" style="height:480px">
+          <!-- Tornado chart: Top 20 uncertainties vs LCOH impact (NOK/kg). Left = cost down (green), Right = cost up (red). -->
+          <svg viewBox="0 0 720 460" width="100%" height="440" preserveAspectRatio="xMidYMid meet" aria-label="Tornado uncertainties" class="chart">
+            <style>
+              .lbl{font-size:12px;fill:var(--muted)}
+              .val{font-size:12px;fill:var(--text)}
+            </style>
+            <!-- axes -->
+            <line x1="360" y1="30" x2="360" y2="430" stroke="#0c141a" stroke-width="2"/>
+            <text x="120" y="24" class="lbl">Cost ↓ (NOK/kg)</text>
+            <text x="520" y="24" class="lbl">Cost ↑ (NOK/kg)</text>
+
+            <!-- scale ticks -->
+            <g class="ticks">
+              <!-- left side ticks -->
+              <line x1="260" y1="30" x2="260" y2="430" stroke="#0c141a" stroke-dasharray="2,6"/>
+              <line x1="160" y1="30" x2="160" y2="430" stroke="#0c141a" stroke-dasharray="2,6"/>
+              <text x="260" y="44" class="lbl" text-anchor="middle">5</text>
+              <text x="160" y="44" class="lbl" text-anchor="middle">10</text>
+              <!-- right side ticks -->
+              <line x1="460" y1="30" x2="460" y2="430" stroke="#0c141a" stroke-dasharray="2,6"/>
+              <line x1="560" y1="30" x2="560" y2="430" stroke="#0c141a" stroke-dasharray="2,6"/>
+              <text x="460" y="44" class="lbl" text-anchor="middle">5</text>
+              <text x="560" y="44" class="lbl" text-anchor="middle">10</text>
+            </g>
+
+            <!-- helper function (conceptual): baseline at x=360. Scale: 20 px per NOK/kg -->
+            <!-- DATA (mock screening-level): label | sign | magnitude (NOK/kg) -->
+            <!-- 1 -->
+            <g transform="translate(0,70)">
+              <text x="10" y="8" class="lbl">Power price (+20%)</text>
+              <rect x="360" y="-6" width="90" height="14" fill="var(--red)" class="bar"/>
+              <text x="455" y="5" class="val">+4.5</text>
+            </g>
+            <!-- 2 -->
+            <g transform="translate(0,92)">
+              <text x="10" y="8" class="lbl">Capacity factor (−5%-pts)</text>
+              <rect x="360" y="-6" width="42" height="14" fill="var(--red)" class="bar"/>
+              <text x="407" y="5" class="val">+2.1</text>
+            </g>
+            <!-- 3 -->
+            <g transform="translate(0,114)">
+              <text x="10" y="8" class="lbl">Financing WACC (+1%-pt)</text>
+              <rect x="360" y="-6" width="40" height="14" fill="var(--red)" class="bar"/>
+              <text x="405" y="5" class="val">+2.0</text>
+            </g>
+            <!-- 4 -->
+            <g transform="translate(0,136)">
+              <text x="10" y="8" class="lbl">Grid tariff (+10%)</text>
+              <rect x="360" y="-6" width="34" height="14" fill="var(--red)" class="bar"/>
+              <text x="399" y="5" class="val">+1.7</text>
+            </g>
+            <!-- 5 -->
+            <g transform="translate(0,158)">
+              <text x="10" y="8" class="lbl">Water cost (+25%)</text>
+              <rect x="360" y="-6" width="22" height="14" fill="var(--red)" class="bar"/>
+              <text x="385" y="5" class="val">+1.1</text>
+            </g>
+            <!-- 6 -->
+            <g transform="translate(0,180)">
+              <text x="10" y="8" class="lbl">Construction labor (+12%)</text>
+              <rect x="360" y="-6" width="20" height="14" fill="var(--red)" class="bar"/>
+              <text x="383" y="5" class="val">+1.0</text>
+            </g>
+            <!-- 7 -->
+            <g transform="translate(0,202)">
+              <text x="10" y="8" class="lbl">BOP electrical (+10%)</text>
+              <rect x="360" y="-6" width="18" height="14" fill="var(--red)" class="bar"/>
+              <text x="381" y="5" class="val">+0.9</text>
+            </g>
+            <!-- 8 -->
+            <g transform="translate(0,224)">
+              <text x="10" y="8" class="lbl">Transport distance (+30%)</text>
+              <rect x="360" y="-6" width="18" height="14" fill="var(--red)" class="bar"/>
+              <text x="381" y="5" class="val">+0.9</text>
+            </g>
+            <!-- 9 -->
+            <g transform="translate(0,246)">
+              <text x="10" y="8" class="lbl">H₂ purity spec (tighter)</text>
+              <rect x="360" y="-6" width="16" height="14" fill="var(--red)" class="bar"/>
+              <text x="379" y="5" class="val">+0.8</text>
+            </g>
+            <!-- 10 -->
+            <g transform="translate(0,268)">
+              <text x="10" y="8" class="lbl">Permit delay (+6 mo)</text>
+              <rect x="360" y="-6" width="16" height="14" fill="var(--red)" class="bar"/>
+              <text x="379" y="5" class="val">+0.8</text>
+            </g>
+            <!-- 11 -->
+            <g transform="translate(0,290)">
+              <text x="10" y="8" class="lbl">OEM delivery slip (+4 mo)</text>
+              <rect x="360" y="-6" width="14" height="14" fill="var(--red)" class="bar"/>
+              <text x="377" y="5" class="val">+0.7</text>
+            </g>
+            <!-- 12 (left side: savings) -->
+            <g transform="translate(0,312)">
+              <text x="10" y="8" class="lbl">Stack efficiency (+3%-pts)</text>
+              <rect x="(360-26)" y="-6" width="26" height="14" fill="var(--green)" transform="translate(-26,0)" class="bar"/>
+              <rect x="334" y="-6" width="26" height="14" fill="var(--green)" class="bar"/>
+              <text x="330" y="5" class="val" text-anchor="end">−1.3</text>
+            </g>
+            <!-- 13 -->
+            <g transform="translate(0,334)">
+              <text x="10" y="8" class="lbl">Capex (−10%)</text>
+              <rect x="343" y="-6" width="22" height="14" fill="var(--green)" class="bar"/>
+              <text x="338" y="5" class="val" text-anchor="end">−1.1</text>
+            </g>
+            <!-- 14 -->
+            <g transform="translate(0,356)">
+              <text x="10" y="8" class="lbl">Electrolyzer price (−15%)</text>
+              <rect x="345" y="-6" width="20" height="14" fill="var(--green)" class="bar"/>
+              <text x="340" y="5" class="val" text-anchor="end">−1.0</text>
+            </g>
+            <!-- 15 -->
+            <g transform="translate(0,378)">
+              <text x="10" y="8" class="lbl">Compression efficiency (+2%-pts)</text>
+              <rect x="348" y="-6" width="16" height="14" fill="var(--green)" class="bar"/>
+              <text x="342" y="5" class="val" text-anchor="end">−0.8</text>
+            </g>
+            <!-- 16 -->
+            <g transform="translate(0,400)">
+              <text x="10" y="8" class="lbl">Availability (+1%-pt)</text>
+              <rect x="350" y="-6" width="14" height="14" fill="var(--green)" class="bar"/>
+              <text x="344" y="5" class="val" text-anchor="end">−0.7</text>
+            </g>
+            <!-- 17 -->
+            <g transform="translate(0,422)">
+              <text x="10" y="8" class="lbl">Transformer losses (−0.5%-pt)</text>
+              <rect x="352" y="-6" width="12" height="14" fill="var(--green)" class="bar"/>
+              <text x="346" y="5" class="val" text-anchor="end">−0.6</text>
+            </g>
+            <!-- 18 -->
+            <g transform="translate(0,444)">
+              <text x="10" y="8" class="lbl">EPC overhead (−5%)</text>
+              <rect x="352" y="-6" width="12" height="14" fill="var(--green)" class="bar"/>
+              <text x="346" y="5" class="val" text-anchor="end">−0.6</text>
+            </g>
+            <!-- 19 -->
+            <g transform="translate(360,444)"></g>
+            <!-- 20 -->
+            <g transform="translate(0,466)">
+              <text x="10" y="8" class="lbl">Site drainage (−30%)</text>
+              <rect x="354" y="-6" width="10" height="14" fill="var(--green)" class="bar"/>
+              <text x="348" y="5" class="val" text-anchor="end">−0.5</text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <!-- COL 2: Residual risks, schedule, safety/ESIA -->
+      <section class="card">
+        <h2>Residual risks</h2>
+        <table>
+          <thead><tr><th>Risk</th><th>Impact</th><th>Mitigation</th></tr></thead>
+          <tbody>
+            <tr><td>Grid connection delay</td><td style="color:var(--red)">High</td><td>Early Statnett consult; reserve capacity; on‑site BESS buffer</td></tr>
+            <tr><td>Permitting timeline</td><td style="color:var(--warn)">Medium</td><td>Early dialogue with NVE; ESIA baseline; traffic/noise studies</td></tr>
+            <tr><td>OEM delivery risk</td><td style="color:var(--warn)">Medium</td><td>Frame agreement across vendors; LLI plan</td></tr>
+            <tr><td>Water supply capacity</td><td style="color:var(--warn)">Medium</td><td>Confirm abstraction rights; alternative source study</td></tr>
+          </tbody>
+        </table>
+        <!-- Likelihood x Impact heatmap -->
+        <div class="viz" style="height:260px; margin-top:8px">
+          <svg viewBox="0 0 560 240" width="100%" height="220" aria-label="Risk heatmap">
+            <style>.cap{font-size:12px;fill:var(--muted)}</style>
+            <!-- grid 5x5 -->
+            <g transform="translate(60,20)">
+              <text x="-50" y="92" class="cap" transform="rotate(-90 -50,92)">Impact →</text>
+              <text x="160" y="200" class="cap">Likelihood →</text>
+              <!-- draw cells -->
+              <g id="cells">
+                <!-- rows: Impact Low→High (top to bottom); cols: Likelihood Low→High (left to right) -->
+                <!-- generate 5x5 cells 40x30 each -->
+                <!-- background -->
+                <rect x="0" y="0" width="200" height="150" fill="#0b141a" stroke="var(--line)"/>
+                <!-- subtle gradient overlay not needed; we'll color per risk -->
+              </g>
+              <!-- axes labels -->
+              <g class="cap">
+                <text x="-6" y="12" text-anchor="end">Low</text>
+                <text x="-6" y="78" text-anchor="end">Med</text>
+                <text x="-6" y="146" text-anchor="end">High</text>
+
+                <text x="0" y="170">Low</text>
+                <text x="80" y="170">Med</text>
+                <text x="160" y="170">High</text>
+              </g>
+              <!-- place risks as colored rounded rects -->
+              <!-- helper: col width 40, row height 30; padding 5 -->
+              <!-- Grid connection delay: Likely x High impact (col=3,row=3) -->
+              <rect x="120" y="120" rx="6" ry="6" width="70" height="22" fill="var(--red)" opacity="0.85"/>
+              <text x="155" y="136" text-anchor="middle" fill="#081016" font-size="11">Grid delay</text>
+
+              <!-- Permitting timeline: Medium x Medium (col=2,row=2) -->
+              <rect x="60" y="60" rx="6" ry="6" width="90" height="22" fill="var(--warn)" opacity="0.9"/>
+              <text x="105" y="76" text-anchor="middle" fill="#081016" font-size="11">Permitting</text>
+
+              <!-- OEM delivery: Medium x Medium-High (col=2,row=3) -->
+              <rect x="60" y="100" rx="6" ry="6" width="80" height="22" fill="var(--warn)" opacity="0.9"/>
+              <text x="100" y="116" text-anchor="middle" fill="#081016" font-size="11">OEM delivery</text>
+
+              <!-- Water supply: Medium x Medium (col=2,row=2) -->
+              <rect x="60" y="80" rx="6" ry="6" width="82" height="22" fill="var(--warn)" opacity="0.9"/>
+              <text x="101" y="96" text-anchor="middle" fill="#081016" font-size="11">Water supply</text>
+            </g>
+            <!-- legend -->
+            <g transform="translate(320,40)">
+              <text class="cap" x="0" y="0">Legend</text>
+              <rect x="0" y="10" width="14" height="14" fill="var(--red)"/>
+              <text class="cap" x="22" y="21">High</text>
+              <rect x="0" y="32" width="14" height="14" fill="var(--warn)"/>
+              <text class="cap" x="22" y="43">Medium</text>
+              <rect x="0" y="54" width="14" height="14" fill="var(--green)"/>
+              <text class="cap" x="22" y="65">Low</text>
+            </g>
+          </svg>
+        </div>
+        <div class="divider"></div>
+        <h2>Schedule • L2 overview</h2>
+        <div class="viz" style="height:110px">
+          <!-- Timeline -->
+          <svg viewBox="0 0 560 110" width="100%" height="90" class="chart">
+            <line x1="40" y1="50" x2="520" y2="50" stroke="#0c141a" stroke-width="8" class="line-path"/>
+            <rect x="40" y="44" width="280" height="12" rx="6" fill="url(#grad1)" class="bar"></rect>
+            <defs>
+              <linearGradient id="grad1" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="var(--teal)"/>
+                <stop offset="100%" stop-color="var(--yellow)"/>
+              </linearGradient>
+            </defs>
+            <circle cx="40" cy="50" r="6" fill="var(--teal)" class="data-point"/>
+            <circle cx="220" cy="50" r="6" fill="var(--yellow)" class="data-point"/>
+            <circle cx="340" cy="50" r="6" fill="var(--blue)" class="data-point"/>
+            <circle cx="520" cy="50" r="6" fill="var(--green)" class="data-point"/>
+            <text x="28" y="80" font-size="12" fill="var(--muted)">Grid</text>
+            <text x="198" y="80" font-size="12" fill="var(--muted)">Civil</text>
+            <text x="312" y="80" font-size="12" fill="var(--muted)">OEM</text>
+            <text x="488" y="80" font-size="12" fill="var(--muted)">Comm.</text>
+          </svg>
+        </div>
+        <div class="grid-3" style="margin-top:6px">
+          <div><strong>Critical Path</strong><div class="muted">Grid → Civil → OEM delivery → Commissioning</div></div>
+          <div><strong>Gate</strong><div class="muted">This page: Decision Gate (DG0→DG1)</div></div>
+          <div><strong>LLI focus</strong><div class="muted">Stacks, compressors, transformers</div></div>
+        </div>
+        <div class="divider"></div>
+        <h2>What keeps this site green</h2>
+        <ul class="muted" style="margin:6px 0 0 18px;line-height:1.6">
+          <li>Permitting matrix drafted; authorities & timelines mapped</li>
+          <li>Baseline: noise, traffic, biodiversity — no red flags to date</li>
+          <li>Storulykkeforskriften cross‑reference initiated</li>
+          <li>Stakeholder engagement plan opened with municipality</li>
+        </ul>
+      </section>
+
+      <!-- COL 3: Quick facts, Offtake, Exports -->
+      <aside class="card">
+        <h2>Quick facts</h2>
+        <div class="facts">
+          <div class="fact"><small>Grid (firm)</small><strong>≥ 80–100 MW</strong></div>
+          <div class="fact"><small>Start‑up year</small><strong>2028 (scr.)</strong></div>
+          <div class="fact"><small>Water avail.</small><strong>Industrial intake</strong></div>
+          <div class="fact"><small>Land</small><strong>~62 ha</strong></div>
+          <div class="fact"><small>Tech</small><strong>PEM</strong></div>
+        </div>
+        <div class="divider"></div>
+        <h2>Off‑take options (screening)</h2>
+        <table>
+          <thead><tr><th>Mode</th><th>Unit cost</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Pipeline (DN300, 20 km)</td><td>2.1 NOK/kg</td><td>Concept</td></tr>
+            <tr><td>Trucking (150 km, 1.2 t)</td><td>4.0 NOK/kg</td><td>Concept</td></tr>
+            <tr><td>Port (LH₂, 5 kt/yr)</td><td>3.4 NOK/kg</td><td>Concept</td></tr>
+          </tbody>
+        </table>
+        <div class="divider"></div>
+        <h2>Board Pack Exports</h2>
+        <div class="btn-row">
+          <button class="btn btn-teal" id="btnExportPack">Export Board Pack (PDF)</button>
+          <button class="btn" id="btnExportSlides">Export Slides (PPTX)</button>
+          <button class="btn" id="btnExportData">Export Data (CSV/JSON)</button>
+        </div>
+        <p class="note">Includes Executive Summary, Financials, Risks, Schedule, ESIA, Safety/Constructability, Off‑take, and Further Works.</p>
+      </aside>
+    </div>
+
+    <!-- SECONDARY SECTIONS following the same look -->
+    <section class="grid-2">
+      <div class="card">
+        <h2>Decision rationale & pre‑conditions</h2>
+        <table>
+          <thead><tr><th>Option</th><th>Rationale</th><th>Pre‑conditions</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Proceed to Pre‑FEED (Go)</strong></td>
+              <td>Techno‑economics within target band; site & utilities viable; off‑take options identified.</td>
+              <td>Secure grid pre‑application; confirm water intake; initiate HAZID & permitting scoping.</td>
+            </tr>
+            <tr>
+              <td>Rework scope</td>
+              <td>Consider OEM B for stack efficiency uplift; optimize layout for crane access and drainage.</td>
+              <td>Vendor engagement round; rerun AI layout with updated constraints.</td>
+            </tr>
+            <tr>
+              <td>Hold / Stop</td>
+              <td>Triggered if grid capacity &lt; 80 MW by Q1; or off‑take price &lt; floor.</td>
+              <td>Board revisit upon condition change.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>Basis of Design & assumptions</h2>
+        <table>
+          <thead><tr><th>Category</th><th>Basis</th></tr></thead>
+          <tbody>
+            <tr><td>Ambient</td><td>−15 to +28 °C design; wind 10 m/s ref.</td></tr>
+            <tr><td>Codes & Standards</td><td>EN/ISO applicable; ATEX zone classification to be confirmed</td></tr>
+            <tr><td>Power</td><td>Grid‑connected; 132 kV intake; 92% plant availability</td></tr>
+            <tr><td>Water</td><td>Industrial intake; treatment duty sized for 100 MW</td></tr>
+            <tr><td>Product</td><td>Compressed H₂ 350–380 bar for trucking; pipeline option DN300</td></tr>
+            <tr><td>Safety</td><td>HAZID at Pre‑FEED start; SIS/SIL philosophy to follow</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid-3">
+      <div class="card">
+        <h2>Further Works — Technical Engineering</h2>
+        <table>
+          <tbody>
+            <tr><td>Process Flow Diagrams (PFDs)</td><td><span class="status status-partial">In Progress</span></td></tr>
+            <tr><td>P&amp;IDs for process units</td><td><span class="status status-not">Not Started</span></td></tr>
+            <tr><td>Mass &amp; Energy Balance</td><td><span class="status status-done">Complete</span></td></tr>
+            <tr><td>Equipment datasheets (tagged)</td><td><span class="status status-not">Not Started</span></td></tr>
+            <tr><td>3D GA model</td><td><span class="status status-partial">In Progress</span></td></tr>
+            <tr><td>Utility consumption &amp; distribution</td><td><span class="status status-not">Not Started</span></td></tr>
+            <tr><td>Hazardous area classification</td><td><span class="status status-not">Not Started</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>Further Works — Project Controls & Interfaces</h2>
+        <table>
+          <tbody>
+            <tr><td>CAPEX estimate ±10% (Class‑3/4)</td><td><span class="status status-not">Not Started</span></td></tr>
+            <tr><td>OPEX update with vendor quotes</td><td><span class="status status-not">Not Started</span></td></tr>
+            <tr><td>Execution schedule (Level 3)</td><td><span class="status status-partial">In Progress</span></td></tr>
+            <tr><td>Procurement plan &amp; LLI register</td><td><span class="status status-not">Not Started</span></td></tr>
+            <tr><td>Risk register update &amp; actions</td><td><span class="status status-partial">In Progress</span></td></tr>
+            <tr><td>Pipeline routing &amp; tie‑ins</td><td><span class="status status-not">Not Started</span></td></tr>
+            <tr><td>Truck loading bay design</td><td><span class="status status-not">Not Started</span></td></tr>
+            <tr><td>Port infrastructure integration</td><td><span class="status status-not">Not Started</span></td></tr>
+            <tr><td>Grid interconnection design</td><td><span class="status status-partial">In Progress</span></td></tr>
+            <tr><td>Water supply &amp; discharge design</td><td><span class="status status-not">Not Started</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>Approvals</h2>
+        <table>
+          <thead><tr><th>Role</th><th>Name</th><th>Date</th><th>Signature</th></tr></thead>
+          <tbody>
+            <tr><td>Project Director</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Engineering Lead</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>HSE Lead</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Finance</td><td>—</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Data confidence & checklist</h2>
+      <div class="grid-2">
+        <div>
+          <div class="checklist">
+            <div class="check"><span class="bullet"></span><div>Data grade: B+ (grid queue pre‑app; water capacity note; ESIA scoping minutes; offtake MoU drafts)</div></div>
+            <div class="check"><span class="bullet"></span><div>Grid: DSO letter (firm &gt;=80 MW); TSO plan alignment</div></div>
+            <div class="check"><span class="bullet"></span><div>Permits: buffers mapped; stakeholders logged</div></div>
+            <div class="check"><span class="bullet"></span><div>CO₂/offtake: transport routes surveyed (desktop)</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="btn-row" style="margin-top:4px">
+            <button class="btn">Save to Watchlist</button>
+            <button class="btn">Export slide</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+<script>
+  // Button hooks
+  function toast(msg){ alert(msg); }
+  const hook = (id,msg)=>{ const el=document.getElementById(id); if(el) el.onclick=()=>toast(msg) };
+  hook('btnExportCSV','CSV bundle export queued.');
+  hook('btnExportPDF','Full PDF export queued.');
+  hook('btnExportPack','Board Pack PDF generated.');
+  hook('btnExportSlides','Slides export (PPTX) generated.');
+  hook('btnExportData','Data export (CSV/JSON) generated.');
+  hook('btnGo','Decision recorded: Proceed to Pre‑FEED (Go).');
+  hook('btnRework','Flagged: Rework scope.');
+  hook('btnHold','Flagged: Hold / Stop.');
+</script>
+</body>
+</html>

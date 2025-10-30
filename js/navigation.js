@@ -1,15 +1,17 @@
 // Define your pages - matching your actual HTML files
 const pages = [
     { name: 'Home', file: 'index.html' },
-    { name: 'Comparison', file: 'comparison.html' },
+    { name: 'Portfolio Board', file: 'comparison.html' },
     { name: 'Screening R2', file: 'Screening_Result2.html' },
     { name: 'Screening R3', file: 'Screening_Result3.html' },
     { name: 'Project Builder', file: 'projectbuilder.html' },
+    { name: 'Electrolyzer', file: 'electrolyzer_config.html' },
     { name: 'OEM Comparison', file: 'OEMcomparison.html' },
+    { name: 'HAZID', file: 'hazid.html' },
     { name: 'CAPEX', file: 'CAPEX.html' },
-    { name: 'LLI5', file: 'LLI5.html' },
+    { name: 'Long Lead Items', file: 'LLI5.html' },
     { name: 'Schedule', file: 'schedule.html' },
-    { name: 'ESIA3', file: 'ESIA3.html' },
+    { name: 'Impact Screening', file: 'ESIA3.html' },
     { name: 'Offtake', file: 'offtake.html' },
     { name: 'Board Pack', file: 'decision_board.html' }
 ];

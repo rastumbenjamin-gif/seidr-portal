@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — HAZID Module</title>
+<link rel="stylesheet" href="css/styles.css?v=5">
+<link rel="stylesheet" href="css/interactive-styles.css?v=5">
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --blue:#74aeea; --pink:#ea7ad6;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
+       font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  .crumb{color:var(--muted);font-size:13px}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;max-width:1780px;margin:0 auto;padding:18px}
+  .left{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h1{margin:.2rem 0 .8rem;font-size:28px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  label{display:block;margin:8px 0 6px}
+  input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)}
+  textarea{min-height:64px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 120px;gap:10px;align-items:center}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .btn-ghost{background:transparent}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
+  .muted{color:var(--muted)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--panel)}
+  tr:hover{background:rgba(25,197,190,.06)}
+  .fit{width:100%;display:block}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .k{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .k strong{display:block;font-size:18px}
+  .risk-low{background:rgba(25,197,190,.14)}
+  .risk-med{background:rgba(246,201,71,.14)}
+  .risk-high{background:rgba(239,140,122,.14)}
+  .risk-extreme{background:rgba(239,140,122,.28)}
+  .tag{display:inline-block;border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:2px 6px;font-size:11px;margin-right:4px}
+  .rightGrid{display:grid;grid-template-rows:auto auto auto 1fr;gap:14px}
+  svg.heat, svg.bowtie{width:100%;height:280px;background:#0c141a;border-radius:12px}
+  .axis{stroke:#2b3b46;stroke-width:1}
+  .grid{stroke:#1a2530;stroke-width:.8}
+  .node{fill:var(--panel-2);stroke:#2b3b46;stroke-width:1.2}
+  .arrow{stroke:#6e7f8a;stroke-width:2;marker-end:url(#arr)}
+  .danger{stroke:#ef8c7a}
+  .ok{stroke:#57d39b}
+  .warn{stroke:#f6c947}
+  .chip{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:var(--panel-2);
+        border-radius:999px;padding:4px 8px;font-size:12px}
+  .chip input{width:auto}
+  .filterRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  .sticky-actions{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,rgba(19,32,42,.98));
+                  padding-top:8px;margin-top:8px}
+  .status-open{background:rgba(246,201,71,.16)}
+  .status-closed{background:rgba(87,211,155,.16)}
+  .status-inprog{background:rgba(116,174,234,.16)}
+  @media (max-width:1300px){ .wrap{grid-template-columns:1fr} }
+</style>
+<script src="js/navigation.js?v=5"></script>
+</head>
+<body>
+  <div class="topbar">
+    <div><a href="index.html" style="color:inherit;text-decoration:none;cursor:pointer"><strong>SEIDR</strong></a> <span class="crumb">/ Project Builder / HAZID</span></div>
+    <nav id="main-nav"></nav>
+    <div class="stack">
+      <span class="pill">Site: Herøya North</span>
+      <a class="btn" href="./">Back</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- LEFT: Filters, Templates, Add -->
+    <div class="left">
+      <div class="card">
+        <h1>HAZID</h1>
+        <div class="muted">Identify hazards per unit/segment, assess risk, capture safeguards & actions.</div>
+      </div>
+
+      <div class="card">
+        <h2>Scope & Filters</h2>
+        <label>Process Unit / Segment</label>
+        <select id="unitSel" multiple size="8">
+          <option value="SUB">HV Substation</option>
+          <option value="RECT">Rectifier/Transformer</option>
+          <option value="ELX" selected>PEM Electrolyzers</option>
+          <option value="WTR">DI Water Treatment</option>
+          <option value="COOL">Cooling Towers</option>
+          <option value="COMP" selected>H₂ Compressors</option>
+          <option value="DRY">Dryer/Deoxo</option>
+          <option value="STORE" selected>H₂ Storage</option>
+          <option value="LOAD" selected>Trailer Loading</option>
+          <option value="O2">O₂ Handling</option>
+          <option value="BOP">Utilities / BoP</option>
+          <option value="CTRL">Control/OPS</option>
+        </select>
+
+        <div class="filterRow" style="margin-top:10px">
+          <div>
+            <label>Min Risk Score</label>
+            <select id="minRisk">
+              <option value="1">1+</option><option value="5">5+</option>
+              <option value="10" selected>10+</option><option value="15">15+</option><option value="20">20+</option>
+            </select>
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="statusFilter">
+              <option value="ALL" selected>All</option>
+              <option value="OPEN">Open</option>
+              <option value="INPROG">In Progress</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="stack" style="margin-top:10px">
+          <button id="btnApplyFilters" class="btn">Apply Filters</button>
+          <button id="btnClearFilters" class="btn btn-ghost">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Templates</h2>
+        <div class="stack">
+          <button class="btn" onclick="seedUnit('ELX')">Seed: Electrolyzers</button>
+          <button class="btn" onclick="seedUnit('COMP')">Seed: Compressors</button>
+          <button class="btn" onclick="seedUnit('STORE')">Seed: Storage</button>
+          <button class="btn" onclick="seedUnit('LOAD')">Seed: Loading</button>
+          <button class="btn btn-ghost" onclick="seedAll()">Seed All Default</button>
+        </div>
+        <div class="muted" style="margin-top:6px">Templates add common hazards; edit as needed.</div>
+      </div>
+
+      <div class="card">
+        <h2>Add / Bulk Edit</h2>
+        <label>New Hazard (free text)</label>
+        <textarea id="newHaz" placeholder="e.g., Hydrogen release at flange during start-up"></textarea>
+        <div class="row">
+          <label>Unit</label>
+          <select id="newHazUnit">
+            <option>ELX</option><option>COMP</option><option>DRY</option><option>STORE</option>
+            <option>LOAD</option><option>WTR</option><option>COOL</option><option>O2</option>
+            <option>BOP</option><option>SUB</option><option>RECT</option><option>CTRL</option>
+          </select>
+        </div>
+        <div class="stack">
+          <button id="btnAddHaz" class="btn">Add Hazard</button>
+          <button id="btnDup" class="btn btn-ghost">Duplicate Selected</button>
+          <button id="btnBulk" class="btn btn-ghost">Bulk Likelihood+1 (selected)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Export</h2>
+        <div class="toolbar">
+          <button id="btnCSV" class="btn">Export CSV</button>
+          <button id="btnJSON" class="btn">Export JSON</button>
+          <button id="btnPrint" class="btn btn-ghost">Print / PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Worksheet, Heatmap, Bow-tie, Actions -->
+    <div class="rightGrid">
+      <div class="card">
+        <h2>HAZID Worksheet</h2>
+        <div style="overflow:auto;max-height:360px">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Unit</th>
+                <th>Node / Segment</th>
+                <th>Guideword / Deviation</th>
+                <th>Hazard Scenario</th>
+                <th>Causes</th>
+                <th>Consequences</th>
+                <th>Safeguards / IPLs</th>
+                <th>Recommendations</th>
+                <th>L</th>
+                <th>S</th>
+                <th>Risk</th>
+                <th>Status</th>
+                <th>Owner</th>
+                <th>Due</th>
+                <th>P&ID Tag</th>
+                <th><input id="selAll" type="checkbox" title="Select all"/></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="sticky-actions">
+          <div class="stack">
+            <span class="pill">L: Likelihood (1–5)</span>
+            <span class="pill">S: Severity (1–5)</span>
+            <span class="pill">Risk = L×S</span>
+            <span class="pill">Selected: <span id="selCount">0</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Risk Matrix & Distribution</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <svg id="heat" class="heat" aria-label="Risk Matrix"></svg>
+          <div>
+            <div class="kpi">
+              <div class="k"><small class="muted">Open Items</small><strong id="kOpen">—</strong></div>
+              <div class="k"><small class="muted">High (≥15)</small><strong id="kHigh">—</strong></div>
+              <div class="k"><small class="muted">Medium (8–14)</small><strong id="kMed">—</strong></div>
+              <div class="k"><small class="muted">Closed</small><strong id="kClosed">—</strong></div>
+            </div>
+            <div style="margin-top:10px" class="stack">
+              <span class="tag">Low: 1–6</span>
+              <span class="tag">Med: 8–14</span>
+              <span class="tag">High: 15–19</span>
+              <span class="tag">Extreme: 20–25</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Bow-Tie — Selected Hazard</h2>
+        <svg id="bowtie" class="bowtie" aria-label="Bow-tie diagram">
+          <defs>
+            <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,3 L0,6 z" fill="#6e7f8a"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <div class="card">
+        <h2>Action Tracker</h2>
+        <div style="overflow:auto;max-height:240px">
+          <table id="actTbl">
+            <thead>
+              <tr><th>ID</th><th>Unit</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="stack" style="margin-top:8px">
+          <button id="btnNewAction" class="btn">New Action from Selection</button>
+          <button id="btnCloseSelected" class="btn btn-ghost">Mark Selected Closed</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* -------------------- Data & Templates -------------------- */
+const UNITS = {
+  SUB:'HV Substation', RECT:'Rectifier/Transformer', ELX:'PEM Electrolyzers', WTR:'DI Water Treatment',
+  COOL:'Cooling Towers', COMP:'H2 Compressors', DRY:'Dryer/Deoxo', STORE:'H2 Storage',
+  LOAD:'Trailer Loading', O2:'O2 Handling', BOP:'Utilities / BoP', CTRL:'Control/OPS'
+};
+
+let hazards = [];   // master list
+let selection = new Set();
+
+const TEMPLATES = {
+  ELX: [
+    h('ELX','Stack room','More flow','H2 accumulation in hall','Ventilation failure; undetected leak','Explosion / injury / asset loss','LEL detectors; purge; ventilation; shutdown','Verify ventilation duty; add roof vents',2,4,'OPEN','','','ELX-001'),
+    h('ELX','DC bus','More temperature','DC bus overheating','High current; cooling fail','Fire; equipment damage','Temp sensors; trips; fire detection','IR scans during ramp; improve cooling',2,4,'OPEN','','','ELX-DC'),
+    h('ELX','O2 outlet','Reverse flow','Hydrogen ingress to O2 line','Valve failure; cross leak','Mixture detonation','NRVs; pressure control; analyzer','Install double block & bleed; interlocks',1,5,'INPROG','Process','2026-01-15','ELX-O2')
+  ],
+  COMP: [
+    h('COMP','Suction header','Less pressure','Compressor surge','Blockage; trip; low suction','Damage to compressor','Anti-surge control; recycle','Tune anti-surge; add bypass capacity',3,3,'OPEN','','','COMP-INT'),
+    h('COMP','Discharge','More pressure','Overpressure at 350 bar','Trip; blocked outlet','Rupture; release','PSV to flare/vent; ESD','Confirm PSV sizing to API 521',2,5,'OPEN','','','COMP-350')
+  ],
+  STORE: [
+    h('STORE','Manifold','Leak','Hydrogen leak at manifold','Seal failure; flange loosening','Fire/explosion','Gas detection; deluge; isolation','Upgrade gasket material; add double isolation',3,5,'OPEN','','','STOR-MAN'),
+    h('STORE','Vessels','External impact','Vehicle collision','Traffic error','Loss of containment','Bollards; crash barrier','Extend barriers; set exclusion zone',2,5,'INPROG','HSE','2025-12-01','STOR-VES')
+  ],
+  LOAD: [
+    h('LOAD','Bay','Human error','Wrong connection','Training gap','Release; injury','Checklists; quick-connect; gas det.','Add interlocked couplers; signage',3,4,'OPEN','','','LOAD-BAY'),
+    h('LOAD','Bay','Static','Static discharge during loading','Dry conditions','Ignition of H2 cloud','Bonding/grounding','Install humidification; ESD mats',2,4,'OPEN','','','LOAD-ESD')
+  ]
+};
+
+function h(unit,node,guide,scenario,causes,cons,sg,rec,L,S,status,owner,due,pid){
+  return {id: uid(), unit, node, guide, scenario, causes, cons, sg, rec, L, S,
+    status, owner, due, pid, selected:false};
+}
+function uid(){ return 'HZ-' + Math.random().toString(36).slice(2,7).toUpperCase(); }
+
+/* -------------------- UI Helpers -------------------- */
+const $ = s => document.querySelector(s);
+function val(id){ return $(id).value; }
+function riskClass(score){
+  if(score>=20) return 'risk-extreme';
+  if(score>=15) return 'risk-high';
+  if(score>=8)  return 'risk-med';
+  return 'risk-low';
+}
+
+/* -------------------- Rendering -------------------- */
+const tbody = $('#tbl tbody');
+function renderTable(){
+  tbody.innerHTML='';
+  const units = Array.from($('#unitSel').selectedOptions).map(o=>o.value);
+  const minR = +$('#minRisk').value;
+  const status = $('#statusFilter').value;
+
+  const rows = hazards.filter(z=>{
+    const r = z.L * z.S;
+    const passUnit = units.length? units.includes(z.unit):true;
+    const passR = r >= minR;
+    const passStatus = status==='ALL' ? true : (status==='OPEN'? z.status==='OPEN': status==='INPROG'? z.status==='INPROG' : z.status==='CLOSED');
+    return passUnit && passR && passStatus;
+  });
+
+  rows.forEach((z,i)=>{
+    const r = z.L * z.S, cls = riskClass(r);
+    const tr=document.createElement('tr');
+    tr.className = cls + (z.status==='OPEN'?' status-open': z.status==='INPROG'?' status-inprog':' status-closed');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td><span class="tag">${z.unit}</span></td>
+      <td contenteditable="true">${escapeHtml(z.node)}</td>
+      <td contenteditable="true">${escapeHtml(z.guide)}</td>
+      <td contenteditable="true">${escapeHtml(z.scenario)}</td>
+      <td contenteditable="true">${escapeHtml(z.causes)}</td>
+      <td contenteditable="true">${escapeHtml(z.cons)}</td>
+      <td contenteditable="true">${escapeHtml(z.sg)}</td>
+      <td contenteditable="true">${escapeHtml(z.rec)}</td>
+      <td>${selLS('L', z.id, z.L)}</td>
+      <td>${selLS('S', z.id, z.S)}</td>
+      <td><strong>${r}</strong></td>
+      <td>${selStatus(z.id, z.status)}</td>
+      <td contenteditable="true">${escapeHtml(z.owner||'')}</td>
+      <td><input type="date" value="${z.due||''}" data-id="${z.id}" class="fit" onchange="editDue(this)"/></td>
+      <td contenteditable="true">${escapeHtml(z.pid||'')}</td>
+      <td style="text-align:center"><input type="checkbox" data-id="${z.id}" ${z.selected?'checked':''} onchange="toggleSel(this)"/></td>
+    `;
+    // inline edits
+    tr.querySelectorAll('[contenteditable]').forEach((cell,ci)=>{
+      cell.addEventListener('input', ()=>{
+        const key = ['node','guide','scenario','causes','cons','sg','rec','owner','pid'][ci>=2?ci-2:0];
+        if(key){ const item = hazards.find(x=>x.id===z.id); item[key] = cell.textContent.trim(); drawBowtie(item); }
+      });
+    });
+    tr.addEventListener('click', (ev)=>{ if(ev.target.tagName!=='SELECT' && ev.target.type!=='checkbox' && ev.target.type!=='date') selectRow(z.id); });
+    tbody.appendChild(tr);
+  });
+
+  $('#selCount').textContent = selection.size;
+  refreshKPIs();
+  drawHeat();
+  if(selection.size===1){
+    const item = hazards.find(x=>x.id===Array.from(selection)[0]);
+    drawBowtie(item);
+  }else{
+    drawBowtie(null);
+  }
+}
+
+function selLS(kind,id,val){
+  const opts=[1,2,3,4,5].map(n=>`<option ${n===val?'selected':''}>${n}</option>`).join('');
+  return `<select data-id="${id}" onchange="editLS(this,'${kind}')">${opts}</select>`;
+}
+function selStatus(id,val){
+  const S=['OPEN','INPROG','CLOSED'].map(s=>`<option ${s===val?'selected':''}>${s}</option>`).join('');
+  return `<select data-id="${id}" onchange="editStatus(this)">${S}</select>`;
+}
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* -------------------- Edits -------------------- */
+function editLS(el,kind){
+  const id = el.getAttribute('data-id');
+  const it = hazards.find(x=>x.id===id);
+  it[kind] = +el.value;
+  renderTable();
+}
+function editStatus(el){
+  const id = el.getAttribute('data-id');
+  const it = hazards.find(x=>x.id===id);
+  it.status = el.value;
+  renderTable();
+}
+function editDue(el){
+  const id = el.getAttribute('data-id');
+  const it = hazards.find(x=>x.id===id);
+  it.due = el.value;
+}
+function toggleSel(el){
+  const id = el.getAttribute('data-id');
+  if(el.checked) selection.add(id); else selection.delete(id);
+  const it = hazards.find(x=>x.id===id); it.selected = el.checked;
+  $('#selCount').textContent = selection.size;
+}
+function selectRow(id){
+  selection.clear();
+  hazards.forEach(h=>h.selected=false);
+  const it = hazards.find(x=>x.id===id);
+  if(it){ it.selected=true; selection.add(id); }
+  renderTable();
+}
+$('#selAll').addEventListener('change', e=>{
+  selection.clear();
+  hazards.forEach(h=>{ h.selected = e.target.checked; if(e.target.checked) selection.add(h.id); });
+  renderTable();
+});
+
+/* -------------------- Seeding -------------------- */
+function seedUnit(u){
+  const items = (TEMPLATES[u]||[]).map(x=>({...x,id:uid()}));
+  hazards = hazards.concat(items);
+  renderTable();
+}
+function seedAll(){
+  Object.keys(TEMPLATES).forEach(k=>seedUnit(k));
+}
+
+/* -------------------- Filters -------------------- */
+$('#btnApplyFilters').addEventListener('click', renderTable);
+$('#btnClearFilters').addEventListener('click', ()=>{
+  Array.from($('#unitSel').options).forEach(o=>o.selected=false);
+  $('#minRisk').value='1'; $('#statusFilter').value='ALL';
+  renderTable();
+});
+
+/* -------------------- Add / Bulk -------------------- */
+$('#btnAddHaz').addEventListener('click', ()=>{
+  const txt = $('#newHaz').value.trim(); if(!txt) return;
+  const u = $('#newHazUnit').value;
+  hazards.push(h(u,'Segment','—',txt,'','', '','',2,3,'OPEN','','',''));
+  $('#newHaz').value='';
+  renderTable();
+});
+$('#btnDup').addEventListener('click', ()=>{
+  const ids = Array.from(selection); if(!ids.length) return;
+  ids.forEach(id=>{
+    const src = hazards.find(x=>x.id===id);
+    hazards.push({...JSON.parse(JSON.stringify(src)), id:uid(), status:'OPEN', owner:'', due:''});
+  });
+  renderTable();
+});
+$('#btnBulk').addEventListener('click', ()=>{
+  selection.forEach(id=>{
+    const it = hazards.find(x=>x.id===id);
+    it.L = Math.min(5, it.L+1);
+  });
+  renderTable();
+});
+$('#btnCloseSelected').addEventListener('click', ()=>{
+  selection.forEach(id=>{ const it=hazards.find(x=>x.id===id); it.status='CLOSED'; it.selected=false; });
+  selection.clear();
+  renderTable();
+});
+$('#btnNewAction').addEventListener('click', ()=>{
+  const ids = Array.from(selection); if(!ids.length) return;
+  ids.forEach(id=>{
+    const it = hazards.find(x=>x.id===id);
+    addAction(it);
+  });
+  renderActions();
+});
+
+/* -------------------- Heatmap -------------------- */
+function drawHeat(){
+  const svg = $('#heat'); svg.innerHTML='';
+  const W=svg.clientWidth||700, H=svg.clientHeight||280, pad=40;
+  // grid
+  for(let i=0;i<=5;i++){
+    const x=pad + i*(W-2*pad)/5, y=pad + i*(H-2*pad)/5;
+    svg.insertAdjacentHTML('beforeend', `<line x1="${x}" y1="${pad}" x2="${x}" y2="${H-pad}" class="grid"/>`);
+    svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+    if(i>0){ svg.insertAdjacentHTML('beforeend', `<text x="${pad-24}" y="${H-pad - (i-1)*(H-2*pad)/5 + 4}" class="muted">S${i}</text>`); }
+    if(i>0){ svg.insertAdjacentHTML('beforeend', `<text x="${pad + (i-1)*(W-2*pad)/5}" y="${H-pad+16}" class="muted">L${i}</text>`); }
+  }
+  // points
+  hazards.forEach(z=>{
+    const L=z.L,S=z.S; const x=pad + (L-0.5)*(W-2*pad)/5; const y=H-pad - (S-0.5)*(H-2*pad)/5;
+    const score=L*S;
+    const col = score>=20?'#ef8c7a':score>=15?'#f6c947':score>=8?'#19c5be':'#74aeea';
+    const op  = z.status==='CLOSED' ? .35 : .95;
+    svg.insertAdjacentHTML('beforeend', `<circle cx="${x}" cy="${y}" r="${6+(score/10)}" fill="${col}" opacity="${op}"><title>${z.unit} ${z.node}: ${z.scenario} [${score}]</title></circle>`);
+  });
+  svg.insertAdjacentHTML('beforeend', `<text x="${W/2}" y="${pad-10}" text-anchor="middle" class="muted">Risk Matrix (Likelihood × Severity)</text>`);
+}
+
+/* -------------------- Bow-tie -------------------- */
+function drawBowtie(item){
+  const svg = $('#bowtie'); svg.innerHTML='';
+  const W=svg.clientWidth||700, H=svg.clientHeight||280, pad=16;
+  // axes baseline
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${H/2}" x2="${W-pad}" y2="${H/2}" class="axis"/>`);
+  // nothing selected
+  if(!item){ svg.insertAdjacentHTML('beforeend', `<text x="${W/2}" y="${H/2-8}" text-anchor="middle" class="muted">Select a hazard to render bow-tie</text>`); return; }
+
+  const centerX=W/2, centerY=H/2;
+  const score=item.L*item.S;
+  const border = score>=20 ? '#ef8c7a' : score>=15 ? '#f6c947' : '#19c5be';
+
+  // hazard node
+  svg.insertAdjacentHTML('beforeend', `<rect x="${centerX-120}" y="${centerY-24}" width="240" height="48" rx="10" class="node" stroke="${border}"/>`);
+  svg.insertAdjacentHTML('beforeend', `<text x="${centerX}" y="${centerY-4}" text-anchor="middle" fill="#e9eef2" font-size="13">${escapeHtml(item.scenario||'Hazard')}</text>`);
+  svg.insertAdjacentHTML('beforeend', `<text x="${centerX}" y="${centerY+14}" text-anchor="middle" class="muted">${UNITS[item.unit]} • L${item.L}×S${item.S}=${score}</text>`);
+
+  // left (threats / causes)
+  const causes = (item.causes||'').split(/;|,|\n/).map(s=>s.trim()).filter(Boolean).slice(0,4);
+  causes.forEach((c,i)=>{
+    const x=centerX-260, y=centerY-70 + i*40;
+    nodeBox(svg,x-130,y-18,260,36,c,'warn');
+    arrow(svg,x+130,y,centerX-120,y);
+  });
+
+  // right (consequences)
+  const cons = (item.cons||'').split(/;|,|\n/).map(s=>s.trim()).filter(Boolean).slice(0,4);
+  cons.forEach((c,i)=>{
+    const x=centerX+260, y=centerY-70 + i*40;
+    nodeBox(svg,x-130,y-18,260,36,c,'danger');
+    arrow(svg,centerX+120,y,x-130,y);
+  });
+
+  // barriers (top/bottom)
+  const sg = (item.sg||'').split(/;|,|\n/).map(s=>s.trim()).filter(Boolean);
+  const leftB  = sg.filter(s=>/prevent|detector|analyser|interlock|nrvs?|psv|shutdown|alarm/i.test(s));
+  const rightB = sg.filter(s=>/deluge|vent|evac|fire|blast|mitig|contain|water curtain|barrier/i.test(s));
+  leftB.slice(0,3).forEach((b,i)=>{
+    const x=centerX-120-100, y=centerY-120 - i*36;
+    nodeBox(svg,x-110,y-14,220,28,b,'ok');
+    arrow(svg,x+110,y,centerX-120,y);
+  });
+  rightB.slice(0,3).forEach((b,i)=>{
+    const x=centerX+120+100, y=centerY+120 + i*36;
+    nodeBox(svg,x-110,y-14,220,28,b,'ok');
+    arrow(svg,centerX+120,y,x-110,y);
+  });
+
+  // recommendation bottom note
+  if(item.rec){
+    svg.insertAdjacentHTML('beforeend', `<text x="${centerX}" y="${H-12}" text-anchor="middle" class="muted">Rec: ${escapeHtml(item.rec)}</text>`);
+  }
+
+  function nodeBox(svg,x,y,w,h,txt,cls){
+    svg.insertAdjacentHTML('beforeend', `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" class="node" />`);
+    if(cls==='danger'||cls==='ok'||cls==='warn'){
+      const col = cls==='danger'?'#ef8c7a':cls==='ok'?'#57d39b':'#f6c947';
+      svg.insertAdjacentHTML('beforeend', `<rect x="${x}" y="${y}" width="6" height="${h}" fill="${col}" />`);
+    }
+    svg.insertAdjacentHTML('beforeend', `<text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" fill="#cfd6db" font-size="12">${escapeHtml(txt)}</text>`);
+  }
+  function arrow(svg,x1,y1,x2,y2){
+    svg.insertAdjacentHTML('beforeend', `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="arrow"/>`);
+  }
+}
+
+/* -------------------- KPIs -------------------- */
+function refreshKPIs(){
+  const open = hazards.filter(h=>h.status!=='CLOSED');
+  const high = open.filter(h=>h.L*h.S >= 15);
+  const med  = open.filter(h=>h.L*h.S >= 8 && h.L*h.S <= 14);
+  const closed = hazards.filter(h=>h.status==='CLOSED');
+  $('#kOpen').textContent = open.length;
+  $('#kHigh').textContent = high.length;
+  $('#kMed').textContent  = med.length;
+  $('#kClosed').textContent = closed.length;
+}
+
+/* -------------------- Actions -------------------- */
+const actBody = $('#actTbl tbody');
+function addAction(hz){
+  const tr=document.createElement('tr');
+  tr.innerHTML = `<td>${hz.id}</td><td>${hz.unit}</td><td>${escapeHtml(hz.rec||'(add recommendation)')}</td>
+    <td>${escapeHtml(hz.owner||'')}</td><td>${hz.due||''}</td><td>${hz.status}</td>`;
+  actBody.appendChild(tr);
+}
+function renderActions(){
+  actBody.innerHTML='';
+  hazards.filter(h=>h.rec && h.status!=='CLOSED').forEach(addAction);
+}
+
+/* -------------------- Export -------------------- */
+$('#btnCSV').addEventListener('click', ()=>{
+  const headers = ['ID','Unit','Node','Guideword','Scenario','Causes','Consequences','Safeguards','Recommendations','L','S','Risk','Status','Owner','Due','P&ID Tag'];
+  const lines = [headers.join(',')].concat(hazards.map(z=>[
+    z.id,z.unit,escCSV(z.node),escCSV(z.guide),escCSV(z.scenario),escCSV(z.causes),escCSV(z.cons),
+    escCSV(z.sg),escCSV(z.rec),z.L,z.S,(z.L*z.S),z.status,escCSV(z.owner||''),z.due||'',escCSV(z.pid||'')
+  ].join(',')));
+  download(lines.join('\n'),'seidr_hazid.csv','text/csv');
+});
+$('#btnJSON').addEventListener('click', ()=>{
+  download(JSON.stringify(hazards,null,2),'seidr_hazid.json','application/json');
+});
+$('#btnPrint').addEventListener('click', ()=>{ window.print(); });
+
+function escCSV(s){ return `"${(s||'').replace(/"/g,'""')}"`; }
+function download(data,name,type){
+  const blob=new Blob([data],{type}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url);
+}
+
+/* -------------------- Boot -------------------- */
+function boot(){
+  // Seed a minimal set so the page isn't empty
+  seedAll();
+  renderActions();
+}
+boot();
+renderTable();
+
+</script>
+</body>
+</html>

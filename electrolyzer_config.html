@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — Electrolyzer Detail & OEM Selection</title>
+<link rel="stylesheet" href="css/styles.css?v=5">
+<link rel="stylesheet" href="css/interactive-styles.css?v=5">
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --blue:#74aeea;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
+       font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  .crumb{color:var(--muted);font-size:13px}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;max-width:1760px;margin:0 auto;padding:18px}
+  .left{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h1{margin:.2rem 0 .8rem;font-size:28px}
+  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  label{display:block;margin:8px 0 6px}
+  input,select{width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)}
+  input[type="range"]{accent-color:#19c5be}
+  .row{display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .btn-ghost{background:transparent}
+  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
+  .muted{color:var(--muted)}
+  .kpi{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+  .k{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .k strong{display:block;font-size:18px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .panel-body{padding:12px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  tr:hover{background:rgba(25,197,190,.06)}
+  /* charts */
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  svg.chart{width:100%;height:280px;background:#0c141a;border-radius:12px}
+  .axis{stroke:#2b3b46;stroke-width:1}
+  .grid{stroke:#1a2530;stroke-width:.8}
+  .line{fill:none;stroke-width:2.5}
+  .dot{r:3}
+  @media (max-width:1400px){ .kpi{grid-template-columns:repeat(3,1fr)} .wrap{grid-template-columns:1fr} .charts{grid-template-columns:1fr} }
+</style>
+<script src="js/navigation.js?v=5"></script>
+</head>
+<body>
+  <div class="topbar">
+    <div><a href="index.html" style="color:inherit;text-decoration:none;cursor:pointer"><strong>SEIDR</strong></a> <span class="crumb">/ Project Builder / Electrolyzer Detail</span></div>
+    <nav id="main-nav"></nav>
+    <div class="stack">
+      <span id="siteTag" class="pill">Site: —</span>
+      <a class="btn" href="./">Back</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- LEFT: OEM & Controls -->
+    <div class="left">
+      <div class="card">
+        <h1>Electrolyzer Detail</h1>
+        <div class="muted">Pick an OEM, tune functions, and see KPIs & costs update in real time.</div>
+      </div>
+
+      <div class="card">
+        <h2>OEM Selection</h2>
+        <label>OEM</label>
+        <select id="oemSel"></select>
+        <div class="row"><label>Stacks per train</label><input id="stacks" type="number" value="20" min="1"/></div>
+        <div class="row"><label>Train capacity (MW)</label><input id="mw" type="number" value="100" min="1"/></div>
+        <div class="row"><label>Delivery pressure (bar)</label><input id="bar" type="number" value="350" min="30"/></div>
+        <div class="row"><label>Turndown (%)</label><input id="turndown" type="number" value="20" min="5" max="100"/></div>
+        <div class="row"><label>Ramp rate (%/min)</label><input id="ramp" type="number" value="5" min="1" max="20"/></div>
+        <div class="row"><label>Stack life (yr)</label><input id="stackLife" type="number" value="7" min="3" max="15"/></div>
+        <div class="row"><label>Stack repl. cost (% ELX capex)</label><input id="stackPct" type="number" value="40" min="10" max="80"/></div>
+        <div class="row"><label>Efficiency mode</label>
+          <select id="effMode">
+            <option value="nominal" selected>Nominal</option>
+            <option value="eco">Eco (higher efficiency, lower ramp)</option>
+            <option value="peak">Peak (lower efficiency, higher ramp)</option>
+          </select>
+        </div>
+        <div class="row"><label>Water quality</label>
+          <select id="h2o">
+            <option>DI 0.1 μS/cm</option>
+            <option>RO-Polished</option>
+            <option>City Water + DI</option>
+          </select>
+        </div>
+        <div class="stack" style="margin-top:8px">
+          <button id="btnApply" class="btn">Apply</button>
+          <button id="btnReset" class="btn btn-ghost">Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Economic Inputs</h2>
+        <div class="row"><label>Power price (NOK/MWh)</label><input id="pElec" type="number" value="650"/></div>
+        <div class="row"><label>Capacity factor (%)</label><input id="capFac" type="number" value="92"/></div>
+        <div class="row"><label>Fixed OPEX (% capex/yr)</label><input id="fopex" type="number" value="3.0" step="0.1"/></div>
+        <div class="row"><label>WACC (%)</label><input id="wacc" type="number" value="8" step="0.1"/></div>
+        <div class="row"><label>Economic life (yr)</label><input id="life" type="number" value="20"/></div>
+      </div>
+
+      <div class="card">
+        <h2>Actions</h2>
+        <div class="stack">
+          <button id="btnRFQ" class="btn btn-teal">Create RFQ Draft</button>
+          <button id="btnSpec" class="btn">Export Spec (PDF)</button>
+          <button id="btnCSV" class="btn btn-ghost">Export CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: KPIs, Charts, Comparison -->
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><strong>Key KPIs</strong> <span class="crumb">— live from inputs & OEM curves</span></div>
+          <div class="stack"><span class="pill">OEM: <span id="oemTag">—</span></span><span class="pill">Mode: <span id="modeTag">Nominal</span></span></div>
+        </div>
+        <div class="panel-body">
+          <div class="kpi">
+            <div class="k"><small class="muted">H₂ Output</small><strong id="kH2">—</strong><small class="muted">t/yr @ capacity</small></div>
+            <div class="k"><small class="muted">O₂ Output</small><strong id="kO2">—</strong><small class="muted">t/yr byproduct</small></div>
+            <div class="k"><small class="muted">Specific Energy</small><strong id="kSE">—</strong><small class="muted">kWh/kg</small></div>
+            <div class="k"><small class="muted">Water Use</small><strong id="kH2O">—</strong><small class="muted">L/kg • m³/h</small></div>
+            <div class="k"><small class="muted">Cooling Duty</small><strong id="kCool">—</strong><small class="muted">MWth (approx)</small></div>
+            <div class="k"><small class="muted">Footprint</small><strong id="kFP">—</strong><small class="muted">m² (ELX hall)</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head">
+          <div><strong>Performance Charts</strong></div>
+        </div>
+        <div class="panel-body charts">
+          <svg id="effChart" class="chart" aria-label="Efficiency vs Load"></svg>
+          <svg id="degChart" class="chart" aria-label="Degradation vs Years"></svg>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head">
+          <div><strong>OEM Comparison</strong></div>
+          <div class="stack"><span class="pill">Prices are indicative (MNOK/MW, all-in)</span></div>
+        </div>
+        <div class="panel-body" style="overflow:auto">
+          <table id="cmpTbl">
+            <thead>
+              <tr>
+                <th>OEM</th><th>Tech</th><th>CAPEX (MNOK/MW)</th><th>kWh/kg</th><th>Avail %</th><th>Turndown %</th><th>Ramp %/min</th><th>Stack Life yr</th><th>Footprint m²/MW</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head"><div><strong>Calculated Economics</strong></div></div>
+        <div class="panel-body" style="overflow:auto">
+          <table id="ecoTbl">
+            <thead>
+              <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
+            </thead>
+            <tbody id="ecoBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------------- Mock OEM data (editable / wire to backend) ---------------- */
+const OEMS = [
+  {
+    key:'OEM-A', name:'HydraCell X500', tech:'PEM',
+    capexMW:29.5, baseEff:52, avail:95, turndown:20, ramp:5,
+    footprintPerMW: 55, // m2/MW (hall only)
+    stackLife:7, pressureMax: 450,
+    curves:{ // kWh/kg vs load fraction
+      load:[0.2,0.4,0.6,0.8,1.0], eff:[58,55,53,52,51.8]
+    }
+  },
+  {
+    key:'OEM-B', name:'AquaKraft 10x10', tech:'Alkaline',
+    capexMW:26.0, baseEff:55, avail:96, turndown:30, ramp:2.5,
+    footprintPerMW: 48, stackLife:10, pressureMax: 200,
+    curves:{ load:[0.3,0.5,0.7,0.9,1.0], eff:[59,57,56,55,54.8] }
+  },
+  {
+    key:'OEM-C', name:'VoltSynth H-Plus', tech:'PEM+Hybrid',
+    capexMW:28.0, baseEff:53, avail:95, turndown:15, ramp:7,
+    footprintPerMW: 52, stackLife:8, pressureMax: 350,
+    curves:{ load:[0.15,0.35,0.6,0.85,1.0], eff:[60,55,53.5,52.8,52.5] }
+  }
+];
+
+// fill OEM select + table
+const $ = s=>document.querySelector(s);
+const $$ = s=>Array.from(document.querySelectorAll(s));
+
+function initOEM(){
+  const sel=$('#oemSel');
+  OEMS.forEach(o=>{
+    const opt=document.createElement('option');
+    opt.value=o.key; opt.textContent=`${o.name} — ${o.tech}`;
+    sel.appendChild(opt);
+  });
+  sel.value='OEM-A';
+  renderCmpTable();
+}
+
+/* ---------------- State & helpers ---------------- */
+const S = {
+  // inputs
+  oem:'OEM-A', stacks:20, mw:100, bar:350, turndown:20, ramp:5, stackLife:7, stackPct:40, effMode:'nominal', h2o:'DI',
+  pElec:650, capFac:92, fopex:3, wacc:8, life:20,
+  // derived & constants
+  waterLperKg: 9.0, // stoichiometric ~9 L/kg H2 (excl. losses)
+  coolMWthPerMW: 0.45, // crude thumb rule MWth per MW
+  hours: ()=>8760*(S.capFac/100),
+};
+
+function CRF(wacc, n){ const i=wacc/100; return (i*Math.pow(1+i,n)) / (Math.pow(1+i,n)-1); }
+
+function effAtLoad(oem, load){
+  // interpolate OEM curve (kWh/kg) and adjust by mode
+  const xs=oem.curves.load, ys=oem.curves.eff;
+  function interp(x){
+    if(x<=xs[0]) return ys[0];
+    if(x>=xs[xs.length-1]) return ys[ys.length-1];
+    for(let i=0;i<xs.length-1;i++){
+      if(x>=xs[i] && x<=xs[i+1]){
+        const t=(x-xs[i])/(xs[i+1]-xs[i]);
+        return ys[i] + t*(ys[i+1]-ys[i]);
+      }
+    }
+    return ys[ys.length-1];
+  }
+  let kwhkg = interp(load);
+  if(S.effMode==='eco') kwhkg -= 1.0; // more efficient
+  if(S.effMode==='peak') kwhkg += 1.0; // less efficient at peak mode
+  return Math.max(48, kwhkg); // clamp to reasonable
+}
+
+/* ---------------- Calculations ---------------- */
+function compute(){
+  const o = OEMS.find(x=>x.key===S.oem);
+  const load = 1.0; // reference at nameplate
+  const kwhkg = effAtLoad(o, load);
+  const kgPerYear = (S.mw*1000 * S.hours()) / kwhkg;
+  const o2PerYear = kgPerYear * 7.94; // kg O2 per kg H2? Actually ~8 kg O2/kg H2 -> using 7.94 for molar masses
+  const waterLyear = kgPerYear * S.waterLperKg;
+  const water_m3h = (waterLyear/1000)/S.hours();
+
+  // CAPEX & OPEX
+  const capexMNOK = o.capexMW * S.mw;                 // all-in electr + BoP
+  const elxShare = 0.65;                               // assumption
+  const elxCapex = capexMNOK * elxShare;
+  const stackRepl = elxCapex * (S.stackPct/100);       // per replacement
+  const stackAnnualMNOK = stackRepl / S.stackLife;
+  const fixedAnnualMNOK = capexMNOK * (S.fopex/100);
+  const opexMNOKyr = fixedAnnualMNOK + stackAnnualMNOK;
+  const crf = CRF(S.wacc, S.life);
+
+  // LCOH components (NOK/kg)
+  const elecNOKperKg = (S.pElec/1000) * kwhkg;
+  const opexNOKperKg = (opexMNOKyr*1e6)/kgPerYear;
+  const capxNOKperKg = ((capexMNOK*1e6)*crf)/kgPerYear;
+
+  // footprint & cooling
+  const hallm2 = o.footprintPerMW * S.mw;
+  const coolMWth = S.mw * S.coolMWthPerMW;
+
+  return {
+    oem:o, kwhkg, kgPerYear, o2PerYear, waterLyear, water_m3h, capexMNOK, opexMNOKyr, crf,
+    lcoh:{elec:elecNOKperKg, opex:opexNOKperKg, capex:capxNOKperKg, total: elecNOKperKg+opexNOKperKg+capxNOKperKg},
+    hallm2, coolMWth
+  };
+}
+
+/* ---------------- UI Binding ---------------- */
+function readInputs(){
+  S.oem = $('#oemSel').value;
+  S.stacks = +$('#stacks').value||S.stacks;
+  S.mw = +$('#mw').value||S.mw;
+  S.bar = +$('#bar').value||S.bar;
+  S.turndown = +$('#turndown').value||S.turndown;
+  S.ramp = +$('#ramp').value||S.ramp;
+  S.stackLife = +$('#stackLife').value||S.stackLife;
+  S.stackPct = +$('#stackPct').value||S.stackPct;
+  S.effMode = $('#effMode').value;
+  S.h2o = $('#h2o').value;
+  S.pElec = +$('#pElec').value||S.pElec;
+  S.capFac = +$('#capFac').value||S.capFac;
+  S.fopex = +$('#fopex').value||S.fopex;
+  S.wacc = +$('#wacc').value||S.wacc;
+  S.life = +$('#life').value||S.life;
+  // reflect mode tag
+  $('#oemTag').textContent = OEMS.find(x=>x.key===S.oem).name;
+  $('#modeTag').textContent = (S.effMode==='eco'?'Eco':S.effMode==='peak'?'Peak':'Nominal');
+}
+
+function resetInputs(){
+  $('#oemSel').value='OEM-A';
+  $('#stacks').value=20; $('#mw').value=100; $('#bar').value=350; $('#turndown').value=20; $('#ramp').value=5;
+  $('#stackLife').value=7; $('#stackPct').value=40; $('#effMode').value='nominal'; $('#h2o').value='DI 0.1 μS/cm';
+  $('#pElec').value=650; $('#capFac').value=92; $('#fopex').value=3.0; $('#wacc').value=8; $('#life').value=20;
+}
+
+function num(n,unit=''){ return `${n.toLocaleString(undefined,{maximumFractionDigits:0})} ${unit}`; }
+function num1(n,unit=''){ return `${n.toFixed(1)} ${unit}`; }
+
+function renderKPIs(R){
+  $('#kH2').textContent = num(Math.round(R.kgPerYear/1000), 't/yr');
+  $('#kO2').textContent = num(Math.round(R.o2PerYear/1000), 't/yr');
+  $('#kSE').textContent = num1(R.kwhkg, 'kWh/kg');
+  $('#kH2O').textContent = `${num1(S.waterLperKg,'L/kg')} • ${num1(R.water_m3h,'m³/h')}`;
+  $('#kCool').textContent = num1(R.coolMWth,'MWth');
+  $('#kFP').textContent = num(Math.round(R.hallm2),'m²');
+
+  // economics table
+  const eb = $('#ecoBody'); eb.innerHTML='';
+  const add=(k,v,n='')=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${k}</td><td><strong>${v}</strong></td><td class="muted">${n}</td>`; eb.appendChild(tr); };
+  add('CAPEX', `${num(Math.round(R.capexMNOK))} MNOK`, 'All-in incl. BoP');
+  add('OPEX / year', `${num(Math.round(R.opexMNOKyr))} MNOK`, `Fixed ${S.fopex}% + stack repl.`);
+  add('CRF', (R.crf*100).toFixed(2)+' %', `${S.wacc}% WACC • ${S.life} yr`);
+  add('LCOH — Electricity', num1(R.lcoh.elec,'NOK/kg'));
+  add('LCOH — OPEX', num1(R.lcoh.opex,'NOK/kg'));
+  add('LCOH — CAPEX', num1(R.lcoh.capex,'NOK/kg'));
+  add('LCOH — Total', `<span style="color:#19c5be">${num1(R.lcoh.total,'NOK/kg')}</span>`);
+}
+
+/* ---------------- Charts ---------------- */
+function drawEffChart(oem){
+  const svg=$('#effChart'); svg.innerHTML='';
+  const W=svg.clientWidth||700, H=svg.clientHeight||280, pad=40;
+  // axes
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" class="axis"/>`);
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" class="axis"/>`);
+  // grid + labels
+  for(let i=0;i<5;i++){
+    const x=pad + i*(W-2*pad)/4;
+    const y=pad + i*(H-2*pad)/4;
+    svg.insertAdjacentHTML('beforeend', `<line x1="${x}" y1="${pad}" x2="${x}" y2="${H-pad}" class="grid"/>`);
+    svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+  }
+  const xs=oem.curves.load, ys=oem.curves.eff.map(e=> e + (S.effMode==='eco'?-1:(S.effMode==='peak'?+1:0)));
+  const toXY=(i)=>({x: pad + xs[i]*(W-2*pad), y: H-pad - ((ys[i]-50)/12)*(H-2*pad)}); // map ~50–62 kWh/kg
+  // polyline
+  let d=''; for(let i=0;i<xs.length;i++){ const p=toXY(i); d+= (i? ' L ':'M ')+p.x+','+p.y; }
+  svg.insertAdjacentHTML('beforeend', `<path d="${d}" class="line" stroke="#19c5be"/>`);
+  xs.forEach((_,i)=>{ const p=toXY(i); svg.insertAdjacentHTML('beforeend', `<circle cx="${p.x}" cy="${p.y}" class="dot" fill="#19c5be"/>`); });
+  svg.insertAdjacentHTML('beforeend', `<text x="${W/2}" y="${H-8}" text-anchor="middle" class="muted">Load fraction</text>`);
+  svg.insertAdjacentHTML('beforeend', `<text x="10" y="${pad-10}" class="muted">kWh/kg</text>`);
+}
+
+function drawDegChart(oem){
+  const svg=$('#degChart'); svg.innerHTML='';
+  const W=svg.clientWidth||700, H=svg.clientHeight||280, pad=40;
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" class="axis"/>`);
+  svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" class="axis"/>`);
+  for(let i=0;i<5;i++){
+    const x=pad + i*(W-2*pad)/4;
+    const y=pad + i*(H-2*pad)/4;
+    svg.insertAdjacentHTML('beforeend', `<line x1="${x}" y1="${pad}" x2="${x}" y2="${H-pad}" class="grid"/>`);
+    svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
+  }
+  // simple degradation: +4% kWh/kg over 10 yrs baseline adjusted by stack life
+  const yrs=[0,2,4,6,8,10];
+  const slope = 0.4 * (7/S.stackLife); // % per year equivalence
+  const base = OEMS.find(x=>x.key===S.oem).baseEff + (S.effMode==='eco'?-1:(S.effMode==='peak'?+1:0));
+  const vals=yrs.map(y=> base * (1 + (slope*y)/100));
+  const toXY=(i)=>({x: pad + (yrs[i]/10)*(W-2*pad), y: H-pad - ((vals[i]-50)/12)*(H-2*pad)});
+  let d=''; for(let i=0;i<yrs.length;i++){ const p=toXY(i); d+= (i? ' L ':'M ')+p.x+','+p.y; }
+  svg.insertAdjacentHTML('beforeend', `<path d="${d}" class="line" stroke="#f6c947"/>`);
+  yrs.forEach((_,i)=>{ const p=toXY(i); svg.insertAdjacentHTML('beforeend', `<circle cx="${p.x}" cy="${p.y}" class="dot" fill="#f6c947"/>`); });
+  svg.insertAdjacentHTML('beforeend', `<text x="${W/2}" y="${H-8}" text-anchor="middle" class="muted">Years</text>`);
+  svg.insertAdjacentHTML('beforeend', `<text x="10" y="${pad-10}" class="muted">kWh/kg (aging)</text>`);
+}
+
+/* ---------------- OEM Comparison table ---------------- */
+function renderCmpTable(){
+  const tb = $('#cmpTbl tbody'); tb.innerHTML='';
+  OEMS.forEach(o=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${o.name}</td><td>${o.tech}</td><td>${o.capexMW}</td><td>${o.baseEff}</td><td>${o.avail}</td>
+                    <td>${o.turndown}</td><td>${o.ramp}</td><td>${o.stackLife}</td><td>${o.footprintPerMW}</td>`;
+    tr.addEventListener('click',()=>{$('#oemSel').value=o.key; apply();});
+    tb.appendChild(tr);
+  });
+}
+
+/* ---------------- Actions ---------------- */
+function exportCSV(R){
+  const lines = [
+    'Field,Value',
+    `OEM,${R.oem.name}`,
+    `Tech,${R.oem.tech}`,
+    `Capacity MW,${S.mw}`,
+    `Stacks,${S.stacks}`,
+    `Delivery bar,${S.bar}`,
+    `kWh/kg (mode ${S.effMode}),${R.kwhkg.toFixed(2)}`,
+    `H2 t/yr,${(R.kgPerYear/1000).toFixed(0)}`,
+    `O2 t/yr,${(R.o2PerYear/1000).toFixed(0)}`,
+    `Water m3/h,${R.water_m3h.toFixed(1)}`,
+    `Cooling MWth,${R.coolMWth.toFixed(1)}`,
+    `CAPEX MNOK,${R.capexMNOK.toFixed(0)}`,
+    `OPEX MNOK/yr,${R.opexMNOKyr.toFixed(0)}`,
+    `LCOH Elec NOK/kg,${R.lcoh.elec.toFixed(2)}`,
+    `LCOH Opex NOK/kg,${R.lcoh.opex.toFixed(2)}`,
+    `LCOH Capex NOK/kg,${R.lcoh.capex.toFixed(2)}`,
+    `LCOH Total NOK/kg,${R.lcoh.total.toFixed(2)}`
+  ];
+  const blob = new Blob([lines.join('\n')],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='seidr_electrolyzer_detail.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportPDFMock(){
+  const win = window.open('', 'spec');
+  win.document.write(`<pre style="font-family:ui-monospace,Menlo,Consolas;white-space:pre-wrap">${document.querySelector('#ecoTbl').outerHTML}</pre>`);
+  win.document.close(); win.focus(); win.print(); win.close();
+}
+
+function createRFQ(){
+  const o = OEMS.find(x=>x.key===S.oem);
+  const body = [
+    `RFQ — Electrolyzer Train`,
+    `OEM preference: ${o.name} (${o.tech})`,
+    `Capacity: ${S.mw} MW | Stacks: ${S.stacks} | Delivery Pressure: ${S.bar} bar`,
+    `Turndown: ${S.turndown}% | Ramp: ${S.ramp}%/min`,
+    `Water Quality: ${S.h2o} | Availability target: ${o.avail}%`,
+    `Site grid: 300 kV (example) | Ambient: -15 to +30°C`,
+    `Please include: CAPEX breakdown, performance curves, utilities, layout footprint, delivery schedule, warranty & service.`
+  ].join('\n');
+  const blob = new Blob([body],{type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='RFQ_Electrolyzer.txt'; a.click(); URL.revokeObjectURL(url);
+}
+
+/* ---------------- Orchestration ---------------- */
+function apply(){
+  readInputs();
+  const R = compute();
+  renderKPIs(R);
+  drawEffChart(R.oem);
+  drawDegChart(R.oem);
+  lastResult = R;
+}
+
+function fromQuery(){
+  const q = new URLSearchParams(location.search);
+  const site = q.get('site') || 'P-14A';
+  const conf = q.get('config') || '100MW';
+  $('#siteTag').textContent = `Site: ${site} • ${conf}`;
+}
+
+let lastResult=null;
+
+/* ---------------- Event wiring ---------------- */
+$('#btnApply').addEventListener('click', apply);
+$('#btnReset').addEventListener('click', ()=>{ resetInputs(); apply(); });
+$('#btnCSV').addEventListener('click', ()=>{ if(lastResult) exportCSV(lastResult) });
+$('#btnSpec').addEventListener('click', exportPDFMock);
+$('#btnRFQ').addEventListener('click', createRFQ);
+
+// live updates on some key inputs
+['oemSel','mw','effMode','capFac','pElec','stackLife','stackPct'].forEach(id=>{
+  $('#'+id).addEventListener('input', apply);
+});
+
+/* ---------------- Boot ---------------- */
+initOEM();
+fromQuery();
+apply();
+</script>
+</body>
+</html>

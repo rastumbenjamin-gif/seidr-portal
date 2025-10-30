@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEIDR — Build industrial projects faster — in hours, not months</title>
+<meta name="description" content="SEIDR is an industrial project engine standardising and automating early‑phase engineering — from screening → layout → CAPEX → schedule in hours, not months."/>
+<style>
+  :root{
+    --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
+    --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
+    --green:#57d39b; --red:#ef8c7a; --warn:#f59e52; --blue:#74aeea; --grey:#7f8b95;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+  header{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,rgba(10,16,22,.9),rgba(10,16,22,.5));backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{width:28px;height:28px;border-radius:8px;background:conic-gradient(from 45deg,var(--teal),#29d8cf,#2be0d7,var(--teal));box-shadow:0 0 0 2px #0b141a,0 0 0 3px rgba(25,197,190,.25)}
+  .brand h1{font-size:16px;letter-spacing:.6px;margin:0;font-weight:700}
+  nav ul{display:flex;gap:18px;list-style:none;margin:0;padding:0}
+  nav a{color:var(--muted)}
+  nav a:hover{color:var(--text)}
+  .cta{display:flex;gap:10px}
+  .btn{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),var(--panel-2));padding:10px 14px;border-radius:10px;color:var(--text);font-weight:600}
+  .btn:hover{border-color:#2b3c47;transform:translateY(-1px)}
+  .btn.primary{background:linear-gradient(180deg,#1a3a42,#11262d);border-color:#18484d;color:#dff7f5;box-shadow:inset 0 0 0 1px rgba(25,197,190,.18),0 10px 30px -15px rgba(25,197,190,.5)}
+  section{padding:40px 0;border-top:1px solid var(--line)}
+  .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .card{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),var(--panel-2));border-radius:16px;padding:16px}
+  .muted{color:var(--muted)}
+  .hero{text-align:center;position:relative;overflow:hidden}
+  .hero .fx{position:absolute;inset:-20%;background:
+    radial-gradient(40% 40% at 70% 20%, rgba(25,197,190,.22), transparent 60%),
+    radial-gradient(30% 30% at 20% 70%, rgba(116,174,234,.18), transparent 60%);
+    filter:blur(60px);opacity:.8;pointer-events:none}
+  .btn-xl{font-size:18px;padding:16px 26px;border-radius:14px}
+  .hero-visuals{margin:26px auto 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;max-width:980px}
+  .frame{aspect-ratio:16/10;border:1px solid var(--line);border-radius:16px;background:
+    linear-gradient(180deg,rgba(25,197,190,.06),transparent),
+    linear-gradient(180deg,var(--panel),var(--panel-2));
+    box-shadow:0 12px 40px -20px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:600}
+  .tiltL{transform:rotate(-2.5deg)}
+  .tiltR{transform:rotate(2.5deg)}
+  #about .grid{display:grid;grid-template-columns:2fr 1.3fr;gap:16px}
+  .bio{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center}
+  .avatar{width:56px;height:56px;border-radius:14px;background:linear-gradient(180deg,#184b50,#0e2227);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <h1>SEIDR</h1>
+      <span class="tag" style="margin-left:10px">Industrial Project Engine</span>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#about">About / Team</a></li>
+        <li><a href="#segments">Segments</a></li>
+        <li><a href="#workflow">Workflow</a></li>
+        <li><a href="#roadmap">Roadmap</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="cta">
+      <a class="btn primary" href="index.html">Explore Demo</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="fx" aria-hidden="true"></div>
+  <div class="wrap">
+    <h2 style="font-size:50px;max-width:900px;margin:0 auto">Build industrial projects <span style="color:var(--teal)">faster</span> — <span style="color:var(--yellow)">in hours, not months</span>.</h2>
+    <p class="muted" style="font-size:17px;max-width:900px;margin:16px auto">Standardising and automating early‑phase engineering. Repeatable, decision‑grade outputs — cost, schedule, and risk — built on benchmarks and traceability.</p>
+    <div class="cta" style="margin:28px 0 10px;justify-content:center">
+      <a class="btn primary btn-xl" href="index.html">Explore demo</a>
+    </div>
+    <div class="hero-visuals">
+      <div class="frame tiltL">Standardised Pre‑FEED</div>
+      <div class="frame">Repeatable Outputs</div>
+      <div class="frame tiltR">Decision‑Grade Deliverables</div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <h3>About & Vision</h3>
+    <div class="grid">
+      <div class="card">
+        <h4>Vision</h4>
+        <p class="muted">Why now: The energy transition demands an order‑of‑magnitude acceleration in how complex assets are defined, evaluated, and approved. SEIDR provides the digital backbone for that change.</p>
+        <ul class="muted" style="margin:10px 0 0;padding-left:18px">
+          <li><b>Standardised Pre‑FEED workflows</b> across hydrogen, e‑fuels and CCUS</li>
+          <li><b>Repeatable cost, schedule & risk outputs</b> grounded in benchmarks</li>
+          <li><b>Decision‑grade deliverables</b> for boards and financiers</li>
+          <li><b>Living Basis of Design</b> with full assumptions traceability</li>
+          <li><b>Vendor & OEM insights</b> through anonymised benchmarks</li>
+          <li><b>APIs & integrations</b> into datarooms and project control systems</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Team</h4>
+        <div class="bio"><div class="avatar"></div><div><b>Jan Eskil Flåm</b><div class="muted">Founder & CEO — Hydrogen & Power‑to‑X leadership</div></div></div>
+        <div class="bio" style="margin-top:10px"><div class="avatar"></div><div><b>Erlend Aamot</b><div class="muted">Co‑founder — Venture building & energy markets</div></div></div>
+        <div class="bio" style="margin-top:10px"><div class="avatar"></div><div><b>Ore Smith</b><div class="muted">Partner — AI / Development</div></div></div>
+        <div class="bio" style="margin-top:10px"><div class="avatar"></div><div><b>Benjamin Rastum</b><div class="muted">Partner — Data Science & Automation</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="wrap">
+    <h3>Customer outcomes</h3>
+    <div class="cards">
+      <div class="card"><h4>Study cost efficiency</h4><p class="muted">Aiming for 60–80% reduction in early‑phase study costs via automation and reuse.</p></div>
+      <div class="card"><h4>Quality & trust</h4><p class="muted">Audit‑ready packs with traceable assumptions and clear risk ownership.</p></div>
+      <div class="card"><h4>Scalable delivery</h4><p class="muted">Templates and catalogs enable consistent multi‑site roll‑outs across sectors.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <h3>Get in touch</h3>
+    <div class="cards">
+      <div class="card">
+        <h4>Request access</h4>
+        <p class="muted">Interested in pilots or enterprise access? Let’s talk.</p>
+        <a class="btn primary" href="mailto:hello@seidr.app?subject=SEIDR%20Access%20Request">Email us</a>
+      </div>
+      <div class="card">
+        <h4>Explore the demo</h4>
+        <p class="muted">Jump into a pre‑populated instance to experience the flow.</p>
+        <a class="btn" href="index.html">Open demo</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap">
+    <div>© 2025 SEIDR — Industrial Project Engine</div>
+    <div class="muted">Privacy • Terms • Security</div>
+  </div>
+</footer>
+</body>
+</html>
