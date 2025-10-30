@@ -48,7 +48,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 20px;
+    padding: 14px 20px !important;
+    min-height: 56px !important;
     background: rgba(15,26,34,.9);
     border-bottom: 1px solid var(--line);
     backdrop-filter: saturate(120%) blur(6px);
@@ -57,3 +58,14 @@
 /* Global readability constraints */
 p, .muted { max-width: 72ch; overflow-wrap: anywhere; }
 .wrap { width: 100%; }
+
+/* Unified SEIDR logo styling across pages */
+.topbar .logo {
+    font-weight: 900;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+}
+.topbar a .logo { text-decoration: none; color: inherit; }
+
+/* Hide breadcrumbs globally for a cleaner header */
+.topbar .crumb{ display:none !important; }
