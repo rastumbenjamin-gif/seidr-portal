@@ -418,6 +418,24 @@
 // For brevity, load the logic by importing index.html's create view script would be ideal,
 // but we inline minimal hooks to avoid duplication here if needed.
 </script>
+<script>
+// Prevent unfinished links from navigating to 404s
+(function safeLinks(){
+  const allowed = new Set([
+    'index.html','seidr_homepage_landing.html','create_ptx_project.html','comparison.html',
+    'Screening_Result2.html','Screening_Result3.html','projectbuilder.html','OEMcomparison.html',
+    'CAPEX.html','LLI5.html','schedule.html','ESIA3.html','offtake.html','decision_board.html'
+  ]);
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('a'); if(!a) return;
+    const href = a.getAttribute('href')||''; if(!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+    try{ const u=new URL(href, window.location.href); if(u.origin!==window.location.origin) return; }catch{}
+    const path = href.split('?')[0].split('#')[0];
+    if(path.startsWith('/') && !path.endsWith('.html')){ e.preventDefault(); return; }
+    if(path.endsWith('.html') && !allowed.has(path.replace(/^\/?/,''))){ e.preventDefault(); return; }
+  }, true);
+})();
+</script>
 </body>
 </html>
 

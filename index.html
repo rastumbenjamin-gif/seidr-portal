@@ -211,7 +211,7 @@
           </ul>
           <div class="progress" aria-label="Onboarding progress"><span id="progBar" style="width:60%"></span></div>
           <div style="display:flex;gap:8px;margin-top:8px">
-            <a class="btn btn-teal" href="/project-builder">Open Project Builder</a>
+            <a class="btn btn-teal" href="projectbuilder.html">Open Project Builder</a>
             <a class="btn btn-ghost" href="/help/getting-started">Getting Started</a>
           </div>
         </div>
@@ -954,6 +954,29 @@ document.getElementById('btnCreateBottom') && (document.getElementById('btnCreat
 paint();
 }
 
+</script>
+
+<script>
+// Soft-block unknown routes so unfinished buttons/links do nothing (no 404)
+(function safeLinks(){
+  const allowed = new Set([
+    'index.html','seidr_homepage_landing.html','create_ptx_project.html','comparison.html',
+    'Screening_Result2.html','Screening_Result3.html','projectbuilder.html','OEMcomparison.html',
+    'CAPEX.html','LLI5.html','schedule.html','ESIA3.html','offtake.html','decision_board.html'
+  ]);
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('a'); if(!a) return;
+    const href = a.getAttribute('href')||'';
+    // ignore hash-only or js:void
+    if(!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+    // external links OK
+    try{ const u=new URL(href, window.location.href); if(u.origin!==window.location.origin) return; }catch{ /* fallthrough */ }
+    const path = href.split('?')[0].split('#')[0];
+    // Allow relative .html in allowed; block app-style paths like /settings, /project-builder, /library/*
+    if(path.startsWith('/') && !path.endsWith('.html')){ e.preventDefault(); return; }
+    if(path.endsWith('.html') && !allowed.has(path.replace(/^\/?/,''))){ e.preventDefault(); return; }
+  }, true);
+})();
 </script>
 </body>
 </html>
