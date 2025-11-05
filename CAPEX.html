@@ -3,7 +3,22 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>SEIDR — CAPEX Workbench</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N92K4XNCV2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-N92K4XNCV2');
+</script>
+<script>
+  setInterval(() => {
+    if (window.gtag) {
+      gtag('event', 'heartbeat', { non_interaction: true });
+    }
+  }, 15000); // sends every 15 seconds
+</script>
+<title>SEIDR — CAPEX Financial (Executive Slim)</title>
 <link rel="stylesheet" href="css/styles.css?v=5">
 <link rel="stylesheet" href="css/interactive-styles.css?v=3">
 <script src="js/interactive-charts.js"></script>
@@ -12,732 +27,1195 @@
   :root{
     --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
     --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
-    --green:#57d39b; --red:#ef8c7a; --blue:#74aeea; --pink:#ea7ad6;
+    --green:#57d39b; --red:#ef8c7a; --warn:#f59e52; --blue:#74aeea; --grey:#7f8b95; --accent:#c9f2ef;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
-       font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);font:12.5px/1.4 Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
   .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);
-          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
-  .crumb{color:var(--muted);font-size:13px}
-  .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;max-width:1840px;margin:0 auto;padding:18px}
-  .left{display:flex;flex-direction:column;gap:14px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-  h1{margin:.2rem 0 .8rem;font-size:28px}
-  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-  h3{margin:10px 0 6px;font-size:13px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-  label{display:block;margin:8px 0 6px}
-  input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)}
-  textarea{min-height:64px;resize:vertical}
-  .row{display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center}
-  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
-  .btn-ghost{background:transparent}
-  .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
-  .muted{color:var(--muted)}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left;vertical-align:top}
-  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--panel)}
-  tr:hover{background:rgba(25,197,190,.06)}
-  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-  .k{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px}
-  .k strong{display:block;font-size:18px}
-  .tag{display:inline-block;border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:2px 6px;font-size:11px;margin-right:4px}
-  .badge{padding:2px 6px;border-radius:999px;border:1px solid var(--line);font-size:11px}
-  .src-quote{background:rgba(116,174,234,.18)}
-  .src-bm{background:rgba(246,201,71,.18)}
-  .src-param{background:rgba(87,211,155,.18)}
-  .src-man{background:rgba(233,100,121,.18)}
-  .risk-high{background:rgba(239,140,122,.16)}
-  .risk-med{background:rgba(246,201,71,.12)}
-  .risk-low{background:rgba(87,211,155,.12)}
-  svg.chart{width:100%;height:320px;background:#0c141a;border-radius:12px}
-  .axis{stroke:#2b3b46;stroke-width:1}
-  .grid{stroke:#1a2530;stroke-width:.8}
-  .bar{rx:6;ry:6}
-  .reftext{fill:#a7b2bb;font-size:12px}
-  .rightGrid{display:grid;grid-template-rows:auto auto auto auto 1fr;gap:14px}
-  .sticky-actions{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,rgba(19,32,42,.98));
-                  padding-top:8px;margin-top:8px}
-  .search{display:flex;gap:8px}
-  .search input{flex:1}
-  @media (max-width:1300px){ .wrap{grid-template-columns:1fr} .kpi{grid-template-columns:repeat(2,1fr)} }
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px);position:sticky;top:0;z-index:100}
+  .topbar .brand{display:flex;align-items:center;gap:12px}
+  .topbar .logo{font-weight:900;letter-spacing:.24em;text-transform:uppercase;color:inherit;text-decoration:none}
+  .topbar .crumb{color:var(--muted);font-size:13px}
+  .wrap{display:grid;grid-template-columns:320px 1fr;gap:12px;min-height:100vh;padding:16px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.32)}
+  .side{padding:12px;position:sticky;top:12px;height:calc(100vh - 24px);overflow:auto}
+  h1{margin:0 0 6px;font-size:17px;letter-spacing:.25px}
+  h2{margin:10px 0 4px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.12em}
+  .row{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+  label{display:block;font-size:10px;color:var(--muted);margin:4px 0 2px}
+  input,select{width:100%;background:#0a131a;border:1px solid var(--line);color:var(--text);padding:6px 8px;border-radius:8px}
+  input[type="number"]{appearance:textfield}
+  .toggle{display:flex;gap:4px;background:#0a131a;border:1px solid var(--line);border-radius:8px;padding:3px}
+  .toggle button{flex:1;background:transparent;border:0;color:var(--muted);padding:5px;border-radius:6px;cursor:pointer}
+  .toggle button.active{background:var(--teal);color:#001513;font-weight:700}
+  .badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:5px 8px;border-radius:999px;color:var(--muted);font-size:10px}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--yellow)}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .kpi .box{background:#0c1720;border:1px solid var(--line);border-radius:10px;padding:8px}
+  .kpi .label{color:var(--muted);font-size:9.5px}
+  .kpi .val{font-size:14px;font-weight:700;margin-top:2px}
+  .pill{display:inline-flex;gap:6px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:#0a1218;color:#cbd5dc;padding:4px 7px;border-radius:999px;font-size:10px}
+  .tag{display:inline-block;padding:2px 6px;border-radius:999px;background:#0c1620;border:1px solid var(--line);font-size:10px;color:#cfe7e4}
+  .content{padding:10px}
+  .grid{display:grid;grid-template-columns:1fr;gap:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  @media(max-width:1100px){ .wrap{grid-template-columns:1fr} .side{position:static;height:auto} .grid2,.grid3{grid-template-columns:1fr} }
+  .tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);padding:6px}
+  .tabs button{background:transparent;border:0;color:var(--muted);padding:5px 8px;border-radius:8px;cursor:pointer;font-weight:600}
+  .tabs button.active{background:#0c1720;color:var(--text);border:1px solid var(--line)}
+  .tabpanel{display:none;padding:10px}
+  .tabpanel.active{display:block}
+  /* Tables */
+  table{width:100%;border-collapse:collapse;background:#0b141b;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12px}
+  th,td{padding:3.5px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+  th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+  .tight td{padding:3px 5px}
+  .ultra th,.ultra td{padding:2.5px 5px; line-height:1.1}
+  tr:hover td{background:#0f1d25}
+  tbody tr:nth-child(even) td{background:rgba(255,255,255,0.015)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono","Courier New",monospace}
+  .right{text-align:right}
+  .num{font-variant-numeric:tabular-nums}
+  .subtle{color:#9fb0bb}
+  .note{color:#c9d5de;font-size:11.5px;opacity:.85}
+  /* Charts */
+  .chart{height:220px;background:#0c1720;border:1px solid var(--line);border-radius:10px;position:relative;padding:6px}
+  .chart canvas{width:100%;height:100%}
+  .chart .legend-box{position:absolute;right:6px;top:6px;background:#0a1218;border:1px solid var(--line);border-radius:6px;padding:5px 7px;font-size:10px;color:var(--muted)}
+  .chart .legend-row{display:flex;gap:6px;align-items:center;margin:1px 0}
+  .chart .sw{width:9px;height:9px;border-radius:2px}
+  .axis-label{position:absolute;color:#9fb0bb;font-size:9.5px;pointer-events:none}
+  .axis-x{left:50%;bottom:1px;transform:translateX(-50%)}
+  .axis-y{top:50%;left:5px;transform:translateY(-50%) rotate(-90deg)}
+  .footerline{margin-top:6px;display:flex;justify-content:space-between;align-items:center}
+  .btn{background:var(--teal);color:#001513;border:0;padding:7px 9px;border-radius:8px;font-weight:800;cursor:pointer}
+  .btn.secondary{background:#0a1218;color:var(--text);border:1px solid var(--line)}
+  /* Financial Risk Heatmap */
+  .heatmap{background:#0c1720;border:1px solid var(--line);border-radius:10px;padding:8px}
+  .heatmap h3{margin:0 0 6px;font-size:12px;letter-spacing:.06em}
+  .hm-grid{display:grid;grid-template-columns:120px repeat(5,1fr);gap:6px}
+  .hm-head{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+  .hm-cell,.hm-head,.hm-row{border:1px solid var(--line);border-radius:8px;padding:6px;background:#0a1218;min-height:30px;display:flex;align-items:center;justify-content:center}
+  .hm-row{justify-content:flex-start;padding-left:10px}
+  .hm-pill{display:inline-block;padding:3px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.08);font-size:10.5px;white-space:nowrap}
+  .hm-g{background:#103a33;color:#bfeee8}
+  .hm-a{background:#3f3820;color:#f4e2a0}
+  .hm-r{background:#422828;color:#f0c3be}
+  .hm-m{background:#25323a;color:#b9cad6}
+  
+  /* Chart Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .chart {
+    animation: fadeIn 0.6s ease-out;
+  }
+  .chart canvas {
+    animation: fadeIn 0.8s ease-out;
+  }
 </style>
-<script src="js/interactive-charts.js"></script>
-<script src="js/main.js" defer></script>
-
 </head>
 <body>
   <div class="topbar">
-    <div><a href="seidr_homepage_landing.html" style="color:inherit;text-decoration:none;cursor:pointer"><span class="logo">SEIDR</span></a> <span class="crumb">/ Project Builder / CAPEX Workbench</span></div>
-    <nav id="main-nav">
-    </nav>
-    <div class="stack">
-      <span class="pill">Site: Herøya North • 100 MW</span>
-      <a class="btn" href="./">Back</a>
+    <div class="brand">
+      <a class="logo" href="seidr_homepage_landing.html">SEIDR</a>
+      <span class="crumb">/ Project Builder / CAPEX Financial</span>
     </div>
+    <nav id="main-nav"></nav>
   </div>
 
   <div class="wrap">
-    <!-- LEFT SIDEBAR -->
-    <div class="left">
-      <div class="card">
-        <h1>CAPEX Workbench</h1>
-        <div class="muted">Drill down by unit/WBS. Every line has a **source tag**, base year, FX & escalation, AACE class, and audit trail.</div>
+    <!-- SIDE -->
+    <aside class="card side">
+      <h1>CAPEX — Financial Console</h1>
+      <div class="badge"><span class="dot"></span> <span id="aaceBadge">AACE Class-4</span></div>
+      <h2>Scenario</h2>
+      <select id="scenarioSel">
+        <option value="base">A — Base</option>
+        <option value="low">B — Low (lean)</option>
+        <option value="high">C — High (conservative)</option>
+      </select>
+      <label>Confidence Curve</label>
+      <div class="toggle" id="pToggle">
+        <button data-p="10">P10</button>
+        <button class="active" data-p="50">P50</button>
+        <button data-p="90">P90</button>
+      </div>
+      <h2>Financial Settings</h2>
+      <div class="row">
+        <div>
+          <label>Currency</label>
+          <select id="ccy"><option>NOK</option><option>EUR</option><option>USD</option></select>
+        </div>
+        <div>
+          <label>View</label>
+          <div class="toggle" id="realNominal">
+            <button class="active" data-mode="real">Real</button>
+            <button data-mode="nominal">Nominal</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>FX (NOK per EUR)</label>
+          <input id="fxRate" type="number" step="0.01" value="12"/>
+        </div>
+        <div>
+          <label>Inflation / Escalation %</label>
+          <input id="escal" type="number" step="0.1" value="2.5"/>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Contingency %</label>
+          <input id="contg" type="number" step="0.5" value="15"/>
+        </div>
+        <div>
+          <label>WACC %</label>
+          <input id="wacc" type="number" step="0.1" value="8"/>
+        </div>
+      </div>
+      <h2>KPIs</h2>
+      <div class="kpi">
+        <div class="box"><div class="label">Total CAPEX (incl. cont.)</div><div class="val" id="k_total">—</div></div>
+        <div class="box"><div class="label">Owner's Reserve</div><div class="val" id="k_reserve">—</div></div>
+        <div class="box"><div class="label">IDC (Capitalized)</div><div class="val" id="k_idc">—</div></div>
+        <div class="box"><div class="label">LCOH / LCOA</div><div class="val" id="k_lcoh">—</div></div>
+      </div>
+      <h2>Audit flags</h2>
+      <div class="pill">
+        <span class="chip" id="flagRates">Rate gaps: 0</span>
+        <span class="chip" id="flagSources">No-source lines: 0</span>
+        <span class="chip" id="flagAACE">Class: 4 (±30%)</span>
+      </div>
+      <h2>Notes</h2>
+      <div class="note">Slimme, executive-tabeller. Heatmap på forsiden. Benchmark fremhever "This Project".</div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="card content">
+      <div class="tabs" id="tabs">
+        <button class="active" data-tab="exec">Executive Summary</button>
+        <button data-tab="bod">BoD & Assumptions</button>
+        <button data-tab="wbs">WBS & Line Items</button>
+        <button data-tab="qto">Quantities (Take-off)</button>
+        <button data-tab="rates">Rate Library</button>
+        <button data-tab="rfq">RFQ / Vendor Quotes</button>
+        <button data-tab="bench">Benchmarking</button>
+        <button data-tab="fx">FX & Escalation</button>
+        <button data-tab="tax">Taxes & Duties</button>
+        <button data-tab="indirects">Project Indirects</button>
+        <button data-tab="fin">Financing & Drawdown</button>
+        <button data-tab="risk">Risk, AACE & Contingency</button>
+        <button data-tab="sens">Sensitivity</button>
+        <button data-tab="cash">Cash-flow / S-curve</button>
+        <button data-tab="lcoh">Unit Cost (LCOH/LCOA)</button>
+        <button data-tab="changelog">Change Log</button>
+        <button data-tab="export">Export</button>
       </div>
 
-      <div class="card">
-        <h2>Assumptions</h2>
-        <div class="row"><label>Base year</label><input id="baseYear" value="2025"/></div>
-        <div class="row"><label>Escalation index (yr)</label><input id="escIdx" type="number" value="3.0" step="0.1"/></div>
-        <div class="row"><label>FX NOK→USD</label><input id="fxUSD" type="number" value="0.095"/></div>
-        <div class="row"><label>FX NOK→EUR</label><input id="fxEUR" type="number" value="0.088"/></div>
-        <div class="row"><label>Display currency</label>
-          <select id="cur"><option value="NOK" selected>NOK</option><option value="USD">USD</option><option value="EUR">EUR</option></select>
-        </div>
+      <!-- EXEC SUMMARY -->
+      <section class="tabpanel active" id="tab-exec">
         <div class="grid2">
-          <div class="row"><label>Contingency (by class)</label>
-            <select id="contMode"><option selected>Auto by AACE</option><option>Manual %</option></select>
+          <div class="grid">
+            <div class="chart"><canvas id="pieCapex"></canvas><div class="legend-box" id="pieLegend"></div><div class="axis-label axis-x">Share</div><div class="axis-label axis-y">Components</div></div>
+            <div class="chart"><canvas id="waterfall"></canvas><div class="legend-box">CAPEX Waterfall</div><div class="axis-label axis-x">Build-up</div><div class="axis-label axis-y">MNOK</div></div>
+            <!-- Financial Risk Heatmap -->
+            <div class="heatmap" id="finHeat">
+              <h3>Financial Risk Heatmap</h3>
+              <div class="hm-grid" id="hmGrid">
+                <div></div>
+                <div class="hm-head">Very Low</div><div class="hm-head">Low</div><div class="hm-head">Med</div><div class="hm-head">High</div><div class="hm-head">Very High</div>
+              </div>
+            </div>
+            <table id="drivers" class="tight">
+              <thead><tr><th>Top Cost Drivers</th><th class="right">Share</th><th class="right">Δ vs last</th><th>Notes</th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <table class="tight" id="kpiTable">
+              <thead><tr><th>KPI</th><th class="right">Value</th><th>Basis</th><th>Comment</th></tr></thead>
+              <tbody>
+                <tr><td>Total Direct</td><td class="right mono num" id="k_direct">—</td><td>WBS × rates</td><td class="subtle">Live</td></tr>
+                <tr><td>Indirects</td><td class="right mono num" id="k_indir">—</td><td>Eng+OH&P+Site</td><td class="subtle">%</td></tr>
+                <tr><td>Contingency</td><td class="right mono num" id="k_cont">—</td><td>AACE / Risk</td><td class="subtle">Max()</td></tr>
+                <tr><td>Total incl. cont.</td><td class="right mono num" id="k_totIncl">—</td><td>Direct+Indirect+Cont</td><td class="subtle">—</td></tr>
+                <tr><td>IDC (capitalised)</td><td class="right mono num" id="k_idc2">—</td><td>Drawdown</td><td class="subtle">Debt only</td></tr>
+              </tbody>
+            </table>
           </div>
-          <div class="row"><label id="contLbl">Manual %</label><input id="contPct" type="number" value="10" disabled/></div>
-        </div>
-        <div class="stack" style="margin-top:8px">
-          <button id="btnApply" class="btn">Apply</button>
-          <button id="btnReset" class="btn btn-ghost">Reset</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Filters & Search</h2>
-        <div class="search">
-          <input id="search" placeholder="Search in item, notes, vendor, WBS, source id…" />
-          <button id="btnFind" class="btn">Find</button>
-        </div>
-        <div class="grid3" style="margin-top:8px">
-          <div><label>Unit</label>
-            <select id="fUnit"><option value="ALL" selected>All</option></select>
-          </div>
-          <div><label>Source</label>
-            <select id="fSource"><option>ALL</option><option>QUOTE</option><option>BENCH</option><option>PARAM</option><option>MANUAL</option></select>
-          </div>
-          <div><label>AACE Class</label>
-            <select id="fClass"><option>ALL</option><option>Class 5</option><option>Class 4</option><option>Class 3</option><option>Class 2</option><option>Class 1</option></select>
+          <div class="grid">
+            <div class="chart"><canvas id="tornado"></canvas><div class="legend-box" id="torLegend"></div><div class="axis-label axis-x">Δ to total (fraction)</div><div class="axis-label axis-y">Drivers</div></div>
+            <div class="chart"><canvas id="pkurve"></canvas><div class="legend-box">P-curve (cumulative probability)</div><div class="axis-label axis-x">Percentile (P10-P90)</div><div class="axis-label axis-y">CDF</div></div>
+            <div class="chart"><canvas id="auditChart"></canvas><div class="legend-box">Source mix</div><div class="axis-label axis-x">Counts</div><div class="axis-label axis-y">Type</div></div>
           </div>
         </div>
-        <div class="stack" style="margin-top:8px">
-          <button id="btnClearFilters" class="btn btn-ghost">Clear</button>
+        <div class="footerline">
+          <div><span class="sw" style="background:var(--teal);display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px"></span><span class="subtle">Live P-level & scenario feed</span></div>
+          <button class="btn" id="btnLender">Generate Lender Snapshot</button>
         </div>
-      </div>
+      </section>
 
-      <div class="card">
-        <h2>Exports</h2>
-        <div class="stack">
-          <button id="btnCSV" class="btn">Export CSV</button>
-          <button id="btnJSON" class="btn">Export JSON</button>
-          <button id="btnPrint" class="btn btn-ghost">Print / PDF</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT: SUMMARY, CHARTS, TABLES -->
-    <div class="rightGrid">
-      <div class="card">
-        <h2>Summary</h2>
-        <div class="kpi">
-          <div class="k"><small class="muted">Base (Direct + Indirect)</small><strong id="kBase">—</strong><small class="muted">excl. contingency/escalation</small></div>
-          <div class="k"><small class="muted">Contingency</small><strong id="kCont">—</strong><small class="muted">method: <span id="kContMode">AACE</span></small></div>
-          <div class="k"><small class="muted">Escalation to FID</small><strong id="kEsc">—</strong><small class="muted">to base year + index</small></div>
-          <div class="k"><small class="muted">Total Installed CAPEX</small><strong id="kTIC">—</strong><small class="muted"><span id="kCur">NOK</span></small></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Breakdowns</h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <svg id="byUnit" class="chart" aria-label="By Unit"></svg>
-          <svg id="byCostType" class="chart" aria-label="Direct vs Indirect"></svg>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Cashflow (S-curve)</h2>
-        <svg id="scurve" class="chart" aria-label="Cashflow S-curve"></svg>
-      </div>
-
-      <div class="card">
-        <h2>CAPEX Items (drill-down)</h2>
-        <div style="overflow:auto;max-height:360px">
-          <table id="tbl">
-            <thead>
-              <tr>
-                <th>#</th><th>WBS</th><th>Unit</th><th>Item</th><th>Qty</th><th>UoM</th>
-                <th>Unit Price</th><th>Base Cost</th><th>Type</th><th>Source</th><th>Ref</th>
-                <th>Vendor</th><th>Date</th><th>Class</th><th>Notes</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
+      <!-- BoD & Assumptions -->
+      <section class="tabpanel" id="tab-bod">
+        <div class="grid2">
+          <table id="bodTable" class="tight">
+            <thead><tr><th>Topic</th><th>Assumption / Value</th><th>Source</th><th>Version</th></tr></thead>
+            <tbody>
+              <tr><td>Electrolyser tech</td><td contenteditable>ALK, 10×10 MW skids</td><td contenteditable>Vendor LOI</td><td contenteditable>v0.3</td></tr>
+              <tr><td>Operating hours</td><td contenteditable>8,200 h/yr</td><td contenteditable>Grid profile</td><td contenteditable>v0.2</td></tr>
+              <tr><td>Delivery pressure</td><td contenteditable>350 bar</td><td contenteditable>Offtake req.</td><td contenteditable>v0.1</td></tr>
+              <tr><td>Water source</td><td contenteditable>Industrial, 1.5 km</td><td contenteditable>Utility letter</td><td contenteditable>v0.1</td></tr>
+              <tr><td>Grid voltage</td><td contenteditable>220 kV, 4 km</td><td contenteditable>TSO email</td><td contenteditable>v0.1</td></tr>
+            </tbody>
+          </table>
+          <table id="assumpReg" class="tight">
+            <thead><tr><th>ID</th><th>Assumption</th><th>Owner</th><th>Impact</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>A-12</td><td contenteditable>OEM capex includes commissioning</td><td contenteditable>Process</td><td class="subtle">Medium</td><td contenteditable>Open</td></tr>
+              <tr><td>A-19</td><td contenteditable>Transformer lead time 36 wks</td><td contenteditable>Electrical</td><td class="subtle">High</td><td contenteditable>Open</td></tr>
+            </tbody>
           </table>
         </div>
-        <div class="sticky-actions">
-          <div class="stack">
-            <span class="pill">Types: Direct (D), Indirect (I)</span>
-            <span class="pill">Source: QUOTE • BENCH • PARAM • MANUAL</span>
-            <button id="btnAdd" class="btn">Add Item</button>
-            <button id="btnEdit" class="btn btn-ghost">Edit Selected</button>
-            <button id="btnDelete" class="btn btn-ghost">Delete Selected</button>
-          </div>
-        </div>
-      </div>
+      </section>
 
-      <div class="card">
-        <h2>Audit Trail / References</h2>
-        <div style="overflow:auto;max-height:220px">
-          <table id="auditTbl">
-            <thead><tr><th>ID</th><th>Change</th><th>User</th><th>When</th></tr></thead>
-            <tbody></tbody>
+      <!-- WBS -->
+      <section class="tabpanel" id="tab-wbs">
+        <table id="wbsTable" class="tight">
+          <thead><tr><th>WBS</th><th>Package</th><th>Discipline</th><th class="right">Qty</th><th>Unit</th><th class="right">Rate</th><th class="right">Base Cost</th><th>Source</th><th class="right">Unc. %</th><th>FX</th><th>Index</th></tr></thead>
+          <tbody></tbody>
+          <tfoot><tr><td colspan="6"><strong>Subtotal (Direct)</strong></td><td id="wbsSubtotal" class="mono right num">—</td><td colspan="4"></td></tr></tfoot>
+        </table>
+      </section>
+
+      <!-- Quantities -->
+      <section class="tabpanel" id="tab-qto">
+        <table id="qtoTable" class="tight">
+          <thead><tr><th>Discipline</th><th>Item</th><th class="right">Quantity</th><th>Unit</th><th>Linked WBS</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Civils</td><td contenteditable>Concrete C35/45</td><td class="right">8,500</td><td>m³</td><td>2.0</td><td class="subtle">Foundations + pits</td></tr>
+            <tr><td>Mech</td><td contenteditable>Stainless piping DN100-DN250</td><td class="right">5,600</td><td>m</td><td>1.1</td><td class="subtle">Process & utility</td></tr>
+            <tr><td>Elec</td><td contenteditable>MV cable 132 kV</td><td class="right">4</td><td>km</td><td>3.0</td><td class="subtle">Grid tie-in</td></tr>
+            <tr><td>Elec</td><td contenteditable>Transformers 220/33 kV</td><td class="right">2</td><td>ea</td><td>3.0</td><td class="subtle">GIS yard</td></tr>
+            <tr><td>Mech</td><td contenteditable>Compression trains</td><td class="right">3</td><td>ea</td><td>1.2</td><td class="subtle">H₂ export</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Rate Library -->
+      <section class="tabpanel" id="tab-rates">
+        <table id="rateTable" class="tight">
+          <thead><tr><th>Item</th><th>Region</th><th class="right">Rate</th><th>Unit</th><th>Basis Year</th><th>Source</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- RFQ / Quotes -->
+      <section class="tabpanel" id="tab-rfq">
+        <table id="rfqTable" class="tight">
+          <thead><tr><th>Package</th><th>Vendor</th><th class="right">Quoted</th><th class="right">Normalized</th><th>Lead Time</th><th>Warranty</th><th>Scope Deviations</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- Benchmarking -->
+      <section class="tabpanel" id="tab-bench">
+        <div class="grid3">
+          <div class="chart"><canvas id="bench_kw"></canvas><div class="legend-box">Cost per kW (This Project highlighted)</div><div class="axis-label axis-x">Projects</div><div class="axis-label axis-y">NOK/kW</div></div>
+          <div class="chart"><canvas id="bench_tpy"></canvas><div class="legend-box">Cost per t/yr (This Project highlighted)</div><div class="axis-label axis-x">Projects</div><div class="axis-label axis-y">NOK/tpy</div></div>
+          <div class="chart"><canvas id="bench_misc"></canvas><div class="legend-box">Package Share</div><div class="axis-label axis-x">Packages</div><div class="axis-label axis-y">Share %</div></div>
+        </div>
+      </section>
+
+      <!-- FX & Escalation -->
+      <section class="tabpanel" id="tab-fx">
+        <table class="tight">
+          <thead><tr><th>Currency</th><th class="right">FX vs NOK</th><th class="right">Inflation %</th><th>Index</th></tr></thead>
+          <tbody>
+            <tr><td>EUR</td><td contenteditable id="fxRowEUR" class="right">12</td><td contenteditable class="right">2.5</td><td>EU HICP</td></tr>
+            <tr><td>USD</td><td contenteditable id="fxRowUSD" class="right">11</td><td contenteditable class="right">2.8</td><td>US CPI</td></tr>
+            <tr><td>NOK</td><td class="right">1</td><td contenteditable id="fxRowNOK" class="right">3</td><td>KPI</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Taxes & Duties -->
+      <section class="tabpanel" id="tab-tax">
+        <table id="taxTable" class="tight">
+          <thead><tr><th>Item</th><th class="right">Rate / %</th><th>Applies to</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>VAT (recoverable)</td><td contenteditable class="right">25</td><td>All domestic</td><td class="subtle">Recoverable on capex</td></tr>
+            <tr><td>Import Duty</td><td contenteditable class="right">3</td><td>Electrolyser modules</td><td class="subtle">CIF value</td></tr>
+            <tr><td>Port/Handling</td><td contenteditable class="right">1.2</td><td>Imported goods</td><td class="subtle">% of CIF</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Indirects -->
+      <section class="tabpanel" id="tab-indirects">
+        <table id="indTable" class="tight">
+          <thead><tr><th>Category</th><th>Basis</th><th class="right">Value</th><th>Applies to</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Engineering & PM</td><td>% of Direct</td><td contenteditable id="engPct" class="right">8</td><td>All direct</td><td>Owner/EPCM</td></tr>
+            <tr><td>Construction Facilities</td><td>Lump sum</td><td contenteditable id="siteLS" class="right">25,000,000</td><td>Project</td><td>Site setup</td></tr>
+            <tr><td>Contractor OH&P</td><td>% of Direct</td><td contenteditable id="ohpPct" class="right">10</td><td>All direct</td><td>OH & Profit</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Financing & Drawdown -->
+      <section class="tabpanel" id="tab-fin">
+        <div class="grid2">
+          <div class="chart"><canvas id="cash"></canvas><div class="legend-box">Drawdown by source</div><div class="axis-label axis-x">Periods</div><div class="axis-label axis-y">MNOK</div></div>
+          <table id="finTable" class="tight">
+            <thead><tr><th>Component</th><th class="right">%</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Debt</td><td contenteditable id="pctDebt" class="right">60</td><td>Senior project finance</td></tr>
+              <tr><td>Equity</td><td contenteditable class="right">40</td><td>Sponsor</td></tr>
+              <tr><td>Fees</td><td contenteditable id="feesPct" class="right">3</td><td>On debt portion</td></tr>
+            </tbody>
+          </table>
+          <table id="drawTable" class="tight">
+            <thead><tr><th>Period</th><th class="right">Draw %</th><th class="right">Debt share %</th><th class="right">Equity share %</th></tr></thead>
+            <tbody>
+              <tr><td>P1 (M1-M3)</td><td contenteditable class="right">10</td><td class="right">0</td><td class="right">100</td></tr>
+              <tr><td>P2 (M4-M9)</td><td contenteditable class="right">40</td><td contenteditable class="right">50</td><td class="right">50</td></tr>
+              <tr><td>P3 (M10-M18)</td><td contenteditable class="right">50</td><td contenteditable class="right">70</td><td class="right">30</td></tr>
+            </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
-    </div>
+      <!-- Risk & AACE -->
+      <section class="tabpanel" id="tab-risk">
+        <div class="grid2">
+          <table id="riskTable" class="tight ultra">
+            <thead><tr><th>Risk</th><th class="right">Prob %</th><th class="right">Impact (MNOK)</th><th>Owner</th><th>Mitigation</th></tr></thead>
+            <tbody>
+              <tr><td>OEM price variance</td><td contenteditable class="right">30</td><td contenteditable class="right">80</td><td contenteditable>Procurement</td><td contenteditable>Frame + FX hedge</td></tr>
+              <tr><td>Steel price spike</td><td contenteditable class="right">25</td><td contenteditable class="right">50</td><td contenteditable>Commercial</td><td contenteditable>Hedge / alternatives</td></tr>
+              <tr><td>Grid connection delay</td><td contenteditable class="right">20</td><td contenteditable class="right">60</td><td contenteditable>TSO</td><td contenteditable>Early app + LDs</td></tr>
+              <tr><td>Soil/ground conditions</td><td contenteditable class="right">15</td><td contenteditable class="right">40</td><td contenteditable>Civil</td><td contenteditable>SI + contingency</td></tr>
+              <tr><td>Permitting slippage</td><td contenteditable class="right">20</td><td contenteditable class="right">30</td><td contenteditable>Owner</td><td contenteditable>Stakeholder mgmt</td></tr>
+              <tr><td>Logistics/port</td><td contenteditable class="right">10</td><td contenteditable class="right">25</td><td contenteditable>Supply chain</td><td contenteditable>Alt. routes + buffers</td></tr>
+            </tbody>
+          </table>
+          <div class="grid">
+            <div class="chart"><canvas id="riskCurve"></canvas><div class="legend-box">Risk curve (ΣP×I)</div><div class="axis-label axis-x">Risks</div><div class="axis-label axis-y">MNOK</div></div>
+            <table class="tight ultra">
+              <thead><tr><th>Contingency method</th><th class="right">Value</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>AACE Class-based %</td><td id="contAACE" class="right mono">—</td><td class="subtle">Applied to Direct+Indirect</td></tr>
+                <tr><td>Risk-based (Σ P×I)</td><td id="contRisk" class="right mono">—</td><td class="subtle">Converted to MNOK</td></tr>
+                <tr><td>Selected for case</td><td id="contSelected" class="right mono">—</td><td class="subtle">Max(AACE, Risk)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sensitivity -->
+      <section class="tabpanel" id="tab-sens">
+        <div class="chart"><canvas id="sensBars"></canvas><div class="legend-box">±10% perturbations</div><div class="axis-label axis-x">Drivers</div><div class="axis-label axis-y">MNOK</div></div>
+        <table class="tight ultra" id="sensTable">
+          <thead><tr><th>Driver</th><th class="right">−10%</th><th class="right">Base</th><th class="right">+10%</th><th class="right">Δ per 10%</th></tr></thead>
+          <tbody>
+            <tr><td>EUR/NOK</td><td class="mono right" id="s_fx_lo">—</td><td class="mono right" id="s_fx_mid">—</td><td class="mono right" id="s_fx_hi">—</td><td class="mono right" id="s_fx_delta">—</td></tr>
+            <tr><td>Electrolyser CAPEX</td><td class="mono right" id="s_oem_lo">—</td><td class="mono right" id="s_oem_mid">—</td><td class="mono right" id="s_oem_hi">—</td><td class="mono right" id="s_oem_delta">—</td></tr>
+            <tr><td>Steel</td><td class="mono right" id="s_steel_lo">—</td><td class="mono right" id="s_steel_mid">—</td><td class="mono right" id="s_steel_hi">—</td><td class="mono right" id="s_steel_delta">—</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Cash-flow -->
+      <section class="tabpanel" id="tab-cash">
+        <div class="chart"><canvas id="scurve"></canvas><div class="legend-box">Cumulative spend</div><div class="axis-label axis-x">Time</div><div class="axis-label axis-y">%</div></div>
+        <table class="tight ultra" id="cashTable">
+          <thead><tr><th>Period</th><th class="right">Spend (MNOK)</th><th class="right">Cum. %</th><th class="right">Debt used</th><th class="right">Equity used</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- LCOH -->
+      <section class="tabpanel" id="tab-lcoh">
+        <div class="grid2">
+          <table class="tight ultra">
+            <thead><tr><th>Input</th><th class="right">Value</th><th>Unit</th></tr></thead>
+            <tbody>
+              <tr><td>Annual H₂ output</td><td contenteditable id="h2out" class="right">29800</td><td>t/yr</td></tr>
+              <tr><td>Capacity factor</td><td contenteditable id="cf" class="right">0.82</td><td>—</td></tr>
+              <tr><td>Electricity price</td><td contenteditable id="elprice" class="right">0.50</td><td>NOK/kWh</td></tr>
+              <tr><td>Stack eff.</td><td contenteditable id="eff" class="right">60</td><td>kWh/kg</td></tr>
+              <tr><td>Fixed OPEX</td><td contenteditable id="opex" class="right">120</td><td>MNOK/yr</td></tr>
+              <tr><td>CRF (cap. recovery)</td><td contenteditable id="crf" class="right">0.12</td><td>1/yr</td></tr>
+            </tbody>
+          </table>
+          <div class="grid">
+            <div class="chart"><canvas id="lcohChart"></canvas><div class="legend-box" id="lcohLegend"></div><div class="axis-label axis-x">Components</div><div class="axis-label axis-y">NOK/kg</div></div>
+            <table class="tight ultra">
+              <thead><tr><th>Component</th><th class="right">Value</th><th>Unit</th></tr></thead>
+              <tbody>
+                <tr><td>Capital cost / kg</td><td class="mono right" id="l_cap">—</td><td>NOK/kg</td></tr>
+                <tr><td>Electricity / kg</td><td class="mono right" id="l_el">—</td><td>NOK/kg</td></tr>
+                <tr><td>OPEX / kg</td><td class="mono right" id="l_ox">—</td><td>NOK/kg</td></tr>
+                <tr><td><strong>Total LCOH</strong></td><td class="mono right" id="l_tot">—</td><td><strong>NOK/kg</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Change Log -->
+      <section class="tabpanel" id="tab-changelog">
+        <table id="chgTable" class="tight">
+          <thead><tr><th>Date</th><th>Who</th><th>Change</th><th>Impacted items</th></tr></thead>
+          <tbody>
+            <tr><td>2025-11-03</td><td>JE</td><td>Updated OEM rate to vendor rev. B</td><td>WBS 1.0</td></tr>
+            <tr><td>2025-11-03</td><td>JE</td><td>Contingency moved to 15%</td><td>All</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Export -->
+      <section class="tabpanel" id="tab-export">
+        <div class="grid">
+          <button class="btn" id="btnExport">Export Board Pack (PDF)</button>
+          <button class="btn secondary" id="btnCSV">Export CSV (WBS)</button>
+          <div class="note">Mock-knapper for demo. Koble til generator senere.</div>
+        </div>
+      </section>
+
+    </main>
   </div>
 
 <script>
-/* ---------------------- Mock dataset (edit or connect to backend) ---------------------- */
-const UNITS = ['ELX','RECT','COMP','DRY','STORE','LOAD','WTR','COOL','O2','BOP','CIVIL','ELECT','CTRL'];
-const ITEMS = [
-  // WBS, Unit, Item, Qty, UoM, UnitPrice(NOK), Type(D/I), Source, Ref, Vendor, Date, Class, Notes
-  r('1.1','ELX','PEM Stacks 5 MW x20',20,'ea', 55_000_000,'D','QUOTE','Q-ELX-2025-07','HydraCell','2025-07-10','Class 3','Incl. frames; ex-works'),
-  r('1.2','ELX','Power Electronics (rectifiers, DC bus)',1,'lot', 190_000_000,'D','QUOTE','Q-PE-2025-06','VoltSynth','2025-06-25','Class 3','Cooling included'),
-  r('1.3','ELX','ELX Hall E&I fitout',1,'lot', 85_000_000,'D','BENCH','BM-ELX-INTL-2024','—','2024-11-01','Class 4','m2 scaling'),
-  r('2.1','RECT','Grid Transformers 132/33kV',2,'ea', 22_000_000,'D','QUOTE','Q-TX-2025-05','ABB','2025-05-30','Class 2','DDP site'),
-  r('2.2','RECT','HV Switchgear & Protection',1,'lot', 48_000_000,'D','BENCH','BM-SW-2024','—','2024-10-01','Class 4','kV scaling'),
-  r('3.1','COMP','H2 Compressors 30→350 bar',4,'ea', 26_000_000,'D','QUOTE','Q-COMP-2025-07','Howden','2025-07-08','Class 3','Oil-free'),
-  r('4.1','DRY','Dryer/Deoxo skids',2,'ea', 12_000_000,'D','QUOTE','Q-DRY-2025-06','Parker','2025-06-15','Class 3','-'),
-  r('5.1','STORE','Storage Vessels 350 bar',12,'ea', 9_500_000,'D','QUOTE','Q-STORE-2025-07','Hexagon','2025-07-12','Class 3','Composite'),
-  r('6.1','LOAD','Trailer loading bays (2)',1,'lot', 14_000_000,'D','BENCH','BM-LOAD-2024','—','2024-09-01','Class 4','—'),
-  r('7.1','WTR','DI Water Plant (50 m3/h)',1,'lot', 18_000_000,'D','QUOTE','Q-WTR-2025-05','Evoqua','2025-05-22','Class 3','—'),
-  r('8.1','COOL','Cooling Towers 30 MWth',1,'lot', 28_000_000,'D','QUOTE','Q-COOL-2025-06','SPX','2025-06-28','Class 3','—'),
-  r('9.1','O2','O2 handling package',1,'lot', 10_000_000,'D','BENCH','BM-O2-2024','—','2024-08-15','Class 4','vent+silencer'),
-  r('10.1','CIVIL','Civils, earthworks, roads, drainage',1,'lot', 95_000_000,'D','BENCH','BM-CIV-2024','—','2024-09-10','Class 4','m2 x factor'),
-  r('11.1','ELECT','Cables & trays (sitewide)',1,'lot', 60_000_000,'D','PARAM','PWR-CBL-0.9%/MW','—','2025-03-15','Class 5','0.9% of TIC guess'),
-  r('12.1','CTRL','DCS/SIS/PLC',1,'lot', 22_000_000,'D','BENCH','BM-CTRL-2024','—','2024-11-20','Class 4','incl. licenses'),
-  // Indirects
-  r('90.1','INDIR','EPCM (8%)',1,'lot', 0.08,'I','PARAM','PCT-TIC','—','2025-07-01','Class 5','% of direct'),
-  r('90.2','INDIR','Owners Costs (3%)',1,'lot', 0.03,'I','PARAM','PCT-TIC','—','2025-07-01','Class 5','% of direct'),
-  r('90.3','INDIR','Insurances & Bonds (1.2%)',1,'lot', 0.012,'I','PARAM','PCT-TIC','—','2025-07-01','Class 5','% of direct')
-];
+/* ===== State & helpers ===== */
+const state = {
+  scenario:'base', p:50, ccy:'NOK', real:true,
+  fx:{EUR:12,USD:11,NOK:1}, escal:2.5, contg:15, wacc:8,
+  wbs:[],
+  indirects:{engPct:8, siteLS:25_000_000, ohpPct:10},
+  debtPct:60, feesPct:3,
+};
+const SCEN={base:1,low:0.92,high:1.12};
+const PLEVEL={10:0.95,50:1,90:1.10};
+const el=id=>document.getElementById(id);
+const getCcy=()=>el('ccy')?el('ccy').value:'NOK';
+const rateNOK=(ccy)=>({NOK:1,EUR:12,USD:11}[ccy]||1);
+const toDisp=(nok)=>({val:nok/rateNOK(getCcy()), ccy:getCcy()});
+const fmtNum=(v,d=0)=>new Intl.NumberFormat('no-NO',{maximumFractionDigits:d,minimumFractionDigits:0}).format(v);
+const fmtCur=(nok)=>{const {val,ccy}=toDisp(nok); return new Intl.NumberFormat('no-NO',{style:'currency',currency:ccy,maximumFractionDigits:0}).format(val);};
 
-function r(wbs,unit,item,qty,uom,unitPrice,type,source,ref,vendor,date,aaceClass,notes){
-  return {id:uid(), wbs, unit, item, qty, uom, unitPrice, type, source, ref, vendor, date, aaceClass, notes};
+/* ===== Calculations ===== */
+function computeDirect(){ let s=0; for(const r of state.wbs){ s += (+r.qty||0) * (+r.rate||0) * SCEN[state.scenario] * PLEVEL[state.p]; } return s; }
+function computeIndirects(d){ const i=state.indirects; const eng=d*(i.engPct/100); const ohp=d*(i.ohpPct/100); return {eng,ohp,site:i.siteLS,total:eng+ohp+i.siteLS}; }
+function contingencyAACE(b){ return b*(state.contg/100); }
+function contingencyRisk(){ const rows=[...document.querySelectorAll('#riskTable tbody tr')]; let s=0; rows.forEach(tr=>{ const p=(+tr.children[1].innerText||0)/100; const i=(+tr.children[2].innerText||0)*1e6; s += p*i;}); return s; }
+function computeIDC(totalIncl){ const rows=[...document.querySelectorAll('#drawTable tbody tr')]; const debtW=(+el('pctDebt')?.innerText||state.debtPct)/100; const wacc=state.wacc/100; let idc=0,cum=0; const periods=[]; rows.forEach(tr=>{ const share=(+tr.children[1].innerText||0)/100; const debt=((+tr.children[2].innerText||0)/100)||debtW; const eq=((+tr.children[3].innerText||0)/100)||(1-debt); const spend=totalIncl*share, debtSpend=spend*debt, eqSpend=spend*eq; idc += (cum + debtSpend*0.5)*(wacc/4); cum += debtSpend; periods.push({spend,debtSpend,eqSpend});}); return {idc,periods}; }
+function computeLCOH(totalIncl){ const h2=+el('h2out')?.innerText||29800; const eff=+el('eff')?.innerText||60; const elp=+el('elprice')?.innerText||0.5; const opex=(+el('opex')?.innerText||120)*1e6; const crf=+el('crf')?.innerText||0.12; const cap=totalIncl*crf; const ene=h2*1000*eff*elp; const l=(cap+opex+ene)/(h2*1000); return {lcoh:l,cap:cap/(h2*1000),el:ene/(h2*1000),ox:opex/(h2*1000)}; }
+
+/* ===== Canvas helpers ===== */
+function ctxWH(id){ 
+  const c=el(id); 
+  if(!c) return null; 
+  const r=c.getBoundingClientRect(); 
+  const newWidth = Math.max(300,r.width);
+  const newHeight = Math.max(150,r.height);
+  // Only set dimensions if they changed to avoid clearing
+  if(c.width !== newWidth || c.height !== newHeight) {
+    c.width = newWidth;
+    c.height = newHeight;
+  }
+  return c.getContext('2d'); 
 }
+function drawAxes(ctx,x0,y0,x1,y1){ ctx.strokeStyle='#334854'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x0,y1); ctx.lineTo(x1,y1); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x0,y1); ctx.lineTo(x0,y0); ctx.stroke(); }
 
-/* ---------------------- State & helpers ---------------------- */
-const $ = s=>document.querySelector(s);
-let rows = ITEMS.slice();
-let selectedId = null;
-
-function uid(){ return 'CX-' + Math.random().toString(36).slice(2,7).toUpperCase(); }
-
-function fxVal(nok){
-  const cur = $('#cur').value;
-  if(cur==='NOK') return {v:nok, s:'MNOK'};
-  const rate = cur==='USD' ? +$('#fxUSD').value : +$('#fxEUR').value;
-  return {v: nok*rate, s: 'M'+cur};
-}
-
-function formatMoneyMNOK(n){ return Math.round(n).toString(); } // simple, label carries unit
-
-/* AACE class → contingency band (rough) */
-function contForClass(cls){
-  const map = {'Class 5': 0.30,'Class 4':0.25,'Class 3':0.18,'Class 2':0.12,'Class 1':0.07};
-  return map[cls] ?? 0.20;
-}
-
-/* ---------------------- Calculations ---------------------- */
-function calcBaseDirect(){
-  // percent PARAM items under INDIR are applied later (% of direct)
-  const directRows = rows.filter(r=>r.type==='D');
-  return directRows.reduce((s,r)=> s + (r.unitPrice * r.qty)/1e6, 0); // MNOK
-}
-function calcIndirect(directMNOK){
-  // PARAM percentages multiply direct
-  const indirRows = rows.filter(r=>r.type==='I');
-  let fixedMNOK = indirRows.filter(r=>r.source!=='PARAM').reduce((s,r)=> s + (r.unitPrice*r.qty)/1e6, 0);
-  let pctMNOK = indirRows.filter(r=>r.source==='PARAM').reduce((s,r)=> s + (r.unitPrice*directMNOK), 0);
-  return fixedMNOK + pctMNOK;
-}
-function calcContingency(totalBaseMNOK){
-  if($('#contMode').value==='Manual %') return totalBaseMNOK * (+$('#contPct').value/100);
-  // weighted by AACE class across rows
-  const weights = rows.map(r=>{
-    const pct = contForClass(r.aaceClass);
-    const cost = (r.type==='D' ? (r.unitPrice*r.qty)/1e6 : 0); // only direct drives class-based cont
-    return {cost,pct};
-  }).filter(x=>x.cost>0);
-  const num = weights.reduce((s,x)=> s + x.cost*x.pct, 0);
-  const den = weights.reduce((s,x)=> s + x.cost, 0) || 1;
-  return (num/den) * totalBaseMNOK; // uses weighted % applied to total base for simplicity
-}
-function calcEscalation(totalBaseMNOK){
-  // naive: apply index % per year to FID at baseYear+1.5yrs (edit if needed)
-  const idx = +$('#escIdx').value/100; // e.g., 3%/yr
-  const years = 1.5;
-  return totalBaseMNOK * (Math.pow(1+idx, years) - 1);
-}
-
-/* ---------------------- Rendering KPIs & Charts ---------------------- */
-function renderKPIs(){
-  const directMNOK = calcBaseDirect();
-  const indirectMNOK = calcIndirect(directMNOK);
-  const baseMNOK = directMNOK + indirectMNOK;
-  const contMNOK = calcContingency(baseMNOK);
-  const escMNOK  = calcEscalation(baseMNOK + contMNOK);
-  const totalMNOK = baseMNOK + contMNOK + escMNOK;
-
-  const base = fxVal(baseMNOK); const cont = fxVal(contMNOK); const esc = fxVal(escMNOK); const tot = fxVal(totalMNOK);
+/* ===== Charts ===== */
+function drawPie(direct,ind,cont,idc){
+  const ctx=ctxWH('pieCapex'); if(!ctx) return;
+  const parts=[direct,ind,cont,idc]; const labels=['Direct','Indirect','Contingency','IDC'];
+  const colors=['#19c5be','#74aeea','#f6c947','#ef8c7a']; const sum=parts.reduce((a,b)=>a+b,0);
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  const w=ctx.canvas.width,h=ctx.canvas.height; const cx=w*0.32,cy=h*0.52,r=Math.min(w,h)*0.35; let a=-Math.PI/2;
   
-  // Animate KPI values with counting effect
-  animateValue($('#kBase'), 0, base.v, 1000, base.s);
-  animateValue($('#kCont'), 0, cont.v, 1200, cont.s);
-  animateValue($('#kEsc'), 0, esc.v, 1400, esc.s);
-  animateValue($('#kTIC'), 0, tot.v, 1600, tot.s);
-  
-  $('#kCur').textContent = base.s.replace('M','');
-  $('#kContMode').textContent = $('#contMode').value==='Manual %' ? `Manual ${$('#contPct').value}%` : 'AACE';
-}
-
-// Animate number counting effect
-function animateValue(element, start, end, duration, suffix) {
+  // Animate pie slices
+  const duration = 1200;
   const startTime = performance.now();
   const animate = (currentTime) => {
     const elapsed = currentTime - startTime;
     const progress = Math.min(elapsed / duration, 1);
-    const current = start + (end - start) * easeOutCubic(progress);
-    element.textContent = `${Math.round(current)} ${suffix}`;
+    const easeProgress = 1 - Math.pow(1 - progress, 3); // ease out cubic
     
-    if (progress < 1) {
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    let currentAngle = -Math.PI/2;
+    
+    parts.forEach((v,i)=>{
+      const ang = (v/sum)*Math.PI*2;
+      const animatedAng = ang * easeProgress;
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,r,currentAngle,currentAngle+animatedAng);
+      ctx.closePath();
+      ctx.fillStyle=colors[i];
+      ctx.fill();
+      currentAngle += ang;
+    });
+    
+    if(progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Draw final state
+      let finalAngle = -Math.PI/2;
+      parts.forEach((v,i)=>{
+        const ang=(v/sum)*Math.PI*2;
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.arc(cx,cy,r,finalAngle,finalAngle+ang);
+        ctx.closePath();
+        ctx.fillStyle=colors[i];
+        ctx.fill();
+        finalAngle += ang;
+      });
+      drawAxes(ctx,w*0.65,18,w-18,h-26);
+    }
+  };
+  requestAnimationFrame(animate);
+  
+  const box=el('pieLegend'); if(box) box.innerHTML=labels.map((t,i)=>`<div class='legend-row' style='animation: fadeIn 0.5s ease-out ${i*0.1}s both'><span class='sw' style='background:${colors[i]}'></span>${t}: ${fmtNum(toDisp(parts[i]).val/1e6)} ${getCcy()} MNOK</div>`).join('');
+}
+function drawWaterfall(direct,ind,cont,idc){
+  const ctx=ctxWH('waterfall'); if(!ctx) return;
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  const w=ctx.canvas.width,h=ctx.canvas.height; const x0=36,y0=18,x1=w-18,y1=h-26; drawAxes(ctx,x0,y0,x1,y1);
+  const items=[{n:'Direct',v:direct,c:'#19c5be'},{n:'Indirect',v:ind,c:'#74aeea'},{n:'Cont.',v:cont,c:'#f6c947'},{n:'IDC',v:idc,c:'#ef8c7a'}];
+  const total=direct+ind+cont+idc; const bw=(x1-x0)/items.length*0.5; const max=total*1.25;
+  
+  // Animate waterfall bars
+  const duration = 1000;
+  const startTime = performance.now();
+  const animate = (currentTime) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 2); // ease out quad
+    
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    drawAxes(ctx,x0,y0,x1,y1);
+    
+    let cum=0;
+    items.forEach((it,i)=>{
+      const x=x0+i*((x1-x0)/items.length)+16;
+      const animatedV = it.v * easeProgress;
+      const y=y1-((cum+animatedV)/max)*(y1-y0);
+      const yB=y1-(cum/max)*(y1-y0);
+      ctx.fillStyle=it.c;
+      ctx.fillRect(x,y,bw,yB-y);
+      ctx.strokeStyle='rgba(201,242,239,.9)';
+      ctx.strokeRect(x,y,bw,yB-y);
+      ctx.fillStyle='#e9eef2';
+      ctx.font='10px system-ui';
+      ctx.fillText(it.n,x,y1+10);
+      cum += animatedV;
+    });
+    
+    if(progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Draw final total bar
+      const xT=x1-bw-16;
+      const yT=y1-(total/max)*(y1-y0);
+      ctx.strokeStyle='rgba(201,242,239,.9)';
+      ctx.lineWidth=2;
+      ctx.strokeRect(xT,yT,bw,y1-yT);
+    }
+  };
+  requestAnimationFrame(animate);
+}
+function drawPKurve(){ 
+  const canvasEl = el('pkurve');
+  if(!canvasEl) return;
+  
+  // Check if canvas is visible (not in hidden tab)
+  const parentPanel = canvasEl.closest('.tabpanel');
+  if(parentPanel && !parentPanel.classList.contains('active')) {
+    // Tab is hidden, skip drawing for now but don't reset animation state
+    return;
+  }
+  
+  const ctx=ctxWH('pkurve'); 
+  if(!ctx) return;
+  
+  const w=ctx.canvas.width,h=ctx.canvas.height; 
+  // If canvas is too small, try to get dimensions from parent container
+  if(w < 100 || h < 100) {
+    const rect = canvasEl.parentElement?.getBoundingClientRect();
+    if(rect && rect.width > 0 && rect.height > 0) {
+      canvasEl.width = Math.max(300, rect.width);
+      canvasEl.height = Math.max(150, rect.height);
+    } else {
+      return; // Still can't get dimensions
+    }
+  }
+  
+  const x0=36,y0=18,x1=ctx.canvas.width-18,y1=ctx.canvas.height-26; 
+  
+  // Pre-calculate all points
+  const points = [];
+  for(let x=x0;x<=x1;x++){
+    const t=(x-x0)/(x1-x0);
+    const y=y1-Math.pow(t,1.8)*(y1-y0);
+    points.push({x,y});
+  }
+  
+  // Always draw the curve - use animation on first render only
+  const canvas = ctx.canvas;
+  const shouldAnimate = !canvas.__pkAnimated;
+  
+  // Cancel any existing animation
+  if(canvas.__pkAnimFrame) {
+    cancelAnimationFrame(canvas.__pkAnimFrame);
+    canvas.__pkAnimFrame = null;
+  }
+  
+  // Helper to draw the complete curve
+  const drawCompleteCurve = () => {
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    drawAxes(ctx,x0,y0,x1,y1);
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for(let i=1;i<points.length;i++){
+      ctx.lineTo(points[i].x, points[i].y);
+    }
+    ctx.strokeStyle='#19c5be';
+    ctx.lineWidth=2;
+    ctx.stroke();
+  };
+  
+  if(shouldAnimate) {
+    // Animate curve drawing on first render
+    const duration = 1500;
+    const startTime = performance.now();
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 2);
+      
+      ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+      drawAxes(ctx,x0,y0,x1,y1);
+      
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      
+      const drawTo = Math.floor(points.length * easeProgress);
+      for(let i=1;i<=drawTo;i++){
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      
+      ctx.strokeStyle='#19c5be';
+      ctx.lineWidth=2;
+      ctx.stroke();
+      
+      if(progress < 1) {
+        canvas.__pkAnimFrame = requestAnimationFrame(animate);
+      } else {
+        canvas.__pkAnimated = true;
+        canvas.__pkAnimFrame = null;
+        // Ensure final complete curve is drawn
+        drawCompleteCurve();
+      }
+    };
+    canvas.__pkAnimFrame = requestAnimationFrame(animate);
+    // Fallback: if animation doesn't complete within 2 seconds, draw it anyway
+    setTimeout(() => {
+      if(!canvas.__pkAnimated) {
+        canvas.__pkAnimated = true;
+        if(canvas.__pkAnimFrame) {
+          cancelAnimationFrame(canvas.__pkAnimFrame);
+          canvas.__pkAnimFrame = null;
+        }
+        drawCompleteCurve();
+      }
+    }, 2000);
+  } else {
+    // Already animated, just draw the final state immediately
+    drawCompleteCurve();
+  }
+}
+function drawSCurve(){ 
+  const ctx=ctxWH('scurve'); if(!ctx) return; 
+  const w=ctx.canvas.width,h=ctx.canvas.height; const x0=36,y0=18,x1=w-18,y1=h-26; 
+  
+  // Pre-calculate all points
+  const points = [];
+  for(let i=0;i<=100;i++){
+    const t=i/100;
+    const y=y1-(1/(1+Math.exp(-10*(t-0.5))))*(y1-y0);
+    const x=x0+t*(x1-x0);
+    points.push({x,y});
+  }
+  
+  // Cancel any existing animation
+  const canvas = ctx.canvas;
+  if(canvas.__scAnimFrame) {
+    cancelAnimationFrame(canvas.__scAnimFrame);
+    canvas.__scAnimFrame = null;
+  }
+  
+  // Store animation state on canvas element
+  if(!canvas.__scAnimated) {
+    canvas.__scAnimated = false;
+    // Animate S-curve drawing
+    const duration = 1500;
+    const startTime = performance.now();
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 2);
+      
+      ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+      drawAxes(ctx,x0,y0,x1,y1);
+      
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      
+      const drawTo = Math.floor(points.length * easeProgress);
+      for(let i=1;i<=drawTo;i++){
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      
+      ctx.strokeStyle='#74aeea';
+      ctx.lineWidth=2;
+      ctx.stroke();
+      
+      if(progress < 1) {
+        canvas.__scAnimFrame = requestAnimationFrame(animate);
+      } else {
+        canvas.__scAnimated = true;
+        canvas.__scAnimFrame = null;
+        // Draw final complete curve
+        ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+        drawAxes(ctx,x0,y0,x1,y1);
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for(let i=1;i<points.length;i++){
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.strokeStyle='#74aeea';
+        ctx.lineWidth=2;
+        ctx.stroke();
+      }
+    };
+    canvas.__scAnimFrame = requestAnimationFrame(animate);
+  } else {
+    // Already animated, just draw the final state immediately
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    drawAxes(ctx,x0,y0,x1,y1);
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for(let i=1;i<points.length;i++){
+      ctx.lineTo(points[i].x, points[i].y);
+    }
+    ctx.strokeStyle='#74aeea';
+    ctx.lineWidth=2;
+    ctx.stroke();
+  }
+}
+function drawTornado(){ 
+  const ctx=ctxWH('tornado'); if(!ctx) return; 
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height); 
+  const w=ctx.canvas.width,h=ctx.canvas.height; const x0=56,y0=18,x1=w-18,y1=h-26; 
+  drawAxes(ctx,x0,y0,x1,y1);
+  const items=[{name:'FX (EUR/NOK)',delta:0.08,color:'#19c5be'},{name:'Electrolyser CAPEX',delta:0.06,color:'#74aeea'},{name:'Steel',delta:0.05,color:'#f6c947'},{name:'Labour',delta:0.04,color:'#57d39b'},{name:'Grid',delta:0.03,color:'#ef8c7a'}];
+  const barH=(y1-y0)/items.length*0.6;
+  
+  // Animate tornado bars
+  const duration = 1200;
+  const startTime = performance.now();
+  const animate = (currentTime) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 2);
+    
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    drawAxes(ctx,x0,y0,x1,y1);
+    
+    items.forEach((it,idx)=>{
+      const y=y0+idx*((y1-y0)/items.length);
+      const len=it.delta*(x1-x0-36)*easeProgress;
+      const delay = idx * 0.1;
+      const itemProgress = Math.max(0, Math.min(1, (progress - delay) / (1 - delay)));
+      const itemEase = 1 - Math.pow(1 - itemProgress, 2);
+      const animatedLen = it.delta*(x1-x0-36)*itemEase;
+      
+      ctx.fillStyle=it.color;
+      ctx.fillRect(x0,y,animatedLen,barH);
+      ctx.fillStyle='#e9eef2';
+      ctx.font='10.5px system-ui';
+      ctx.fillText(it.name,x0+animatedLen+6,y+barH-2);
+    });
+    
+    if(progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  };
+  requestAnimationFrame(animate);
+  
+  const box=el('torLegend'); if(box) box.innerHTML=items.map((it,i)=>`<div class='legend-row' style='animation: fadeIn 0.4s ease-out ${i*0.1}s both'><span class='sw' style='background:${it.color}'></span>${it.name}</div>`).join('');
+}
+function drawAudit(){ 
+  const ctx=ctxWH('auditChart'); if(!ctx) return; 
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height); 
+  const w=ctx.canvas.width,h=ctx.canvas.height; const x0=36,y0=18,x1=w-18,y1=h-26; 
+  drawAxes(ctx,x0,y0,x1,y1);
+  const metrics=[{n:'Vendor',v:state.wbs.filter(x=>x.source==='Vendor').length,c:'#19c5be'},{n:'Benchmark',v:state.wbs.filter(x=>x.source==='Benchmark').length,c:'#74aeea'},{n:'Engineer',v:state.wbs.filter(x=>x.source==='Engineer').length,c:'#f6c947'}];
+  const max=Math.max(...metrics.map(m=>m.v),1); const bw=(x1-x0-16)/metrics.length*0.6;
+  
+  // Animate bars
+  const duration = 1000;
+  const startTime = performance.now();
+  const animate = (currentTime) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 2);
+    
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    drawAxes(ctx,x0,y0,x1,y1);
+    
+    metrics.forEach((m,i)=>{
+      const x=x0+16+i*((x1-x0-16)/metrics.length);
+      const fullHgt=(m.v/max)*(y1-y0);
+      const hgt = fullHgt * easeProgress;
+      const delay = i * 0.15;
+      const itemProgress = Math.max(0, Math.min(1, (progress - delay) / (1 - delay)));
+      const itemEase = 1 - Math.pow(1 - itemProgress, 2);
+      const animatedHgt = fullHgt * itemEase;
+      const y=y1-animatedHgt;
+      
+      ctx.fillStyle=m.c;
+      ctx.fillRect(x,y,bw,animatedHgt);
+      ctx.fillStyle='#e9eef2';
+      ctx.font='10.5px system-ui';
+      ctx.fillText(`${m.n} (${m.v})`,x,y-3);
+    });
+    
+    if(progress < 1) {
       requestAnimationFrame(animate);
     }
   };
   requestAnimationFrame(animate);
 }
 
-// Easing function for smooth animation
-function easeOutCubic(t) {
-  return 1 - Math.pow(1 - t, 3);
-}
-
-function byUnitData(){
-  const map = {};
-  rows.forEach(r=>{
-    if(r.type!=='D') return; // focus on direct for unit chart
-    map[r.unit] = (map[r.unit]||0) + (r.unitPrice*r.qty)/1e6;
-  });
-  return Object.entries(map).map(([unit,val])=>({name:unit,val}));
-}
-function byCostTypeData(){
-  const direct = calcBaseDirect();
-  const indirect = calcIndirect(direct);
-  return [{name:'Direct', val:direct},{name:'Indirect',val:indirect}];
-}
-
-function drawBars(svgId, items, title=''){
-  const svg = $(svgId); svg.innerHTML='';
-  const W=svg.clientWidth||800, H=svg.clientHeight||320, pad=48, bw=48, gap=26;
-  const maxVal = Math.max(1, ...items.map(x=>x.val))*1.18;
+/* Benchmarks (highlight this project) */
+function barsHighlight(ctxId, series, labels, idxHighlight){
+  const ctx=ctxWH(ctxId); if(!ctx) return; 
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  const w=ctx.canvas.width,h=ctx.canvas.height; const x0=40,y0=18,x1=w-18,y1=h-26; 
+  drawAxes(ctx,x0,y0,x1,y1);
+  const bw=(x1-x0)/series.length*0.5; const max=Math.max(...series)*1.25;
   
-  // Add chart container class for animations
-  svg.classList.add('chart-container');
-  
-  // Remove existing tooltip if it exists
-  const existingTooltip = document.getElementById('tooltip-' + svgId.replace('#', ''));
-  if (existingTooltip) {
-    existingTooltip.remove();
-  }
-  
-  // Create tooltip element
-  const tooltip = document.createElement('div');
-  tooltip.className = 'chart-tooltip';
-  tooltip.id = 'tooltip-' + svgId.replace('#', '');
-  document.body.appendChild(tooltip);
-  
-  // axes/grid
-  const axis=(x1,y1,x2,y2)=>svg.insertAdjacentHTML('beforeend',`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="axis"/>`);
-  axis(pad,H-pad,W-pad,H-pad); axis(pad,pad,pad,H-pad);
-  for(let i=0;i<4;i++){
-    const y=pad + i*(H-2*pad)/3; svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
-    const v=(maxVal*(1 - i/3)).toFixed(0);
-    svg.insertAdjacentHTML('beforeend', `<text x="8" y="${y+4}" class="reftext">${v} MNOK</text>`);
-  }
-  
-  // bars with animations and hover effects
-  items.forEach((it,idx)=>{
-    const x = pad + 24 + idx*(bw+gap);
-    const h = (it.val/maxVal)*(H-2*pad);
-    const y = H-pad-h;
-    const col = it.name==='Indirect' ? '#74aeea' : '#19c5be';
+  // Animate bars
+  const duration = 1200;
+  const startTime = performance.now();
+  const animate = (currentTime) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
     
-    // Create bar with animation delay
-    const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    bar.setAttribute('class', 'bar chart-bar');
-    bar.setAttribute('x', x);
-    bar.setAttribute('y', y);
-    bar.setAttribute('width', bw);
-    bar.setAttribute('height', h);
-    bar.setAttribute('fill', col);
-    bar.setAttribute('rx', 6);
-    bar.setAttribute('ry', 6);
-    bar.style.animationDelay = `${idx * 0.1}s`;
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    drawAxes(ctx,x0,y0,x1,y1);
     
-    // Add hover effects
-    bar.addEventListener('mouseenter', (e) => {
-      tooltip.innerHTML = `
-        <div class="tooltip-title">${it.name}</div>
-        <div class="tooltip-value">${Math.round(it.val)} MNOK</div>
-        <div class="tooltip-label">${it.name === 'Indirect' ? 'Indirect costs' : 'Direct costs'}</div>
-      `;
-      tooltip.classList.add('show');
+    series.forEach((v,i)=>{
+      const x=x0+i*((x1-x0)/series.length)+12;
+      const fullHgt = (v/max)*(y1-y0);
+      const delay = i * 0.1;
+      const itemProgress = Math.max(0, Math.min(1, (progress - delay) / (1 - delay)));
+      const easeProgress = 1 - Math.pow(1 - itemProgress, 3);
+      const animatedHgt = fullHgt * easeProgress;
+      const y=y1-animatedHgt;
       
-      const rect = svg.getBoundingClientRect();
-      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
-      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+      ctx.fillStyle=i===idxHighlight?'#19c5be':'#3b5667';
+      ctx.fillRect(x,y,bw,animatedHgt);
+      if(i===idxHighlight && itemProgress > 0.5){
+        ctx.strokeStyle='#c9f2ef';
+        ctx.lineWidth=2;
+        ctx.strokeRect(x,y,bw,animatedHgt);
+      }
+      ctx.fillStyle='#e9eef2';
+      ctx.font='10px system-ui';
+      ctx.fillText(labels[i], x, y1+10);
     });
     
-    bar.addEventListener('mouseleave', () => {
-      tooltip.classList.remove('show');
-    });
-    
-    bar.addEventListener('mousemove', (e) => {
-      const rect = svg.getBoundingClientRect();
-      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
-      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
-    });
-    
-    svg.appendChild(bar);
-    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${H-pad+16}" text-anchor="middle" class="reftext">${it.name}</text>`);
-    svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" class="reftext">${Math.round(it.val)}</text>`);
-  });
-  
-  if(title) svg.insertAdjacentHTML('beforeend', `<text x="${W/2}" y="${16}" text-anchor="middle" class="reftext">${title}</text>`);
-}
-function drawSCurve(){
-  const svg=$('#scurve'); svg.innerHTML='';
-  const W=svg.clientWidth||800, H=svg.clientHeight||320, pad=48;
-  
-  // Add chart container class for animations
-  svg.classList.add('chart-container');
-  
-  // Remove existing tooltip if it exists
-  const existingTooltip = document.getElementById('tooltip-scurve');
-  if (existingTooltip) {
-    existingTooltip.remove();
-  }
-  
-  // Create tooltip element
-  const tooltip = document.createElement('div');
-  tooltip.className = 'chart-tooltip';
-  tooltip.id = 'tooltip-scurve';
-  document.body.appendChild(tooltip);
-  
-  // Simple time-phasing: months 1..24, with spend profile (front-loaded civils, mid OEM, back commissioning)
-  const months = 24;
-  const profile = Array.from({length:months}, (_,i)=>{
-    const t=i+1;
-    let w = 0.0;
-    if(t<=6) w = 2+t;           // ramp up
-    else if(t<=16) w = 10;      // plateau construction+OEM
-    else w = Math.max(3, 18 - (t-16)*2); // tail
-    return w;
-  });
-  const sumW = profile.reduce((a,b)=>a+b,0);
-  // total base + contingency only (typically escalation applies as delivered; but we include all for display)
-  const direct = calcBaseDirect(), indir=calcIndirect(direct), cont=calcContingency(direct+indir), esc=calcEscalation(direct+indir+cont);
-  const total = direct+indir+cont+esc;
-  const monthly = profile.map(w=> total * (w/sumW));
-  const cum = monthly.map((_,i)=> monthly.slice(0,i+1).reduce((a,b)=>a+b,0));
-
-  // axes
-  const axis = (x1,y1,x2,y2)=>svg.insertAdjacentHTML('beforeend',`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="axis"/>`);
-  axis(pad,H-pad,W-pad,H-pad); axis(pad,pad,pad,H-pad);
-  for(let i=0;i<4;i++){
-    const y=pad + i*(H-2*pad)/3; svg.insertAdjacentHTML('beforeend', `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" class="grid"/>`);
-    const v=(total*(1 - i/3)).toFixed(0);
-    svg.insertAdjacentHTML('beforeend', `<text x="8" y="${y+4}" class="reftext">${v} MNOK</text>`);
-  }
-  
-  // lines: monthly (bars) + cumulative (line)
-  const maxY = total*1.05;
-  const bw=(W-2*pad)/months * 0.6;
-  
-  // Create monthly bars with animations
-  monthly.forEach((val,i)=>{
-    const x = pad + (i+0.2)*(W-2*pad)/months;
-    const h = (val/maxY)*(H-2*pad);
-    const y = H-pad-h;
-    
-    const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    bar.setAttribute('class', 'bar chart-bar');
-    bar.setAttribute('x', x);
-    bar.setAttribute('y', y);
-    bar.setAttribute('width', bw);
-    bar.setAttribute('height', h);
-    bar.setAttribute('fill', '#74aeea');
-    bar.setAttribute('rx', 3);
-    bar.setAttribute('ry', 3);
-    bar.style.animationDelay = `${i * 0.05}s`;
-    
-    // Add hover effects for monthly bars
-    bar.addEventListener('mouseenter', (e) => {
-      tooltip.innerHTML = `
-        <div class="tooltip-title">Month ${i+1}</div>
-        <div class="tooltip-value">${Math.round(val)} MNOK</div>
-        <div class="tooltip-label">Monthly spend</div>
-      `;
-      tooltip.classList.add('show');
-      
-      const rect = svg.getBoundingClientRect();
-      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
-      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
-    });
-    
-    bar.addEventListener('mouseleave', () => {
-      tooltip.classList.remove('show');
-    });
-    
-    bar.addEventListener('mousemove', (e) => {
-      const rect = svg.getBoundingClientRect();
-      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
-      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
-    });
-    
-    svg.appendChild(bar);
-    
-    if((i+1)%3===0) svg.insertAdjacentHTML('beforeend', `<text x="${x+bw/2}" y="${H-pad+16}" text-anchor="middle" class="reftext">M${i+1}</text>`);
-  });
-  
-  // Create cumulative line with animation
-  let d=''; cum.forEach((val,i)=>{
-    const x = pad + (i+0.5)*(W-2*pad)/months;
-    const y = H-pad - (val/maxY)*(H-2*pad);
-    d+=(i?' L ':'M ')+x+','+y;
-  });
-  
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  line.setAttribute('d', d);
-  line.setAttribute('stroke', '#19c5be');
-  line.setAttribute('fill', 'none');
-  line.setAttribute('stroke-width', '2.5');
-  line.setAttribute('class', 'line-path');
-  line.style.strokeDasharray = '1000';
-  line.style.strokeDashoffset = '1000';
-  line.style.animation = 'lineDraw 1.5s ease-out forwards';
-  line.style.animationDelay = '0.5s';
-  
-  svg.appendChild(line);
-  
-  // Add data points on the cumulative line
-  cum.forEach((val,i)=>{
-    const x = pad + (i+0.5)*(W-2*pad)/months;
-    const y = H-pad - (val/maxY)*(H-2*pad);
-    
-    const point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    point.setAttribute('cx', x);
-    point.setAttribute('cy', y);
-    point.setAttribute('r', 3);
-    point.setAttribute('fill', '#19c5be');
-    point.setAttribute('class', 'data-point');
-    point.style.animationDelay = `${(i * 0.05) + 1}s`;
-    
-    // Add hover effects for data points
-    point.addEventListener('mouseenter', (e) => {
-      tooltip.innerHTML = `
-        <div class="tooltip-title">Month ${i+1}</div>
-        <div class="tooltip-value">${Math.round(val)} MNOK</div>
-        <div class="tooltip-label">Cumulative spend</div>
-      `;
-      tooltip.classList.add('show');
-      
-      const rect = svg.getBoundingClientRect();
-      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
-      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
-    });
-    
-    point.addEventListener('mouseleave', () => {
-      tooltip.classList.remove('show');
-    });
-    
-    point.addEventListener('mousemove', (e) => {
-      const rect = svg.getBoundingClientRect();
-      tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
-      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
-    });
-    
-    svg.appendChild(point);
-  });
+    if(progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  };
+  requestAnimationFrame(animate);
 }
 
-/* ---------------------- CAPEX Table ---------------------- */
-const tb = $('#tbl tbody');
-function renderTable(){
-  tb.innerHTML='';
-  const q = $('#search').value.trim().toLowerCase();
-  const fUnit = $('#fUnit').value;
-  const fSource = $('#fSource').value;
-  const fClass = $('#fClass').value;
-
-  const filtered = rows.filter(r=>{
-    const text = [r.item,r.notes,r.vendor,r.wbs,r.ref,r.unit,r.aaceClass,r.source].join(' ').toLowerCase();
-    const passQ = q? text.includes(q) : true;
-    const passU = fUnit==='ALL' ? true : r.unit===fUnit || (fUnit==='INDIR' && r.type==='I');
-    const passS = fSource==='ALL' ? true : r.source===fSource;
-    const passC = fClass==='ALL' ? true : r.aaceClass===fClass;
-    return passQ && passU && passS && passC;
-  });
-
-  filtered.forEach((r,i)=>{
-    const baseMNOK = (r.type==='I' && r.source==='PARAM') ? 0 : (r.unitPrice*r.qty)/1e6;
-    const srcClass = r.source==='QUOTE'?'src-quote': r.source==='BENCH'?'src-bm': r.source==='PARAM'?'src-param':'src-man';
-    const tr=document.createElement('tr');
-    tr.innerHTML = `
-      <td>${i+1}</td>
-      <td>${r.wbs}</td>
-      <td><span class="tag">${r.unit}</span></td>
-      <td>${escapeHtml(r.item)}</td>
-      <td>${r.qty}</td>
-      <td>${r.uom}</td>
-      <td>${r.type==='I' && r.source==='PARAM' ? (r.unitPrice*100).toFixed(1)+'%' : Math.round(r.unitPrice/1e6)}</td>
-      <td><strong>${Math.round(baseMNOK)}</strong></td>
-      <td>${r.type}</td>
-      <td><span class="badge ${srcClass}">${r.source}</span></td>
-      <td>${escapeHtml(r.ref)}</td>
-      <td>${escapeHtml(r.vendor||'—')}</td>
-      <td>${r.date}</td>
-      <td>${r.aaceClass}</td>
-      <td>${escapeHtml(r.notes||'')}</td>
-    `;
-    tr.addEventListener('click', ()=>{ selectedId = r.id; highlightSelection(tr); });
+/* ===== Build tables / seeds ===== */
+function buildWBS(){
+  const tb=document.querySelector('#wbsTable tbody'); tb.innerHTML='';
+  state.wbs.forEach((r,i)=>{ const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.id}</td>
+      <td contenteditable data-edit="pkg" data-i="${i}">${r.pkg}</td>
+      <td contenteditable data-edit="disc" data-i="${i}">${r.disc}</td>
+      <td contenteditable class="right" data-edit="qty" data-i="${i}">${r.qty}</td>
+      <td contenteditable data-edit="unit" data-i="${i}">${r.unit}</td>
+      <td contenteditable class="right" data-edit="rate" data-i="${i}">${fmtNum(r.rate,0)}</td>
+      <td class="mono right">${fmtCur(r.qty*r.rate)}</td>
+      <td><span class="tag">${r.source}</span></td>
+      <td contenteditable class="right" data-edit="unc" data-i="${i}">${r.unc}</td>
+      <td contenteditable data-edit="fx" data-i="${i}">${r.fx}</td>
+      <td contenteditable data-edit="index" data-i="${i}">${r.index}</td>`;
     tb.appendChild(tr);
   });
-
-  renderKPIs();
-  drawBars('#byUnit', byUnitData().sort((a,b)=>b.val-a.val).slice(0,8), 'Top Units (MNOK, direct)');
-  drawBars('#byCostType', byCostTypeData(), 'Direct vs Indirect (MNOK)');
-  drawSCurve();
+  attachEditors();
+}
+function attachEditors(){
+  document.querySelectorAll('[contenteditable][data-edit]').forEach(ed=>{
+    ed.addEventListener('input',()=>{
+      const i=+ed.dataset.i; const key=ed.dataset.edit; let val=ed.innerText.trim();
+      if(['qty','rate','unc'].includes(key)) val=Number(val.replace(/[^0-9.\-]/g,'')||0);
+      state.wbs[i][key]=val||state.wbs[i][key];
+      const r=state.wbs[i]; ed.parentElement.children[6].innerText=fmtCur((+r.qty||0)*(+r.rate||0));
+      renderAll();
+    });
+  });
+}
+function seedRateLib(){
+  const tb=document.querySelector('#rateTable tbody'); tb.innerHTML='';
+  const rows=[
+    ['Structural steel','Norway','22,000','NOK/t','2025','Benchmark'],
+    ['Concrete C35/45','Norway','1,800','NOK/m³','2025','Benchmark'],
+    ['Electrician','Norway','850','NOK/h','2025','Benchmark'],
+    ['Instrument tech','Norway','790','NOK/h','2025','Benchmark'],
+    ['OEM 10 MW skid','EU','32,000,000','EUR/ea','2025','Vendor'],
+    ['MV cable 132 kV','Norway','2,500','NOK/m','2025','Benchmark'],
+    ['SS piping DN200','EU','1,250','EUR/m','2025','Benchmark'],
+    ['Control valves','EU','2,900','EUR/ea','2025','Vendor'],
+    ['Plate heat exchanger','EU','120,000','EUR/ea','2025','Vendor']
+  ];
+  rows.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td class="right" contenteditable>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td>`; tb.appendChild(tr); });
+}
+function seedRFQ(){
+  const tb=document.querySelector('#rfqTable tbody'); tb.innerHTML='';
+  const rows=[
+    ['Electrolyser package','OEM A','NOK 3,400,000,000','NOK 3,200,000,000','42 wks','24 mo','-2 yr warranty vs spec'],
+    ['Grid & Substation','EPC B','NOK 1,000,000,000','NOK 950,000,000','36 wks','12 mo','incl. testing'],
+    ['Civils','Contractor C','NOK 320,000,000','NOK 300,000,000','28 wks','—','excl. winter measures'],
+    ['Compression','OEM D','NOK 150,000,000','NOK 145,000,000','30 wks','18 mo','—'],
+    ['Rectifier Trains','OEM E','NOK 420,000,000','NOK 400,000,000','34 wks','24 mo','Harmonic filters included'],
+    ['BESS (Grid Support)','OEM F','NOK 260,000,000','NOK 255,000,000','30 wks','36 mo','10 MW / 20 MWh'],
+    ['GIS Switchgear','OEM G','NOK 210,000,000','NOK 205,000,000','32 wks','24 mo','66 kV bays']
+  ];
+  rows.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td class="right">${r[2]}</td><td class="right">${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td class="subtle">${r[6]}</td>`; tb.appendChild(tr); });
+}
+function seedWBS(){
+  state.wbs = [
+    {id:'1.0', pkg:'Electrolyser skids (100 MW)', disc:'Process', qty:10, unit:'MW', rate:35_000_000, source:'Vendor', unc:12, fx:'NOK', index:'—'},
+    {id:'1.1', pkg:'Process BoP (manifolds, coolers)', disc:'Process', qty:1, unit:'lot', rate:420_000_000, source:'Benchmark', unc:15, fx:'NOK', index:'—'},
+    {id:'1.2', pkg:'Compression (H₂ export)', disc:'Mechanical', qty:3, unit:'ea', rate:45_000_000, source:'Vendor', unc:18, fx:'NOK', index:'KPI'},
+    {id:'1.3', pkg:'Rectifier Trains', disc:'Electrical', qty:3, unit:'ea', rate:140_000_000, source:'Vendor', unc:18, fx:'NOK', index:'KPI'},
+    {id:'2.0', pkg:'Civils & Foundations', disc:'Civil', qty:1, unit:'lot', rate:260_000_000, source:'Engineer', unc:20, fx:'NOK', index:'KPI'},
+    {id:'2.1', pkg:'Buildings (ELE room, MCC, admin)', disc:'Civil', qty:1, unit:'lot', rate:140_000_000, source:'Engineer', unc:18, fx:'NOK', index:'KPI'},
+    {id:'3.0', pkg:'Electrical & Grid (GIS, TX, cabling)', disc:'Electrical', qty:1, unit:'lot', rate:310_000_000, source:'Benchmark', unc:18, fx:'NOK', index:'KPI'},
+    {id:'3.1', pkg:'BESS (Grid support)', disc:'Electrical', qty:1, unit:'lot', rate:180_000_000, source:'Vendor', unc:22, fx:'NOK', index:'—'},
+    {id:'3.2', pkg:'Control & Instrumentation', disc:'I&C', qty:1, unit:'lot', rate:85_000_000, source:'Engineer', unc:20, fx:'NOK', index:'KPI'},
+    {id:'4.0', pkg:'Utilities & Water', disc:'Mechanical', qty:1, unit:'lot', rate:95_000_000, source:'Engineer', unc:15, fx:'NOK', index:'KPI'},
+    {id:'5.0', pkg:'Roads & Drainage', disc:'Civil', qty:1, unit:'lot', rate:55_000_000, source:'Engineer', unc:20, fx:'NOK', index:'KPI'},
+    {id:'6.0', pkg:'Jetty / Port handling (if export)', disc:'Marine', qty:1, unit:'lot', rate:90_000_000, source:'Benchmark', unc:25, fx:'NOK', index:'KPI'},
+    {id:'7.0', pkg:'H₂ Storage (30 t eq.)', disc:'Process', qty:1, unit:'lot', rate:110_000_000, source:'Vendor', unc:20, fx:'NOK', index:'KPI'}
+  ];
+  buildWBS();
 }
 
-function highlightSelection(tr){
-  $('#tbl tbody tr.selected')?.classList.remove('selected');
-  tr.classList.add('selected');
-}
-
-function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-/* ---------------------- Add / Edit / Delete ---------------------- */
-$('#btnAdd').addEventListener('click', ()=>{
-  const wbs = prompt('WBS (e.g., 1.1)'); if(!wbs) return;
-  const unit = prompt('Unit (e.g., ELX, COMP, INDIR)'); if(!unit) return;
-  const item = prompt('Item description'); if(!item) return;
-  const qty  = +prompt('Quantity', '1')||1;
-  const uom  = prompt('UoM','lot')||'lot';
-  const type = prompt('Type D/I','D')||'D';
-  const source=prompt('Source QUOTE/BENCH/PARAM/MANUAL','MANUAL')||'MANUAL';
-  const unitPrice = +prompt(source==='PARAM'&&type==='I' ? 'Enter fraction of direct (e.g., 0.08 for 8%)' : 'Unit price (NOK)','0')||0;
-  const ref = prompt('Reference (quote # / benchmark code / model id)','—')||'—';
-  const vendor = prompt('Vendor/Source','—')||'—';
-  const date = prompt('Date (YYYY-MM-DD)', new Date().toISOString().slice(0,10))||new Date().toISOString().slice(0,10);
-  const aaceClass = prompt('AACE Class (Class 1..5)','Class 4')||'Class 4';
-  const notes = prompt('Notes','')||'';
-  rows.push({id:uid(), wbs, unit, item, qty, uom, unitPrice, type, source, ref, vendor, date, aaceClass, notes});
-  addAudit(`Added ${item} (${unit})`);
-  ensureUnitFilterOptions();
-  renderTable();
-});
-
-$('#btnEdit').addEventListener('click', ()=>{
-  if(!selectedId){ alert('Select a row first.'); return; }
-  const it = rows.find(r=>r.id===selectedId);
-  const item = prompt('Edit item', it.item); if(item===null) return; it.item=item;
-  const unitPrice = +prompt('Edit unit price (NOK or fraction if PARAM+I)', it.unitPrice); if(!isNaN(unitPrice)) it.unitPrice=unitPrice;
-  const notes = prompt('Notes', it.notes||''); if(notes!==null) it.notes=notes;
-  addAudit(`Edited ${it.item} (${it.unit})`);
-  renderTable();
-});
-
-$('#btnDelete').addEventListener('click', ()=>{
-  if(!selectedId){ alert('Select a row first.'); return; }
-  const it = rows.find(r=>r.id===selectedId);
-  if(confirm(`Delete ${it.item}?`)){
-    rows = rows.filter(r=>r.id!==selectedId);
-    addAudit(`Deleted ${it.item} (${it.unit})`);
-    selectedId = null; renderTable();
+/* ===== Financial Risk Heatmap ===== */
+const HM_ROWS=['Rare','Unlikely','Possible','Likely','Almost'];
+const HM_COLS=['Very Low','Low','Med','High','Very High'];
+const FIN_RISKS=[
+  {label:'Instruments',r:0,c:1,t:'g'},{label:'DCS · N₂ · Cooling · FW',r:1,c:1,t:'g'},
+  {label:'HV',r:1,c:2,t:'m'},{label:'Switchgear · DI · E-house',r:2,c:2,t:'m'},
+  {label:'Transformers · BESS',r:2,c:3,t:'a'},{label:'GIS · Compressors',r:3,c:3,t:'a'},
+  {label:'Rectifier · Tanks',r:3,c:4,t:'r'},{label:'Electrolyzer',r:4,c:4,t:'r'},
+  {label:'EUR/NOK FX',r:3,c:3,t:'a'},{label:'Steel index',r:2,c:3,t:'a'},
+  {label:'Labour availability',r:2,c:2,t:'m'},{label:'Permitting',r:1,c:3,t:'a'}
+];
+function renderFinancialHeatmap(){
+  const grid=el('hmGrid');
+  for(let r=0;r<HM_ROWS.length;r++){
+    const lbl=document.createElement('div'); lbl.className='hm-row'; lbl.textContent=HM_ROWS[r]; grid.appendChild(lbl);
+    for(let c=0;c<HM_COLS.length;c++){ const cell=document.createElement('div'); cell.className='hm-cell'; cell.dataset.pos=`${r}-${c}`; grid.appendChild(cell); }
   }
-});
-
-/* ---------------------- Search & Filters ---------------------- */
-$('#btnFind').addEventListener('click', renderTable);
-$('#search').addEventListener('keydown', e=>{ if(e.key==='Enter') renderTable(); });
-$('#btnClearFilters').addEventListener('click', ()=>{
-  $('#search').value=''; $('#fUnit').value='ALL'; $('#fSource').value='ALL'; $('#fClass').value='ALL'; renderTable();
-});
-
-function ensureUnitFilterOptions(){
-  const sel=$('#fUnit'); const cur=sel.value;
-  sel.innerHTML='<option value="ALL">All</option>';
-  const units = Array.from(new Set(rows.map(r=>r.type==='I'?'INDIR':r.unit)));
-  units.forEach(u=>{ const op=document.createElement('option'); op.value=u; op.textContent=u; sel.appendChild(op); });
-  sel.value = units.includes(cur)? cur:'ALL';
+  FIN_RISKS.forEach(it=>{ const cell=grid.querySelector(`.hm-cell[data-pos="${it.r}-${it.c}"]`); if(!cell) return;
+    const pill=document.createElement('span'); pill.className=`hm-pill hm-${it.t}`; pill.textContent=it.label; cell.appendChild(pill);
+  });
 }
 
-/* ---------------------- Assumptions & Events ---------------------- */
-$('#btnApply').addEventListener('click', ()=>{ renderKPIs(); drawSCurve(); });
-$('#btnReset').addEventListener('click', ()=>{
-  $('#baseYear').value='2025'; $('#escIdx').value='3.0'; $('#fxUSD').value='0.095'; $('#fxEUR').value='0.088';
-  $('#cur').value='NOK'; $('#contMode').value='Auto by AACE'; $('#contPct').value='10'; $('#contPct').disabled=true; renderTable();
-});
-$('#contMode').addEventListener('change', ()=>{
-  const manual = $('#contMode').value==='Manual %';
-  $('#contPct').disabled = !manual;
-  $('#contLbl').textContent = manual ? 'Manual %' : 'Manual %';
-  renderKPIs(); drawSCurve();
-});
-$('#cur').addEventListener('change', ()=>{ renderKPIs(); });
+/* ===== Executive calculations & render ===== */
+function renderDrivers(){
+  const body=document.querySelector('#drivers tbody'); body.innerHTML='';
+  const items=state.wbs.map(r=>({name:r.pkg,val:r.qty*r.rate,note:r.disc}));
+  const sum=items.reduce((a,b)=>a+b.val,0);
+  items.sort((a,b)=>b.val-a.val).slice(0,10).forEach(it=>{
+    const tr=document.createElement('tr'); tr.innerHTML=`<td>${it.name}</td><td class="right">${(100*it.val/sum).toFixed(1)}%</td><td class="right subtle">±</td><td class='subtle'>${it.note}</td>`; body.appendChild(tr);
+  });
+}
+function renderCashTable(periods,total){
+  const tb=document.querySelector('#cashTable tbody'); tb.innerHTML=''; let cum=0; let i=0;
+  periods.forEach(p=>{ cum+=p.spend; i++; const tr=document.createElement('tr');
+    tr.innerHTML=`<td>P${i}</td><td class="mono right">${fmtNum(toDisp(p.spend).val/1e6)}</td><td class="right">${fmtNum(cum/total*100,1)}%</td><td class="mono right">${fmtNum(toDisp(p.debtSpend).val/1e6)}</td><td class="mono right">${fmtNum(toDisp(p.eqSpend).val/1e6)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+function renderSensitivity(){
+  const base=computeDirect()+computeIndirects(computeDirect()).total+contingencyAACE(computeDirect()+computeIndirects(computeDirect()).total);
+  const items=[{name:'EUR/NOK',lo:base*0.97,mid:base,hi:base*1.03},{name:'Electrolyser CAPEX',lo:base*0.94,mid:base,hi:base*1.06},{name:'Steel',lo:base*0.95,mid:base,hi:base*1.05}];
+  const ids=['fx','oem','steel']; items.forEach((it,idx)=>{ el(`s_${ids[idx]}_lo`).innerText=fmtNum(toDisp(it.lo).val/1e6); el(`s_${ids[idx]}_mid`).innerText=fmtNum(toDisp(it.mid).val/1e6); el(`s_${ids[idx]}_hi`).innerText=fmtNum(toDisp(it.hi).val/1e6); el(`s_${ids[idx]}_delta`).innerText=fmtNum(toDisp(it.hi-it.mid).val/1e6); });
+  const ctx=ctxWH('sensBars'); if(!ctx) return; 
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  const w=ctx.canvas.width,h=ctx.canvas.height; const x0=50,y0=18,x1=w-18,y1=h-26; 
+  drawAxes(ctx,x0,y0,x1,y1);
+  const bw=(x1-x0)/items.length*0.18; const colors=['#74aeea','#19c5be','#f6c947'];
+  const max=items.reduce((m,z)=>Math.max(m,z.hi),0)*1.05;
+  
+  // Animate sensitivity bars
+  const duration = 1200;
+  const startTime = performance.now();
+  const animate = (currentTime) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    drawAxes(ctx,x0,y0,x1,y1);
+    
+    items.forEach((it,i)=>{
+      const x=x0+i*((x1-x0)/items.length)+10;
+      const delay = i * 0.15;
+      const itemProgress = Math.max(0, Math.min(1, (progress - delay) / (1 - delay)));
+      const easeProgress = 1 - Math.pow(1 - itemProgress, 2);
+      const vals=[it.lo,it.mid,it.hi];
+      
+      vals.forEach((v,j)=>{
+        const fullHgt = (v/max)*(y1-y0);
+        const animatedHgt = fullHgt * easeProgress;
+        const y=y1-animatedHgt;
+        ctx.fillStyle=colors[j];
+        ctx.fillRect(x+j*(bw+4),y,bw,animatedHgt);
+      });
+      
+      ctx.fillStyle='#e9eef2';
+      ctx.font='10px system-ui';
+      ctx.fillText(items[i].name,x,y1+10);
+    });
+    
+    if(progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  };
+  requestAnimationFrame(animate);
+}
+function drawRiskCurve(){
+  const rows=[...document.querySelectorAll('#riskTable tbody tr')]; const data=rows.map(tr=>(+tr.children[1].innerText||0)/100*(+tr.children[2].innerText||0));
+  const ctx=ctxWH('riskCurve'); if(!ctx) return; 
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  const w=ctx.canvas.width,h=ctx.canvas.height; const x0=40,y0=18,x1=w-18,y1=h-26; 
+  drawAxes(ctx,x0,y0,x1,y1);
+  const max=Math.max(...data,1)*1.2; const bw=(x1-x0)/data.length*0.6;
+  
+  // Animate risk bars
+  const duration = 1000;
+  const startTime = performance.now();
+  const animate = (currentTime) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    drawAxes(ctx,x0,y0,x1,y1);
+    
+    data.forEach((v,i)=>{
+      const x=x0+i*((x1-x0)/data.length)+10;
+      const fullHgt = (v/max)*(y1-y0);
+      const delay = i * 0.1;
+      const itemProgress = Math.max(0, Math.min(1, (progress - delay) / (1 - delay)));
+      const easeProgress = 1 - Math.pow(1 - itemProgress, 2);
+      const animatedHgt = fullHgt * easeProgress;
+      const y=y1-animatedHgt;
+      
+      ctx.fillStyle='#ef8c7a';
+      ctx.fillRect(x,y,bw,animatedHgt);
+      ctx.fillStyle='#e9eef2';
+      ctx.font='10px system-ui';
+      ctx.fillText(`R${i+1}`,x,y1+10);
+    });
+    
+    if(progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  };
+  requestAnimationFrame(animate);
+}
+function updateFlags(){ const noSource=state.wbs.filter(r=>!r.source||r.source==='—').length; el('flagSources').innerText=`No-source lines: ${noSource}`; el('flagRates').innerText=`Rate gaps: 0`; }
 
-/* ---------------------- Exports & Print ---------------------- */
-$('#btnCSV').addEventListener('click', ()=>{
-  const headers = ['ID','WBS','Unit','Item','Qty','UoM','UnitPrice(NOK or frac)','Type','Source','Ref','Vendor','Date','AACE Class','Notes'];
-  const lines = [headers.join(',')].concat(rows.map(r=>[
-    r.id,r.wbs,escCSV(r.unit),escCSV(r.item),r.qty,r.uom,r.unitPrice,r.type,r.source,escCSV(r.ref),escCSV(r.vendor||''),r.date,r.aaceClass,escCSV(r.notes||'')
-  ].join(',')));
-  download(lines.join('\n'),'seidr_capex.csv','text/csv');
-});
-$('#btnJSON').addEventListener('click', ()=>{ download(JSON.stringify(rows,null,2),'seidr_capex.json','application/json'); });
-$('#btnPrint').addEventListener('click', ()=>{ window.print(); });
-function escCSV(s){ return `"${(s||'').replace(/"/g,'""')}"`; }
-function download(data,name,type){ const blob=new Blob([data],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url); }
-
-/* ---------------------- Audit Trail ---------------------- */
-const auditBody = $('#auditTbl tbody');
-function addAudit(msg){
-  const tr=document.createElement('tr');
-  const when = new Date().toISOString().replace('T',' ').slice(0,16);
-  tr.innerHTML = `<td>${uid()}</td><td>${escapeHtml(msg)}</td><td>user@seidr</td><td>${when}</td>`;
-  auditBody.appendChild(tr);
+/* ===== Orchestrate render ===== */
+function renderAll(){
+  const direct=computeDirect(); const ind=computeIndirects(direct);
+  const base=direct+ind.total; const contSel=Math.max(contingencyAACE(base), contingencyRisk()); const total=base+contSel;
+  const {idc,periods}=computeIDC(total); const grand=total+idc; const L=computeLCOH(grand);
+  el('wbsSubtotal').innerText=fmtCur(direct);
+  el('k_direct').innerText=fmtCur(direct);
+  el('k_indir').innerText=fmtCur(ind.total);
+  el('k_cont').innerText=fmtCur(contSel);
+  el('k_totIncl').innerText=fmtCur(total);
+  el('k_idc').innerText=fmtCur(idc);
+  el('k_idc2').innerText=fmtCur(idc);
+  el('k_total').innerText=fmtCur(grand);
+  el('k_reserve').innerText=fmtCur(contSel);
+  el('k_lcoh').innerText=`${fmtNum(L.lcoh,2)} NOK/kg`;
+  el('l_cap').innerText=fmtNum(L.cap,2);
+  el('l_el').innerText=fmtNum(L.el,2);
+  el('l_ox').innerText=fmtNum(L.ox,2);
+  el('l_tot').innerText=fmtNum(L.lcoh,2);
+  el('contAACE').innerText=fmtCur(contingencyAACE(base));
+  el('contRisk').innerText=fmtCur(contingencyRisk());
+  el('contSelected').innerText=fmtCur(contSel);
+  renderCashTable(periods,total);
+  renderDrivers();
+  drawPie(direct,ind.total,contSel,idc);
+  drawWaterfall(direct,ind.total,contSel,idc);
+  drawPKurve(); drawSCurve(); drawTornado(); drawAudit(); drawRiskCurve(); renderSensitivity();
+  barsHighlight('bench_kw',[9000,10500,8600,9300,8800],['Proj-A','Proj-B','This Project','Proj-D','Proj-E'],2);
+  barsHighlight('bench_tpy',[32000,28000,35000,30000,29500],['Proj-A','Proj-B','This Project','Proj-D','Proj-E'],2);
+  const ctx3=ctxWH('bench_misc'); if(ctx3){ const labels=['BoP','Elec','Civ','Util','Other']; const series=[28,22,18,12,20]; const w=ctx3.canvas.width,h=ctx3.canvas.height; const x0=40,y0=18,x1=w-18,y1=h-26; drawAxes(ctx3,x0,y0,x1,y1); const bw=(x1-x0)/series.length*0.6; const max=Math.max(...series)*1.2; series.forEach((v,i)=>{ const x=x0+i*((x1-x0)/series.length)+10; const y=y1-(v/max)*(y1-y0); ctx3.fillStyle='#f6c947'; ctx3.fillRect(x,y,bw,y1-y); ctx3.fillStyle='#e9eef2'; ctx3.font='10px system-ui'; ctx3.fillText(labels[i],x,y1+10); }); }
+  updateFlags();
 }
 
-/* ---------------------- Boot ---------------------- */
-function boot(){
-  // populate unit filter
-  ensureUnitFilterOptions();
-  // fill items table
-  renderTable();
-  // seed audit
-  addAudit('Initial dataset loaded (mock)');
-}
-boot();
+/* ===== Init ===== */
+window.addEventListener('DOMContentLoaded',()=>{
+  seedWBS(); seedRateLib(); seedRFQ(); renderFinancialHeatmap(); renderAll();
+  document.querySelectorAll('.tabs button').forEach(btn=>{
+    btn.addEventListener('click',()=>{document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));document.getElementById('tab-'+btn.dataset.tab).classList.add('active'); setTimeout(renderAll,50);});
+  });
+  document.querySelectorAll('#pToggle button').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('#pToggle button').forEach(x=>x.classList.remove('active'));b.classList.add('active'); state.p=+b.dataset.p; renderAll();});});
+  el('scenarioSel').addEventListener('change',e=>{state.scenario=e.target.value; renderAll();});
+  ['fxRate','escal','contg','wacc'].forEach(id=>{ const n=el(id); n&&n.addEventListener('input',renderAll);});
+  ['h2out','eff','elprice','opex','crf'].forEach(id=>{ const n=el(id); if(!n) return; n.addEventListener('input',renderAll); n.addEventListener('keyup',renderAll);});
+  el('btnLender').addEventListener('click',()=>alert('Lender Snapshot prepared (mock).'));
+  el('btnExport').addEventListener('click',()=>alert('Board Pack PDF generated (mock).'));
+  el('btnCSV').addEventListener('click',()=>alert('CSV exported (mock).'));
+});
 </script>
 </body>
 </html>

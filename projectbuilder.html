@@ -3,7 +3,25 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>SEIDR — Project Builder: Layout & Process Units</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N92K4XNCV2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-N92K4XNCV2');
+</script>
+<script>
+  setInterval(() => {
+    if (window.gtag) {
+      gtag('event', 'heartbeat', { non_interaction: true });
+    }
+  }, 15000); // sends every 15 seconds
+</script>
+<title>SEIDR — Project Builder: Layout & Process (with Auto‑Generator)</title>
+<link rel="stylesheet" href="css/styles.css?v=5">
+<link rel="stylesheet" href="css/interactive-styles.css?v=5">
+<script src="js/navigation.js?v=5"></script>
 <style>
   :root{
     --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
@@ -15,8 +33,11 @@
   html,body{height:100%}
   body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
        font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
-  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);
-          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 20px;background:rgba(15,26,34,.9);
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px);position:sticky;top:0;z-index:20}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{font-weight:900;letter-spacing:.24em;text-transform:uppercase}
+  .topbar a.logo{color:inherit;text-decoration:none}
   .crumb{color:var(--muted);font-size:13px}
   .wrap{display:grid;grid-template-columns:360px 1fr;gap:18px;max-width:1720px;margin:0 auto;padding:18px}
   .left{display:flex;flex-direction:column;gap:14px}
@@ -24,6 +45,7 @@
   h1{margin:.2rem 0 .8rem;font-size:28px}
   h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
   .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+  .btn[disabled]{opacity:.6;cursor:not-allowed}
   .stack{display:flex;gap:8px;flex-wrap:wrap}
   .toggle{display:flex;align-items:center;gap:8px;margin:4px 0}
   .toggle input{accent-color:var(--teal)}
@@ -35,7 +57,7 @@
   .sw{width:14px;height:14px;border-radius:4px;border:1px solid var(--line)}
   /* right side */
   .right{display:grid;grid-template-rows:auto auto 1fr;gap:14px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative}
   .panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
   .panel-body{padding:10px 12px}
   /* site layout svg */
@@ -63,23 +85,39 @@
   th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left}
   th{color:var(--muted);font-weight:600}
   tr:hover{background:rgba(25,197,190,.06)}
-  @media (max-width:1200px){
-    .wrap{grid-template-columns:1fr}
-  }
+  @media (max-width:1200px){.wrap{grid-template-columns:1fr}}
+  /* --- Auto‑Generator UI --- */
+  #genOverlay{position:absolute;inset:0;background:rgba(10,16,22,.85);display:none;align-items:center;justify-content:center;z-index:5;}
+  .gen-box{width:min(560px,92%);background:rgba(19,32,42,.94);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .gen-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .steps{display:grid;gap:6px;margin:10px 0 12px}
+  .step{display:flex;align-items:center;gap:10px;color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:50%;background:#30424f;}
+  .step.active .dot{background:var(--teal)}
+  .step.done{color:#a9d8d6}
+  .step.done .dot{background:var(--green)}
+  .bar{height:8px;background:#0e1820;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--teal),#62d5cf);transition:width .35s ease}
+  .hint{font-size:12px;color:var(--muted)}
+  /* pre‑generation state */
+  #site.pregen *{pointer-events:none}
+  #site.pregen .unit,
+  #site.pregen #gPipe,
+  #site.pregen #gGrid,
+  #site.pregen #gRoad,
+  #site.pregen #gSafety,
+  #site.pregen text{opacity:0}
+  /* keep grid + parcel visible */
 </style>
-<link rel="stylesheet" href="css/interactive-styles.css?v=3">
-<link rel="stylesheet" href="css/styles.css?v=5">
-<script src="js/navigation.js?v=5"></script>
-<script src="js/main.js" defer></script>
 </head>
 <body>
   <div class="topbar">
-    <div><a href="seidr_homepage_landing.html" style="color:inherit;text-decoration:none;cursor:pointer"><span class="logo">SEIDR</span></a> <span class="crumb">/ Project Builder / Herøya North — Layout & Process</span></div>
-    <nav id="main-nav">
-    </nav>
-    <div class="stack"><a class="btn" href="./">Back to Map</a><button class="btn">Export</button></div>
+    <div class="brand">
+      <a class="logo" href="seidr_homepage_landing.html">SEIDR</a>
+    </div>
+    <nav id="main-nav"></nav>
+    <div class="stack"><a class="btn" href="./">Back to Map</a><button class="btn" onclick="exportPNG()">Export</button></div>
   </div>
-
   <div class="wrap">
     <!-- LEFT -->
     <div class="left">
@@ -94,7 +132,6 @@
           <div class="lg"><span class="sw" style="background:rgba(239,140,122,.25);border:1px solid rgba(239,140,122,.5)"></span><span>Safety/Exclusion</span></div>
         </div>
       </div>
-
       <div class="card">
         <h2>Layers</h2>
         <div class="toggle"><input id="lyGrid" type="checkbox" checked/> Grid & Substation</div>
@@ -103,7 +140,6 @@
         <div class="toggle"><input id="lySafety" type="checkbox" checked/> Safety Zones</div>
         <div class="toggle"><input id="lyBldg" type="checkbox" checked/> Buildings</div>
       </div>
-
       <div class="card">
         <h2>Unit Library</h2>
         <div class="grid2">
@@ -122,22 +158,33 @@
         </div>
         <div class="muted" style="margin-top:8px">Click a button to highlight the unit on the layout & PFD.</div>
       </div>
-
       <div class="card">
         <h2>Selected Unit</h2>
         <div id="ins" class="muted">Hover or click units in the layout or blocks in the PFD to see details.</div>
       </div>
     </div>
-
     <!-- RIGHT -->
     <div class="right">
       <!-- SITE LAYOUT -->
       <div class="panel layout">
         <div class="panel-head">
           <div><strong>Site Layout Plan</strong> <span class="crumb">— not to scale (grid 50 m)</span></div>
-          <div class="stack"><button class="btn" onclick="fit()">Fit to View</button><button class="btn">Download PNG</button></div>
+          <div class="stack">
+            <button id="genBtn" class="btn" onclick="autoGenerate()">Auto‑generate layout</button>
+            <button class="btn" onclick="fit()">Fit to View</button>
+            <button class="btn" onclick="downloadPNG()">Download PNG</button>
+          </div>
         </div>
-        <svg id="site" viewBox="0 0 1200 700" aria-label="Site Layout">
+        <!-- GENERATION OVERLAY -->
+        <div id="genOverlay">
+          <div class="gen-box">
+            <div class="gen-head"><strong>Generating mock layout…</strong><span class="pill" id="genEta">⏳</span></div>
+            <div class="steps" id="steps"></div>
+            <div class="bar"><div class="fill" id="fill"></div></div>
+            <div class="hint" id="genHint" style="margin-top:8px">This is a staged mock‑up for demo purposes.</div>
+          </div>
+        </div>
+        <svg id="site" viewBox="0 0 1200 700" aria-label="Site Layout" class="pregen">
           <!-- background + grid -->
           <defs>
             <pattern id="pgrid" width="50" height="50" patternUnits="userSpaceOnUse">
@@ -147,19 +194,16 @@
           <rect x="0" y="0" width="1200" height="700" fill="url(#pgrid)"/>
           <!-- parcel boundary -->
           <path d="M80,120 L1120,160 L1080,600 L320,640 L120,520 Z" fill="rgba(25,197,190,.05)" stroke="#2c4556" stroke-width="2" class="fence"/>
-
           <!-- Roads -->
           <g id="gRoad">
             <path d="M60,560 L1140,520" class="road" stroke-linecap="round"/>
             <path d="M280,640 L300,520" class="road" stroke-linecap="round"/>
           </g>
-
           <!-- Safety Zones (example around storage & loading) -->
           <g id="gSafety">
             <ellipse cx="970" cy="470" rx="120" ry="70" class="haz"></ellipse>
             <ellipse cx="1040" cy="350" rx="70" ry="45" class="haz"></ellipse>
           </g>
-
           <!-- Grid & Substation -->
           <g id="gGrid">
             <rect x="120" y="160" width="180" height="110" rx="10" fill="#14333a" stroke="#2e5b5b" class="unit" data-key="SUB"/>
@@ -169,7 +213,6 @@
             <rect x="480" y="220" width="160" height="80" rx="10" fill="#14333a" stroke="#2e5b5b" class="unit" data-key="RECT"/>
             <text x="560" y="265" text-anchor="middle" fill="#a7b2bb" font-size="12">Rectifiers / Transformers</text>
           </g>
-
           <!-- Electrolyzer Hall -->
           <g id="gELX">
             <rect x="460" y="320" width="260" height="150" rx="12" fill="#2a2312" stroke="#5b4e2a" class="unit" data-key="ELX"/>
@@ -181,60 +224,47 @@
             <line x1="640" y1="340" x2="640" y2="450" stroke="#453c22" stroke-width="1.5"/>
             <line x1="685" y1="340" x2="685" y2="450" stroke="#453c22" stroke-width="1.5"/>
           </g>
-
           <!-- Utilities / Water Treatment -->
           <g id="gUTIL">
             <rect x="370" y="500" width="180" height="90" rx="10" fill="#1c2a36" stroke="#3c5668" class="unit" data-key="WTR"/>
             <text x="460" y="550" text-anchor="middle" fill="#cfd6db" font-size="12">Water Treatment (DI)</text>
-
             <rect x="300" y="300" width="120" height="70" rx="10" fill="#1c2a36" stroke="#3c5668" class="unit" data-key="COOL"/>
             <text x="360" y="345" text-anchor="middle" fill="#cfd6db" font-size="12">Cooling Towers</text>
-
             <rect x="720" y="230" width="120" height="60" rx="10" fill="#1c2a36" stroke="#3c5668" class="unit" data-key="BOP"/>
             <text x="780" y="265" text-anchor="middle" fill="#cfd6db" font-size="12">Utilities / BoP</text>
           </g>
-
           <!-- H2 Compression, Purification, Storage, Loading -->
           <g id="gH2">
             <rect x="760" y="360" width="140" height="70" rx="10" fill="#14311f" stroke="#2c6b46" class="unit" data-key="COMP"/>
             <text x="830" y="400" text-anchor="middle" fill="#e9eef2" font-size="12">H₂ Compressors</text>
-
             <rect x="760" y="450" width="140" height="65" rx="10" fill="#14311f" stroke="#2c6b46" class="unit" data-key="DRY"/>
             <text x="830" y="490" text-anchor="middle" fill="#cfe9da" font-size="12">Dryer / Deoxo</text>
-
             <rect x="920" y="420" width="180" height="120" rx="12" fill="#14311f" stroke="#2c6b46" class="unit" data-key="STORE"/>
             <text x="1010" y="480" text-anchor="middle" fill="#cfe9da" font-size="12">Storage (350 bar)</text>
-
             <rect x="980" y="320" width="120" height="60" rx="10" fill="#14311f" stroke="#2c6b46" class="unit" data-key="LOADING"/>
             <text x="1040" y="355" text-anchor="middle" fill="#cfe9da" font-size="12">Trailer Loading</text>
           </g>
-
           <!-- O2 Handling -->
           <g id="gO2">
             <rect x="720" y="500" width="120" height="70" rx="10" fill="#1c2a36" stroke="#3c5668" class="unit" data-key="O2"/>
             <text x="780" y="540" text-anchor="middle" fill="#cfd6db" font-size="12">O₂ Handling</text>
           </g>
-
           <!-- Pipework -->
           <g id="gPipe">
             <!-- Power to ELX -->
             <path d="M640,260 L590,320" class="elec" fill="none"/>
             <path d="M560,300 L540,320" class="elec" fill="none"/>
-
             <!-- Water to ELX -->
             <path d="M460,500 L520,470 L520,450" class="pipe" fill="none"/>
-
             <!-- H2 process -->
             <path d="M720,395 L760,395" class="pipe" fill="none"/>
             <path d="M830,430 L830,450" class="pipe" fill="none"/>
             <path d="M900,470 L920,470" class="pipe" fill="none"/>
             <path d="M1010,420 L1010,380 L980,380" class="pipe" fill="none"/>
-
             <!-- O2 from ELX -->
             <path d="M645,470 L720,535" class="pipe-o2" fill="none"/>
           </g>
         </svg>
-
         <!-- inspector overlay -->
         <div class="over" id="siteInfo">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px">
@@ -247,7 +277,6 @@
           <div class="kv"><span>Power</span><span id="uP">—</span></div>
         </div>
       </div>
-
       <!-- PROCESS FLOW DIAGRAM -->
       <div class="panel pfd">
         <div class="panel-head">
@@ -260,13 +289,11 @@
               <path d="M0,0 L8,3 L0,6 z" fill="#6e7f8a"/>
             </marker>
           </defs>
-
           <!-- sections -->
           <text x="100" y="24" class="blk-t" fill="#a7b2bb">Power</text>
           <text x="360" y="24" class="blk-t" fill="#a7b2bb">Electrolysis</text>
           <text x="700" y="24" class="blk-t" fill="#a7b2bb">Gas Handling</text>
           <text x="980" y="24" class="blk-t" fill="#a7b2bb">Export</text>
-
           <!-- blocks -->
           <g class="pblk unit" data-key="SUB">
             <rect x="40" y="60" width="140" height="60" rx="8" class="blk"/>
@@ -308,7 +335,6 @@
             <rect x="200" y="190" width="160" height="60" rx="8" class="blk"/>
             <text x="280" y="225" text-anchor="middle" class="blk-t">Cooling Towers</text>
           </g>
-
           <!-- arrows -->
           <path d="M180,90 L200,90" class="arr" fill="none"/>
           <path d="M360,90 L380,90" class="arr" fill="none"/>
@@ -316,14 +342,11 @@
           <path d="M760,90 L780,90" class="arr" fill="none"/>
           <path d="M920,90 L940,90" class="arr" fill="none"/>
           <path d="M1020,120 L1020,140" class="arr" fill="none"/>
-
           <!-- water and oxygen lines -->
           <path d="M460,190 L460,160" class="arr" fill="none"/>
           <path d="M580,120 L620,220" class="arr" fill="none" stroke-dasharray="4 3"/>
-
         </svg>
       </div>
-
       <!-- COMPONENT TABLE -->
       <div class="panel">
         <div class="panel-head">
@@ -342,10 +365,8 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
-
 <script>
 /* --- simple data model for units --- */
 const UNITS = [
@@ -362,7 +383,6 @@ const UNITS = [
   {key:'BOP',   name:'Utilities / BoP',        duty:'Air, N₂, instrument air',  size:'tbd',              power:'0.3 MW',      color:'#1c2a36'},
   {key:'CTRL',  name:'Control / OPS',          duty:'Control room, MCC, admin', size:'1,200 m²',         power:'—',           color:'#1c2a36'},
 ];
-
 const tblBody = document.querySelector('#tbl tbody');
 UNITS.forEach(u=>{
   const tr=document.createElement('tr');
@@ -372,25 +392,21 @@ UNITS.forEach(u=>{
   tr.addEventListener('click',()=>selectUnit(u.key));
   tblBody.appendChild(tr);
 });
-
 /* --- selection & inspector --- */
 let selected = null;
 function $(s){return document.querySelector(s)}
 function $all(s){return Array.from(document.querySelectorAll(s))}
-
 function unitNodes(key){
   const site = $all(`#site .unit[data-key="${key}"]`);
   const pfd  = $all(`#pfd .unit[data-key="${key}"]`);
   return site.concat(pfd);
 }
-
 function highlight(key,on=true){
   unitNodes(key).forEach(n=>{
     n.classList.toggle('sel',on);
     if(n.classList.contains('pblk')) n.style.transform = on ? 'translateY(-2px)' : 'translateY(0)';
   });
 }
-
 function selectUnit(key){
   if(selected && selected!==key) highlight(selected,false);
   selected = key;
@@ -402,50 +418,149 @@ function selectUnit(key){
   $('#uDuty').textContent = u.duty;
   $('#uSize').textContent = u.size;
   $('#uP').textContent    = u.power || '—';
-  // left side “Selected Unit” card
+  // left side "Selected Unit" card
   $('#ins').innerHTML = `<strong>${u.name}</strong> <span class="pill">${u.key}</span><br/>
     <span class="muted">${u.duty}</span><br/>
     <small class="muted">Size: ${u.size} • Power: ${u.power||'—'}</small>`;
 }
-
 function resetSel(){
   if(selected){ highlight(selected,false); selected=null; }
   $('#uName').textContent = '—'; $('#uTag').textContent='—';
   $('#uDuty').textContent='—'; $('#uSize').textContent='—'; $('#uP').textContent='—';
   $('#ins').textContent = 'Hover or click units in the layout or blocks in the PFD to see details.';
 }
-
 function flash(key){
   selectUnit(key);
   unitNodes(key).forEach(n=>{
     n.animate([{filter:'brightness(2)'},{filter:'brightness(1)'}],{duration:500,iterations:1});
   });
 }
-
 function fit(){
   // Simple visual nudge
   $('#site').animate([{transform:'scale(1.02)'},{transform:'scale(1)'}],{duration:250});
 }
-
+function exportPNG(){ alert('Wire this to your exporter.'); }
+function downloadPNG(){ alert('PNG export placeholder.'); }
 /* hover bindings for site & pfd units */
-$all('#site .unit, #pfd .unit').forEach(n=>{
-  const key=n.getAttribute('data-key');
-  n.addEventListener('mouseenter',()=>highlight(key,true));
-  n.addEventListener('mouseleave',()=>{ if(selected!==key) highlight(key,false); });
-  n.addEventListener('click',()=>selectUnit(key));
-});
-
+function bindHovers(){
+  $all('#site .unit, #pfd .unit').forEach(n=>{
+    const key=n.getAttribute('data-key');
+    n.addEventListener('mouseenter',()=>highlight(key,true));
+    n.addEventListener('mouseleave',()=>{ if(selected!==key) highlight(key,false); });
+    n.addEventListener('click',()=>selectUnit(key));
+  });
+}
 /* layer toggles */
 $('#lyGrid').addEventListener('change',e=> $('#gGrid').style.display = e.target.checked?'':'none');
 $('#lyRoad').addEventListener('change',e=> $('#gRoad').style.display = e.target.checked?'':'none');
 $('#lyPipe').addEventListener('change',e=> $('#gPipe').style.display = e.target.checked?'':'none');
 $('#lySafety').addEventListener('change',e=> $('#gSafety').style.display = e.target.checked?'':'none');
 $('#lyBldg').addEventListener('change',e=>{
-  // buildings are all “unit” rects except grid and safety; just dim them
+  // buildings are all "unit" rects except grid and safety; just dim them
   const on = e.target.checked;
   $all('#site .unit').forEach(u=>u.style.opacity = on ? 1 : .25);
 });
+/* -------- Mock Auto‑Generator -------- */
+let generated = false;
+const STEPS = [
+  'Scanning parcel & constraints',
+  'Sizing process blocks (100 MW PEM)',
+  'Routing power & utilities',
+  'Placing H₂ compression & storage',
+  'Computing safety standoffs',
+  'Finalizing pipe runs',
+  'Rendering labels & legends'
+];
+function setPreGenState(){
+  // hide interactive layout bits until generated
+  $('#site').classList.add('pregen');
+  // Also hint on inspector
+  $('#ins').innerHTML = '<em class="muted">Click <strong>Auto‑generate layout</strong> to build a mock layout.</em>';
+}
+function revealWithStagger(){
+  const elems = [
+    ...$all('#gGrid *'),
+    ...$all('#gELX *'),
+    ...$all('#gUTIL *'),
+    ...$all('#gH2 *'),
+    ...$all('#gO2 *'),
+    ...$all('#gPipe *'),
+    ...$all('#gSafety *'),
+    ...$all('#gRoad *'),
+  ];
+  let delay = 0;
+  elems.forEach(el=>{
+    el.animate([
+      {opacity:0, transform:'translateY(6px)'},
+      {opacity:1, transform:'translateY(0)'}
+    ],{duration:300, delay});
+    // Ensure visible afterwards
+    el.style.opacity = 1;
+    delay += 12; // stagger
+  });
+  $('#site').classList.remove('pregen');
+}
+function makeStepsUI(){
+  const stepsBox = $('#steps');
+  stepsBox.innerHTML = '';
+  STEPS.forEach((t,i)=>{
+    const row = document.createElement('div');
+    row.className = 'step';
+    row.id = `st${i}`;
+    row.innerHTML = `<span class="dot"></span><span>${t}</span>`;
+    stepsBox.appendChild(row);
+  });
+}
+async function autoGenerate(){
+  if(generated){ // allow "regenerate" feel with replay
+    runGenerator();
+    return;
+  }
+  runGenerator();
+}
+async function runGenerator(){
+  const btn = $('#genBtn');
+  btn.disabled = true;
+  $('#genOverlay').style.display = 'flex';
+  makeStepsUI();
+  $('#fill').style.width = '0%';
+  const total = STEPS.length;
+  for(let i=0;i<total;i++){
+    activateStep(i);
+    // variable step time for realism
+    const ms = 250 + Math.random()*350;
+    await sleep(ms);
+    completeStep(i);
+    const pct = Math.round(((i+1)/total)*100);
+    $('#fill').style.width = pct+'%';
+  }
+  await sleep(250);
+  $('#genOverlay').style.display = 'none';
+  revealWithStagger();
+  bindHovers();
+  generated = true;
+  btn.textContent = 'Regenerate mock layout';
+  btn.disabled = false;
+}
+function activateStep(i){
+  for(let j=0;j<STEPS.length;j++){
+    const row = $('#st'+j);
+    if(!row) continue;
+    row.classList.remove('active','done');
+    if(j<i) row.classList.add('done');
+  }
+  const r = $('#st'+i);
+  if(r) r.classList.add('active');
+}
+function completeStep(i){
+  const r = $('#st'+i);
+  if(r){ r.classList.remove('active'); r.classList.add('done'); }
+}
+function sleep(ms){ return new Promise(res=>setTimeout(res,ms)); }
+// init
+setPreGenState();
+// bind PFD hovers immediately (always visible)
+bindHovers();
 </script>
 </body>
 </html>
-

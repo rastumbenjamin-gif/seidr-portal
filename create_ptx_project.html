@@ -3,655 +3,1048 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>SEIDR — Create PtX Project</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N92K4XNCV2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-N92K4XNCV2');
+</script>
+<script>
+  setInterval(() => {
+    if (window.gtag) {
+      gtag('event', 'heartbeat', { non_interaction: true });
+    }
+  }, 15000); // sends every 15 seconds
+</script>
+<title>SEIDR — Site Screener (v20 • LCOH & CAPEX Columns)</title>
 <link rel="stylesheet" href="css/styles.css?v=5">
 <link rel="stylesheet" href="css/interactive-styles.css?v=5">
+<script src="js/navigation.js?v=5"></script>
 <style>
   :root{
     --bg:#0f1a22; --panel:#13202a; --panel-2:#0e1820; --line:#20303b;
     --text:#e9eef2; --muted:#a7b2bb; --teal:#19c5be; --yellow:#f6c947;
     --green:#57d39b; --red:#ef8c7a; --warn:#f59e52; --blue:#74aeea; --grey:#7f8b95;
+    --sea:#0b141a; --land:#171a1f; --contour:#242b34; --contour2:#1f2730;
+    --river:#20303b; --lake:#121b22;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif}
-  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(15,26,34,.9);border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+  body{margin:0;background:linear-gradient(180deg,#0d1820,var(--bg) 35%,#0b141a);color:var(--text);
+       font:15px/1.5 system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 20px;background:rgba(15,26,34,.9);
+          border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px);position:sticky;top:0;z-index:20}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{font-weight:900;letter-spacing:.24em;text-transform:uppercase}
+  .topbar a.logo{color:inherit;text-decoration:none}
   .crumb{color:var(--muted);font-size:13px}
-  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
-  .btn.primary{background:#14333a;border-color:#275e5d}
-  .btn.warn{background:#352613;border-color:#5c471f}
-  .wrap{max-width:1800px;margin:0 auto;padding:18px;display:grid;grid-template-columns:520px 1fr;gap:16px}
-  .left,.right{display:flex;flex-direction:column;gap:12px}
+  .wrap{display:grid;grid-template-columns:380px 1fr;gap:18px;max-width:1720px;margin:0 auto;padding:18px}
+  .left{display:flex;flex-direction:column;gap:14px}
+  .right{display:flex;flex-direction:column;gap:14px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-  h1{margin:.2rem 0 .6rem;font-size:26px}
-  h2{margin:0 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-  h3{margin:.2rem 0 .4rem;font-size:16px}
+  .panel{background:var(--panel);border:1px solid var(--line);overflow:hidden;position:relative;border-radius:14px}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .panel-body{padding:10px 12px}
+  h1{margin:.2rem 0 .8rem;font-size:26px}
+  h2{margin:8px 0 10px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
   .muted{color:var(--muted)}
+  .btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+  .btn[disabled]{opacity:.6;cursor:not-allowed}
   .stack{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .stack-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
-  .kv{display:grid;grid-template-columns:1fr auto;gap:10px;margin:6px 0}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-  .row{display:flex;gap:10px;align-items:center}
-  label{display:block;margin:8px 0 6px;white-space:nowrap}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);
+        padding:3px 8px;border-radius:999px;font-size:12px}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-size:12px}
-  input[type="text"], input[type="number"], input[type="date"], select, textarea{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:8px}
+  label{display:block;margin-bottom:4px;font-size:12px;color:var(--muted)}
+  select, input[type="text"], textarea{width:100%;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:10px;color:var(--text);padding:7px 8px;font-size:13px}
   input[type="range"]{width:100%}
-  textarea{min-height:70px}
-  .help{font-size:12px;color:var(--muted)}
-  .bar{height:10px;border-radius:6px;background:#13242f;overflow:hidden;border:1px solid var(--line)}
-  .bar>span{display:block;height:100%;background:linear-gradient(90deg,#2cc0b9,#57d39b)}
-  .sectionTabs{display:flex;gap:6px;margin-bottom:8px}
-  .tab{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);cursor:pointer}
-  .tab.active{outline:2px solid #275e5d}
-  .hidden{display:none}
-  .map{height:280px;border-radius:12px;border:1px solid var(--line);background:repeating-linear-gradient(45deg,#0e1820,#0e1820 10px,#0c151c 10px,#0c151c 20px)}
-  .mini{height:160px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .grid1{display:grid;grid-template-columns:1fr;gap:10px}
+  .val{font-weight:700;color:var(--text)}
+  .group{border:1px dashed var(--line);border-radius:12px;padding:10px;margin-top:8px;background:var(--panel-2)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  #mapWrap{position:relative;padding:10px}
+  #mapFrame{
+    position:relative;border-radius:14px;border:1px solid var(--line);overflow:hidden;
+    background:linear-gradient(180deg,#091117,#0a141b);
+    box-shadow: inset 0 0 0 1px rgba(32,48,59,.4), inset 0 18px 40px rgba(0,0,0,.25);
+  }
+  #svgMap{width:100%;height:600px;display:block;background:var(--sea)}
+  .legend{position:absolute;right:12px;bottom:12px;background:rgba(14,24,32,.92);border:1px solid var(--line);border-radius:10px;padding:10px;backdrop-filter:blur(3px)}
+  .legend .bar{width:160px;height:8px;border-radius:6px;background:linear-gradient(90deg,#4a1616,#7a2c0f,#8b6d19,#2d6f58,#19c5be);border:1px solid var(--line);margin-top:6px}
+  .legend .ticks{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:4px}
   table{width:100%;border-collapse:collapse}
-  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left}
-  th{color:var(--muted);font-weight:600}
+  th,td{padding:8px;border-bottom:1px solid var(--line);font-size:13px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:linear-gradient(180deg,var(--panel),var(--panel-2));z-index:1}
   tr:hover{background:rgba(25,197,190,.06)}
-  .scoreBubble{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-weight:700}
-  .scoreBubble.red{background:rgba(239,140,122,.12);border-color:rgba(239,140,122,.5)}
-  .scoreBubble.amber{background:rgba(245,158,82,.12);border-color:rgba(245,158,82,.5)}
-  .scoreBubble.green{background:rgba(87,211,155,.12);border-color:rgba(87,211,155,.5)}
-  .code{font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px;white-space:pre-wrap;max-height:220px;overflow:auto}
-  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
-  .owner-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);padding:4px 8px;border-radius:999px}
-  .owner-chip small{color:var(--muted)}
-  .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:#0f1f25;font-size:12px}
-  .list-tight li{margin:2px 0}
-  @media (max-width:1400px){ .wrap{grid-template-columns:1fr} }
+  #hm_listWrap{overflow:visible}
+  .site-dot{stroke:#0b141a;stroke-width:1}
+  .contour{fill:none;stroke:var(--contour);stroke-width:1;opacity:.35}
+  .contour.alt{stroke:var(--contour2);opacity:.25}
+  .river{fill:none;stroke:var(--river);stroke-width:1.1;opacity:.5}
+  .lake{fill:var(--lake);stroke:#1a222a;stroke-width:1;opacity:.9}
+  .mini-actions{display:flex;gap:8px}
+  .mini-actions .btnx{
+    border:1px solid var(--line);background:var(--panel-2);color:var(--text);
+    font-size:12px;padding:5px 8px;border-radius:8px;cursor:pointer;white-space:nowrap
+  }
+  .mini-actions .btnx:hover{background:#0f1c25}
+  .subtle{color:var(--muted);font-size:12px;margin-top:4px}
+  /* View switching */
+  .view{display:none}
+  .view.active{display:block}
+  /* Review page styles (from Screening_Result pages) */
+  .section{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+  .sec-head{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
+  .sec-title{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .sec-body{padding:12px}
+  .num{font-variant-numeric:tabular-nums}
+  .bar-wrap{height:8px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);overflow:hidden}
+  .bar{height:100%;background:linear-gradient(90deg,var(--red),#ffb0a3);transition:width .35s ease}
+  .bar-ok{height:100%;background:linear-gradient(90deg,var(--green),#b7f0d4);transition:width .35s ease}
+  .bar-amber{height:100%;background:linear-gradient(90deg,var(--yellow),#ffe08a);transition:width .35s ease}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+  .ok{background:rgba(87,211,155,.12);border-color:#2a5f46;color:#cdecd9}
+  .bad{background:rgba(239,140,122,.12);border-color:#8b3f33;color:#efb4a8}
+  .warn{background:rgba(246,201,71,.14);border-color:#6f4c21;color:#ffe3a6}
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:12px;background:var(--panel-2);padding:4px}
+  .toggle button{padding:6px 10px;border-radius:8px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+  .toggle button.active{background:var(--panel);color:var(--text);box-shadow:0 0 0 1px var(--line) inset}
+  .divider{height:1px;background:var(--line);margin:10px 0}
+  .waterfall-row{display:flex;align-items:center;gap:10px}
+  .waterfall-row .lab{width:280px;color:var(--muted);font-size:12px}
+  .waterfall-row .val{width:120px;text-align:right;font-size:12px}
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fact{padding:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px}
+  .fact .t{font-size:12px;color:var(--muted)}
+  .fact .v{font-weight:600}
+  .score-bar{height:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .score-bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--red),#ffb0a3)}
+  .score-fill{display:block;height:100%;background:linear-gradient(90deg,var(--green),#b7f0d4)}
+  .blocker{padding:12px 0;border-top:1px solid var(--line)}
+  .b-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .sev{padding:6px;border-radius:10px;font-size:12px;border:1px solid var(--line)}
+  .sev.high{background:rgba(239,140,122,.12);color:#efb4a8;border-color:#8b3f33}
+  .sev.med{background:rgba(245,158,82,.12);color:#ffd3a8;border-color:#6f4c21}
+  .sev.low{background:rgba(87,211,155,.12);color:#cdecd9;border-color:#2a5f46}
+  .b-title{font-weight:600}
+  .b-sub{color:var(--muted);font-size:14px}
+  .b-imp{color:#efb4a8;font-size:12px;margin-top:2px}
+  .link{font-size:12px;color:var(--text);background:var(--panel-2);border:1px solid var(--line);padding:6px 10px;border-radius:8px;cursor:pointer}
+  .link:hover{filter:brightness(1.08)}
+  .fixes{margin-top:10px;padding-left:46px}
+  .fix-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fix{border:1px solid var(--line);background:var(--panel-2);border-radius:10px;padding:10px}
+  .fix .meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .meta .cell{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px}
+  .meta .k{font-size:10px;color:var(--muted);text-transform:uppercase}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .a-btn{border-radius:10px;padding:10px;border:1px solid var(--line);cursor:pointer}
+  .a-btn.primary{background:var(--text);color:#0c1318}
+  .a-btn.ghost{background:var(--panel-2);color:var(--text)}
+  .foot{color:var(--muted);font-size:12px;margin-top:12px}
+  .review-layout{display:grid;grid-template-columns:1fr 380px;gap:16px;max-width:1400px;margin:0 auto;padding:18px}
+  @media (max-width:1180px){.review-layout{grid-template-columns:1fr}}
 </style>
-<script src="js/navigation.js?v=5"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div class="topbar">
-    <div><a href="seidr_homepage_landing.html" style="color:inherit;text-decoration:none;cursor:pointer"><span class="logo">SEIDR</span></a> <span class="crumb">/ Projects / Create PtX Project</span></div>
+    <div class="brand">
+      <a class="logo" href="seidr_homepage_landing.html">SEIDR</a>
+    </div>
     <nav id="main-nav"></nav>
     <div class="stack">
+      <button class="btn" id="btnBackToScreener" style="display:none" onclick="showView('screener'); return false;">← Back to Screener</button>
       <button class="btn" id="btnPreset">Load Example</button>
-      <button class="btn" id="btnImport">Import JSON</button>
-      <button class="btn" id="btnExport">Export JSON</button>
-      <button class="btn primary" id="btnCreate">Create Project</button>
+      <button class="btn" id="btnReseed">Reseed sites</button>
     </div>
   </div>
-
+  <!-- Main Screener View -->
+  <div id="viewScreener" class="view active">
   <div class="wrap">
     <div class="left">
       <div class="card">
-        <h1>Create PtX Project</h1>
-        <div class="muted">Choose <strong>Manual Site</strong> or let <strong>SEIDR Auto-Screen</strong> propose the optimal site. Adjust technology, size, products, utilities and evidence in one place. Live preview on the right.</div>
-        <div class="sectionTabs" role="tablist">
-          <div class="tab active" data-mode="manual" role="tab">Manual Site</div>
-          <div class="tab" data-mode="auto" role="tab">Auto — from Screening</div>
-        </div>
-        <div class="grid2">
-          <div>
-            <label class="muted">Project name</label>
-            <input id="p_name" placeholder="e.g., Ålesund H₂ Hub — 20 MW"/>
-          </div>
-          <div>
-            <label class="muted">Confidentiality</label>
-            <select id="p_conf"><option>Internal</option><option selected>Confidential</option><option>Public (demo)</option></select>
-          </div>
-        </div>
-        <div class="grid3" style="margin-top:8px">
-          <div>
-            <label class="muted">Decision Gate</label>
-            <select id="p_gate"><option>DG0 — Opportunity</option><option selected>DG1 — Pre-FEED</option><option>DG2 — FEED</option></select>
-          </div>
-          <div>
-            <label class="muted">Owner</label>
-            <input id="p_owner" placeholder="e.g., Norwegian Hydrogen"/>
-          </div>
-          <div>
-            <label class="muted">Portfolio tag</label>
-            <input id="p_tag" placeholder="Region / Client / Segment"/>
-          </div>
-        </div>
-      </div>
-
-      <div class="card mode-manual">
-        <h2>Site (Manual)</h2>
-        <div class="grid2">
-          <div>
-            <label class="muted">Coordinates</label>
-            <input id="s_coords" placeholder="Lat, Lng (e.g., 62.47, 6.15)"/>
-          </div>
-          <div>
-            <label class="muted">Address / Site name</label>
-            <input id="s_name" placeholder="e.g., Industripark West — Plot B"/>
-          </div>
-        </div>
-        <div class="grid3" style="margin-top:8px">
-          <div>
-            <label class="muted">Plot area (ha)</label>
-            <input id="s_plot" type="number" value="12" min="0">
-          </div>
-          <div>
-            <label class="muted">Zoning</label>
-            <select id="s_zone"><option>Industrial</option><option>Commercial</option><option>Greenfield</option></select>
-          </div>
-          <div>
-            <label class="muted">Proximity flags</label>
-            <input id="s_flags" placeholder="protected-area, heritage"/>
-          </div>
-        </div>
-        <div class="help">Tip: Use the map on the right to place a pin and auto-fill coordinates.</div>
-      </div>
-
-      <div class="card mode-auto hidden">
-        <h2>Auto Site (from Screening)</h2>
-        <div class="grid2">
-          <div>
-            <label class="muted">Shortlist source</label>
-            <select id="auto_source"><option>Latest Screening R3</option><option>Saved shortlist</option><option>Upload CSV</option></select>
-          </div>
-          <div>
-            <label class="muted">Pick strategy</label>
-            <select id="auto_pick"><option>Highest score</option><option>Best grid</option><option>Least capex</option><option>Balanced</option></select>
-          </div>
-        </div>
-        <div class="grid3" style="margin-top:8px">
-          <div>
-            <label class="muted">Min grid kV</label>
-            <input id="auto_kv" type="number" value="132">
-          </div>
-          <div>
-            <label class="muted">Max water distance (km)</label>
-            <input id="auto_wkm" type="number" value="5">
-          </div>
-          <div>
-            <label class="muted">Max HH route (km)</label>
-            <input id="auto_hh" type="number" value="25">
-          </div>
-        </div>
-        <div class="stack" style="margin-top:8px">
-          <button class="btn" id="btnPreviewAuto">Preview top 5</button>
-          <button class="btn primary" id="btnPickAuto">Auto-select best</button>
-        </div>
-        <div id="autoTableWrap" class="hidden" style="margin-top:8px">
-          <div class="stack" style="justify-content:space-between;margin-bottom:6px">
-            <div class="muted">Select multiple to send to <strong>Comparison</strong>.</div>
-            <div class="stack-right">
-              <span class="badge">Selected: <strong id="selCount">0</strong></span>
-              <button class="btn" id="btnAddSelected">Add selected</button>
-              <button class="btn primary" id="btnGoComparison">Proceed to Comparison</button>
+        <h1>Site Screener</h1>
+        <div class="muted">Dropdowns first, sliders next. Auto water flow from MW & tech. LCOH/CAPEX estimated per site.</div>
+        <!-- DROPDOWNS BLOCK -->
+        <h2>Scenario</h2>
+        <div class="group">
+          <div class="row3">
+            <div>
+              <label>Electrolyzer technology</label>
+              <select id="dd_tech">
+                <option>PEM</option><option selected>ALK</option><option>SOEC</option><option>AEM</option>
+              </select>
+            </div>
+            <div>
+              <label>Primary product</label>
+              <select id="dd_product">
+                <option selected>Hydrogen (gas)</option>
+                <option>Hydrogen (liquid)</option>
+                <option>Ammonia</option>
+                <option>Methanol</option>
+                <option>e-SAF</option>
+              </select>
+            </div>
+            <div>
+              <label>Project scale type</label>
+              <select id="dd_scale">
+                <option>Demo (≤20 MW)</option>
+                <option>Mid (20–120 MW)</option>
+                <option selected>Large (120–500 MW)</option>
+                <option>Giga (500+ MW)</option>
+              </select>
             </div>
           </div>
-          <table>
-            <thead>
-              <tr><th>#</th><th></th><th>Site</th><th>Grid</th><th>Water</th><th>HH</th><th>Score</th><th></th></tr>
-            </thead>
-            <tbody id="autoRows"></tbody>
-          </table>
-          <div id="shortlistChips" class="stack" style="margin-top:8px"></div>
+          <div class="row3" style="margin-top:10px">
+            <div>
+              <label>Grid connection type</label>
+              <select id="dd_gridconn">
+                <option selected>Substation tie-in</option>
+                <option>Direct HV</option>
+                <option>On-site generation</option>
+                <option>Not applied</option>
+              </select>
+            </div>
+            <div>
+              <label>Land control status</label>
+              <select id="dd_landctl">
+                <option>None</option>
+                <option>LOI</option>
+                <option selected>Option</option>
+                <option>Acquired</option>
+              </select>
+            </div>
+            <div>
+              <label>Queue status</label>
+              <select id="dd_queuestat">
+                <option selected>Any</option>
+                <option>Applied</option>
+                <option>In queue</option>
+                <option>Confirmed</option>
+              </select>
+            </div>
+          </div>
+          <div class="row3" style="margin-top:10px">
+            <div>
+              <label>Water source type</label>
+              <select id="dd_wsrc">
+                <option selected>Any</option>
+                <option>Industrial</option>
+                <option>Surface</option>
+                <option>Desal</option>
+                <option>Wastewater</option>
+              </select>
+            </div>
+            <div>
+              <label>Zoning status</label>
+              <select id="dd_zoning">
+                <option selected>Any</option>
+                <option>Industrial</option>
+                <option>Mixed</option>
+                <option>Needs rezoning</option>
+              </select>
+            </div>
+            <div>
+              <label>Tech readiness preference</label>
+              <select id="dd_trl">
+                <option selected>Proven</option>
+                <option>Commercializing</option>
+                <option>Frontier</option>
+              </select>
+            </div>
+          </div>
+          <div class="subtle">Auto water flow (m³/hr): <span id="auto_flow">—</span></div>
         </div>
-        <div class="help">Uses Gatekeeper rulebook weights/thresholds for scoring (demo logic).</div>
-      </div>
-
-      <div class="card">
-        <h2>Technology & Scale</h2>
-        <div class="grid3">
-          <div>
-            <label class="muted">Electrolyzer tech</label>
-            <select id="t_tech"><option>PEM</option><option>ALK</option></select>
+        <!-- SLIDERS BLOCK -->
+        <h2>Power & Grid</h2>
+        <div class="group">
+          <div class="row3">
+            <div class="sl">
+              <label>Required capacity (MW EL) <span class="val" id="sl_mw_v">130</span></label>
+              <input id="sl_mw" type="range" min="10" max="500" step="10" value="130">
+            </div>
+            <div class="sl">
+              <label>Min available grid kV <span class="val" id="sl_kv_v">220</span></label>
+              <input id="sl_kv" type="range" min="66" max="420" step="11" value="220">
+            </div>
+            <div class="sl">
+              <label>Max grid distance (km) <span class="val" id="sl_gkm_v">4</span></label>
+              <input id="sl_gkm" type="range" min="0" max="50" step="0.5" value="4">
+            </div>
           </div>
-          <div>
-            <label class="muted">Capacity (MW EL)</label>
-            <input id="t_mw" type="number" value="20" min="1">
-          </div>
-          <div>
-            <label class="muted">Stack config</label>
-            <select id="t_stack"><option>OEM A — 5 MW skids</option><option>OEM B — 10 MW skids</option><option>OEM C — 20 MW blocks</option></select>
-          </div>
-        </div>
-        <div class="grid3" style="margin-top:8px">
-          <div>
-            <label class="muted">Operating hours (h/yr)</label>
-            <input id="t_hours" type="number" value="8000" min="0" max="8760">
-          </div>
-          <div>
-            <label class="muted">Efficiency (kWh/kg H₂)</label>
-            <input id="t_eff" type="number" value="51" step="0.1">
-          </div>
-          <div>
-            <label class="muted">Availability (%)</label>
-            <input id="t_avail" type="number" value="95" min="0" max="100">
-          </div>
-        </div>
-        <div class="help">Adjusts footprint, power draw, water demand and expected annual H₂ output in the live preview.</div>
-      </div>
-
-      <div class="card">
-        <h2>Products & Offtake</h2>
-        <div class="grid2">
-          <div>
-            <label class="muted">Primary product</label>
-            <select id="prod_primary"><option>Hydrogen (compressed)</option><option>Ammonia (NH₃)</option><option>Methanol (MeOH)</option></select>
-          </div>
-          <div>
-            <label class="muted">Delivery pressure (bar)</label>
-            <input id="prod_bar" type="number" value="350">
-          </div>
-        </div>
-        <div class="grid3" style="margin-top:8px">
-          <div>
-            <label class="muted">Storage (t H₂ eq.)</label>
-            <input id="prod_storage" type="number" value="20">
-          </div>
-          <div>
-            <label class="muted">Offtake status</label>
-            <select id="prod_status"><option>Exploration</option><option>LOI</option><option>Term sheet</option></select>
-          </div>
-          <div>
-            <label class="muted">Truck loads / day</label>
-            <input id="prod_trucks" type="number" value="4">
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Utilities & Access</h2>
-        <div class="grid3">
-          <div>
-            <label class="muted">Grid kV</label>
-            <input id="u_kv" type="number" value="132">
-          </div>
-          <div>
-            <label class="muted">Grid distance (km)</label>
-            <input id="u_gdkm" type="number" value="5">
-          </div>
-          <div>
-            <label class="muted">Queue status</label>
-            <select id="u_q"><option>confirmed</option><option>fast-track</option><option>allocation</option><option>queued</option></select>
+          <div class="row3" style="margin-top:10px">
+            <div class="sl">
+              <label>Max grid queue wait (years) <span class="val" id="sl_gwait_v">3</span></label>
+              <input id="sl_gwait" type="range" min="0" max="10" step="0.5" value="3">
+            </div>
           </div>
         </div>
-        <div class="grid3" style="margin-top:8px">
-          <div>
-            <label class="muted">Water source</label>
-            <select id="u_wsrc"><option>industrial</option><option>municipal</option><option>on-site</option></select>
-          </div>
-          <div>
-            <label class="muted">Water distance (km)</label>
-            <input id="u_wkm" type="number" value="2">
-          </div>
-          <div>
-            <label class="muted">HH route length (km)</label>
-            <input id="u_hh" type="number" value="12">
+        <h2>Water & Utilities</h2>
+        <div class="group">
+          <div class="row3">
+            <div class="sl">
+              <label>Max water distance (km) <span class="val" id="sl_wkm_v">1.5</span></label>
+              <input id="sl_wkm" type="range" min="0" max="30" step="0.1" value="1.5">
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="card">
-        <h2>Evidence & Governance</h2>
-        <div class="grid2">
-          <div>
-            <label class="muted">Evidence pack</label>
-            <select id="e_pack"><option>None</option><option>Minimal (grid+water)</option><option>Standard (grid+water+HH+zoning)</option></select>
-          </div>
-          <div>
-            <label class="muted">Target decision date</label>
-            <input id="e_date" type="date">
+        <h2>Logistics & Market</h2>
+        <div class="group">
+          <div class="row3">
+            <div class="sl">
+              <label>Max road distance to port (km) <span class="val" id="sl_port_v">80</span></label>
+              <input id="sl_port" type="range" min="0" max="200" step="5" value="80">
+            </div>
+            <div class="sl">
+              <label>Max H₂ truck distance (km) <span class="val" id="sl_hh_v">60</span></label>
+              <input id="sl_hh" type="range" min="0" max="200" step="5" value="60">
+            </div>
+            <div class="sl" id="co2_wrap" style="display:none">
+              <label>Max CO₂ export distance (km) <span class="val" id="sl_co2_v">120</span></label>
+              <input id="sl_co2" type="range" min="0" max="300" step="5" value="120">
+            </div>
           </div>
         </div>
-        <div style="margin-top:6px">
-          <label class="muted">Notes / assumptions</label>
-          <textarea id="e_notes" placeholder="Key assumptions, constraints, and sources..."></textarea>
+        <h2>Land</h2>
+        <div class="group">
+          <div class="row3">
+            <div class="sl">
+              <label>Required plot size (ha) <span class="val" id="sl_plot_v">12</span></label>
+              <input id="sl_plot" type="range" min="0" max="200" step="1" value="12">
+            </div>
+            <div class="sl">
+              <label>Min contiguous usable land (%) <span class="val" id="sl_usable_v">70</span></label>
+              <input id="sl_usable" type="range" min="50" max="100" step="1" value="70">
+            </div>
+            <div class="sl">
+              <label>Max terrain slope (%) <span class="val" id="sl_slope_v">12</span></label>
+              <input id="sl_slope" type="range" min="0" max="30" step="1" value="12">
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div class="footer">
-        <div class="muted">JSON preview updates live</div>
-        <div class="stack">
-          <button class="btn" id="btnReset">Reset</button>
-          <button class="btn primary" id="btnCreateBottom">Create Project</button>
+        <h2>Risk & Execution</h2>
+        <div class="group">
+          <div class="row3">
+            <div class="sl">
+              <label>Max permitting risk (0–100) <span class="val" id="sl_risk_v">60</span></label>
+              <input id="sl_risk" type="range" min="0" max="100" step="1" value="60">
+            </div>
+            <div class="sl">
+              <label>Min site maturity score (0–100) <span class="val" id="sl_maturity_v">30</span></label>
+              <input id="sl_maturity" type="range" min="0" max="100" step="1" value="30">
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
+    <!-- RIGHT -->
     <div class="right">
-      <div class="card">
-        <h2>Map / Site Placement</h2>
-        <div class="map" id="mapBox" title="Map placeholder (demo)"></div>
-        <div class="grid3" style="margin-top:8px">
-          <div class="kv"><span>Coords</span><strong id="pv_coords">—</strong></div>
-          <div class="kv"><span>Zoning</span><strong id="pv_zone">—</strong></div>
-          <div class="kv"><span>Proximity flags</span><strong id="pv_flags">—</strong></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Parcel / Ownership</h2>
-        <div class="grid3">
-          <div class="kv"><span>Cadastre (Gnr/Bnr)</span><strong id="pv_cad">—</strong></div>
-          <div class="kv"><span>Municipality</span><strong id="pv_muni">—</strong></div>
-          <div class="kv"><span>Area (ha)</span><strong id="pv_area">—</strong></div>
-        </div>
-        <div class="grid3" style="margin-top:6px">
-          <div class="kv"><span>Zoning</span><strong id="pv_pzoning">—</strong></div>
-          <div class="kv"><span>Plan status</span><strong id="pv_plan">—</strong></div>
-          <div class="kv"><span>Last sale</span><strong id="pv_sale">—</strong></div>
-        </div>
-        <div style="margin-top:6px">
-          <div class="muted">Owners</div>
-          <div id="pv_owners" class="stack" style="margin-top:4px"></div>
-        </div>
-        <div style="margin-top:6px">
-          <div class="muted">Easements / Remarks</div>
-          <ul id="pv_ease" class="list-tight" style="margin-top:4px;padding-left:18px"></ul>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Sizing & Outputs</h2>
-        <div class="grid3">
-          <div class="kv"><span>H₂ output (t/yr)</span><strong id="pv_h2">—</strong></div>
-          <div class="kv"><span>Elec draw (MW)</span><strong id="pv_mw">—</strong></div>
-          <div class="kv"><span>Water demand (m³/day)</span><strong id="pv_water">—</strong></div>
-        </div>
-        <div class="grid3" style="margin-top:6px">
-          <div class="kv"><span>Footprint need (ha)</span><strong id="pv_ha">—</strong></div>
-          <div class="kv"><span>Plot fit</span><strong id="pv_fit">—</strong></div>
-          <div class="kv"><span>Storage days</span><strong id="pv_store">—</strong></div>
-        </div>
-        <div class="bar" style="margin-top:6px"><span id="pv_fitbar" style="width:0%"></span></div>
-        <div class="help">Footprint model: PEM 0.05 ha/MW, ALK 0.06 ha/MW (illustrative).</div>
-      </div>
-
-      <div class="card">
-        <h2>Readiness & Gate Class</h2>
-        <div class="grid2">
-          <div>
-            <div class="muted">Evidence</div>
-            <div id="pv_ev" class="scoreBubble">—</div>
-            <div class="help" id="pv_ev_help">—</div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="stack">
+            <strong>Region Screening / Heatmap</strong>
+            <span class="crumb" id="hm_filters">Filters: —</span>
           </div>
-          <div>
-            <div class="muted">Gatekeeper class</div>
-            <div id="pv_class" class="scoreBubble">—</div>
-            <div class="help" id="pv_class_help">—</div>
+          <div class="stack">
+            <span class="chip">Screened: <strong id="hm_totalSites">—</strong></span>
+            <span class="chip">Match: <strong id="hm_matchSites">—</strong></span>
           </div>
         </div>
-      </div>
-
-      <div class="card">
-        <h2>Quick CAPEX & Schedule (mock)</h2>
-        <div class="grid2">
-          <div>
-            <table>
-              <thead><tr><th>Package</th><th>Base (MNOK)</th></tr></thead>
-              <tbody id="capexRows"></tbody>
-              <tfoot><tr><th>Total (Class-4)</th><th id="capexTot">—</th></tr></tfoot>
-            </table>
-          </div>
-          <div>
-            <div class="muted">Milestones</div>
-            <ul id="msList" style="margin-top:6px"></ul>
-            <div class="bar" style="margin-top:6px"><span id="schBar" style="width:0%"></span></div>
-            <div class="help">Timeline sanity vs COD window.</div>
+        <div id="mapWrap">
+          <div id="mapFrame">
+            <svg id="svgMap" viewBox="0 0 1100 600" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <clipPath id="landClip"><path id="landPath"/></clipPath>
+                <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#0a1217" flood-opacity="0.8"/>
+                </filter>
+                <filter id="hillshade" x="-20%" y="-20%" width="140%" height="140%">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise"/>
+                  <feColorMatrix type="saturate" values="0.0"/>
+                  <feComponentTransfer>
+                    <feFuncA type="table" tableValues="0 0.09"/>
+                  </feComponentTransfer>
+                </filter>
+              </defs>
+              <!-- Landmass -->
+              <path id="land" fill="var(--land)" stroke="#20262e" stroke-width="1.2" filter="url(#softShadow)"></path>
+              <!-- Hillshade texture clipped to land -->
+              <g clip-path="url(#landClip)">
+                <rect x="0" y="0" width="1100" height="600" filter="url(#hillshade)"></rect>
+              </g>
+              <!-- Hydrology & contours -->
+              <g id="lakes" clip-path="url(#landClip)"></g>
+              <g id="islands"></g>
+              <g id="rivers" clip-path="url(#landClip)"></g>
+              <g id="contours"></g>
+              <!-- Sites -->
+              <g id="sites"></g>
+            </svg>
+            <div class="legend">
+              <div><strong>Composite score</strong> (0–100)</div>
+              <div class="bar"></div>
+              <div class="ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="card">
-        <h2>JSON (project)</h2>
-        <div id="jsonOut" class="code">—</div>
-      </div>
-
-      <div class="card">
-        <h2>Dev Notes</h2>
-        <ul style="margin-top:6px">
-          <li>Mode switch: Manual vs Auto from Screening. Auto uses demo shortlist + Gatekeeper-like scoring.</li>
-          <li><strong>New:</strong> Parcel / Ownership fills when choosing Auto Site “Use”.</li>
-          <li><strong>New:</strong> Multi-select → “Proceed to Comparison”. Also added to JSON under <code>comparison.shortlist</code>.</li>
-          <li>Live sizing & evidence compute mirrors Gatekeeper envelopes.</li>
-          <li>Wire the Create/Comparison actions to your real routes in the app.</li>
-        </ul>
+        <div class="panel-body" id="hm_listWrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:42px">#</th>
+                <th>Site & meta</th>
+                <th>Grid (kV)</th>
+                <th>Grid (km)</th>
+                <th>Water (km)</th>
+                <th>HH (km)</th>
+                <th>Port (km)</th>
+                <th>Land (ha)</th>
+                <th>Usable %</th>
+                <th>Slope %</th>
+                <th>Queue</th>
+                <th>Risk</th>
+                <th>Maturity</th>
+                <th>LCOH (€/kg)</th>
+                <th>CAPEX (M€)</th>
+                <th>Score</th>
+                <th style="width:220px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="hm_rows"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
+  </div>
+  <!-- End Main Screener View -->
+  
+  <!-- Review View No-Go (Screening_Result2) -->
+  <div id="viewReviewNoGo" class="view">
+    <div class="review-layout" id="reviewNoGoContent"></div>
+  </div>
+  
+  <!-- Review View GO (Screening_Result3) -->
+  <div id="viewReviewGo" class="view">
+    <div class="review-layout" id="reviewGoContent"></div>
+  </div>
 
 <script>
-// ---- Minimal rulebook-ish constants (aligned with Gatekeeper demo) ----
-const FIT_HA_PER_MW = { PEM: 0.05, ALK: 0.06 };
-const EVIDENCE_TARGET_GREEN = 70; // %
-const EVIDENCE_AMBER_FLOOR = 30;  // %
-const COD_WINDOW = [2027, 2030];
-const GRID_MIN_KV = 132;
-
-// ---- Demo shortlist + parcel / ownership meta ----
-const AUTO_DEMO_SITES = [
-  {site:'R3-01 North Port', kv:220, gdkm:3, wkm:1.2, hh:9, score:0.84, coords:'62.47, 6.15',
-    parcel:{ gnr:'12', bnr:'48', muni:'Ålesund', areaHa:16.2, zoning:'Industrial', plan:'Regulated (ID 2019-23)',
-      lastSale:'2018-09-12', owners:[{name:'Kyst Eiendom KF', share:'100%'}],
-      easements:['Right-of-way for port cranes (north strip)','Power line corridor 132 kV (west edge)'] } },
-  {site:'R3-12 East Ridge', kv:145, gdkm:8, wkm:4.1, hh:14, score:0.78, coords:'62.41, 6.09',
-    parcel:{ gnr:'202', bnr:'3', muni:'Ålesund', areaHa:11.4, zoning:'Industrial/Logistics', plan:'Zoning in revision',
-      lastSale:'2022-05-03', owners:[{name:'Ridge Park AS', share:'85%'},{name:'Åkrene Utbygging AS', share:'15%'}],
-      easements:['Seasonal road restriction (spring thaw)','Protected ridge habitat buffer (east 50 m)'] } },
-  {site:'R3-07 Delta Park', kv:132, gdkm:5, wkm:6.0, hh:11, score:0.74, coords:'62.51, 6.20',
-    parcel:{ gnr:'55', bnr:'901', muni:'Giske', areaHa:13.0, zoning:'Industrial', plan:'Approved 2017',
-      lastSale:'2017-02-22', owners:[{name:'Delta Næringspark DA', share:'100%'}],
-      easements:['Floodway caution (Q200 fringe)','Fiber trunk line servitude (center)'] } },
-  {site:'R3-18 Fjordside', kv:110, gdkm:2, wkm:8.5, hh:26, score:0.62, coords:'62.49, 6.18',
-    parcel:{ gnr:'17', bnr:'56', muni:'Sula', areaHa:9.2, zoning:'Mixed industrial', plan:'Legacy (update due)',
-      lastSale:'2009-11-30', owners:[{name:'Fjordside Industrier ASA', share:'60%'},{name:'Privat: Solheim', share:'40%'}],
-      easements:['Shoreline protection zone','Public right-of-way to pier'] } },
-  {site:'R3-03 Inland Hub', kv:220, gdkm:18, wkm:2.2, hh:6, score:0.70, coords:'62.35, 6.05',
-    parcel:{ gnr:'301', bnr:'77', muni:'Sykkylven', areaHa:18.8, zoning:'Greenfield → Industrial (proposed)', plan:'Municipal plan only',
-      lastSale:'—', owners:[{name:'Kommunal grunn', share:'100%'}],
-      easements:['Agricultural lease (expires 2027)','Snow load/seasonal access constraint'] } }
-];
-
-// ---- Shortlist selection state for Comparison ----
-let selectedIndices = new Set();
-const shortlist = [];
-
-// ---- Helpers ----
 const $ = s => document.querySelector(s);
 const $all = s => [...document.querySelectorAll(s)];
-function clamp01(x){ return Math.max(0, Math.min(1, x)); }
-function fmt(num, digits=0){ return Number(num).toLocaleString(undefined,{maximumFractionDigits:digits, minimumFractionDigits:digits}); }
-
-// ---- Mode switch ----
-$all('.tab').forEach(tab=>tab.addEventListener('click', ()=>{
-  $all('.tab').forEach(t=>t.classList.remove('active'));
-  tab.classList.add('active');
-  const mode = tab.dataset.mode;
-  document.querySelector('.mode-manual').classList.toggle('hidden', mode!=='manual');
-  document.querySelector('.mode-auto').classList.toggle('hidden', mode!=='auto');
-}));
-
-// ---- Render Parcel / Ownership card ----
-function renderParcel(p){
-  const cad = (p?.gnr && p?.bnr) ? `Gnr ${p.gnr} / Bnr ${p.bnr}` : '—';
-  $('#pv_cad').textContent = cad;
-  $('#pv_muni').textContent = p?.muni || '—';
-  $('#pv_area').textContent = p?.areaHa ? fmt(p.areaHa,2) : '—';
-  $('#pv_pzoning').textContent = p?.zoning || '—';
-  $('#pv_plan').textContent = p?.plan || '—';
-  $('#pv_sale').textContent = p?.lastSale || '—';
-  const ownWrap = $('#pv_owners'); ownWrap.innerHTML = '';
-  (p?.owners||[]).forEach(o=>{ const span = document.createElement('span'); span.className='owner-chip'; span.innerHTML = `<strong>${o.name}</strong><small>${o.share||''}</small>`; ownWrap.appendChild(span); });
-  if((p?.owners||[]).length===0){ const span = document.createElement('span'); span.className='pill'; span.textContent='—'; ownWrap.appendChild(span); }
-  const ul = $('#pv_ease'); ul.innerHTML='';
-  (p?.easements||[]).forEach(e=>{ const li = document.createElement('li'); li.textContent = e; ul.appendChild(li); });
-  if((p?.easements||[]).length===0){ const li = document.createElement('li'); li.textContent='—'; ul.appendChild(li); }
+function colorForScore(s){
+  if(s<40) return '#4a1616';
+  if(s<55) return '#7a2c0f';
+  if(s<70) return '#8b6d19';
+  if(s<85) return '#2d6f58';
+  return '#19c5be';
 }
-
-function refreshSelCount(){ const el=$('#selCount'); if(el) el.textContent = selectedIndices.size; }
-function renderShortlistChips(){ const holder=$('#shortlistChips'); if(!holder) return; holder.innerHTML=''; shortlist.forEach((s)=>{ const chip=document.createElement('span'); chip.className='owner-chip'; chip.innerHTML = `<strong>${s.site}</strong><small>${s.coords}</small>`; holder.appendChild(chip); }); }
-
-// ---- Auto shortlist table ----
-const btnPrev = document.getElementById('btnPreviewAuto'); if(btnPrev){ btnPrev.onclick = ()=>{
-  const tbody = document.getElementById('autoRows'); if(!tbody) return; tbody.innerHTML='';
-  AUTO_DEMO_SITES.forEach((s,i)=>{
-    const tr = document.createElement('tr');
+let GEO = {type:'FeatureCollection',features:[]};
+let LAND_POLY = [];
+let CENTROID = {x:550,y:300};
+// === Macro landmass generator ===
+function generateMacroLand(points=120){
+  const cx=550, cy=300;
+  const rx=480, ry=250;
+  const out=[];
+  for(let i=0;i<points;i++){
+    const t = (i/points)*Math.PI*2;
+    const cos = Math.cos(t), sin = Math.sin(t);
+    let rX = rx * Math.pow(Math.abs(cos), 0.6) * Math.sign(cos);
+    let rY = ry * Math.pow(Math.abs(sin), 0.6) * Math.sign(sin);
+    let x = cx + rX;
+    let y = cy + rY;
+    const inward = 26 + 14*Math.sin(3.2*t) + 10*Math.cos(1.7*t) + 8*Math.sin(5.1*t);
+    const len = Math.hypot(x-cx, y-cy) || 1;
+    x -= (x-cx)/len * inward;
+    y -= (y-cy)/len * inward;
+    const jx = Math.sin(7.3*t)*4 + Math.cos(11.7*t)*3;
+    const jy = Math.cos(6.1*t)*4 + Math.sin(9.9*t)*3;
+    out.push([x+jx, y+jy]);
+  }
+  out.push([out[out.length-1][0], 600]);
+  out.push([out[0][0], 600]);
+  return out;
+}
+function centroid(pts){
+  const cx = pts.reduce((a,p)=>a+p[0],0)/pts.length;
+  const cy = pts.reduce((a,p)=>a+p[1],0)/pts.length;
+  return {x:cx,y:cy};
+}
+function buildLand(){
+  const pts = generateMacroLand(140);
+  LAND_POLY = pts.map(([x,y])=>({x,y}));
+  const d = 'M '+pts.map(p=>p.join(',')).join(' L ')+' Z';
+  $('#land').setAttribute('d', d);
+  $('#landPath').setAttribute('d', d);
+  CENTROID = centroid(pts);
+  drawContours(22);
+  drawHydrology();
+}
+function lerp(a,b,t){ return a+(b-a)*t; }
+function jitter(v,mag){ return v + (Math.random()*2-1)*mag; }
+function drawContours(n){
+  const g = $('#contours'); g.innerHTML='';
+  const base = LAND_POLY;
+  for(let i=1;i<=n;i++){
+    const t = i/(n+3);
+    const pathPts = base.map(p=>{
+      const x = lerp(p.x, CENTROID.x, t);
+      const y = lerp(p.y, CENTROID.y, t);
+      return [jitter(x, 6*(1-t)), jitter(y, 6*(1-t))];
+    });
+    const d = 'M '+pathPts.map(p=>p.join(',')).join(' L ')+' Z';
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', d);
+    path.setAttribute('class','contour'+(i%2?' alt':''));
+    path.setAttribute('clip-path','url(#landClip)');
+    g.appendChild(path);
+  }
+}
+function pathEl(d, cls){
+  const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d', d); if(cls) p.setAttribute('class', cls);
+  return p;
+}
+function drawHydrology(){
+  const lakesEl = $('#lakes'); lakesEl.innerHTML='';
+  const lakes = [
+    {cx:CENTROID.x-210, cy:CENTROID.y-40, rx:36, ry:18},
+    {cx:CENTROID.x+180, cy:CENTROID.y-10, rx:28, ry:14},
+    {cx:CENTROID.x-40,  cy:CENTROID.y+80, rx:24, ry:12},
+    {cx:CENTROID.x+60,  cy:CENTROID.y-120, rx:20, ry:10}
+  ];
+  lakes.forEach(L=>{
+    const d = `M ${L.cx-L.rx},${L.cy}
+      C ${L.cx-L.rx},${L.cy-L.ry} ${L.cx+L.rx},${L.cy-L.ry} ${L.cx+L.rx},${L.cy}
+      C ${L.cx+L.rx},${L.cy+L.ry} ${L.cx-L.rx},${L.cy+L.ry} ${L.cx-L.rx},${L.cy} Z`;
+    const p = pathEl(d, 'lake'); lakesEl.appendChild(p);
+  });
+  const islandsEl = $('#islands'); islandsEl.innerHTML='';
+  const makePoly=(cx,cy,s)=>[[cx-10*s,cy],[cx-6*s,cy+8*s],[cx+4*s,cy+10*s],[cx+10*s,cy+2*s],[cx+2*s,cy-8*s]];
+  const islandGroups = [
+    makePoly(180,110,1.0), makePoly(230,96,0.9), makePoly(280,130,1.1),
+    makePoly(720,120,1.0), makePoly(760,90,0.8), makePoly(800,140,1.1)
+  ];
+  islandGroups.forEach(poly=>{
+    const d = 'M '+poly.map(p=>p.join(',')).join(' L ')+' Z';
+    const p = pathEl(d, null);
+    p.setAttribute('fill','var(--land)');
+    p.setAttribute('stroke','#20262e');
+    p.setAttribute('stroke-width','1.1');
+    islandsEl.appendChild(p);
+  });
+  const rivEl = $('#rivers'); rivEl.innerHTML='';
+  const r1 = `M ${CENTROID.x+160},${CENTROID.y-130} C ${CENTROID.x+120},${CENTROID.y-70} ${CENTROID.x+60},${CENTROID.y-20} ${CENTROID.x-10},${CENTROID.y+40}`;
+  const r2 = `M ${CENTROID.x-220},${CENTROID.y-60}  C ${CENTROID.x-200},${CENTROID.y-10} ${CENTROID.x-140},${CENTROID.y+40} ${CENTROID.x-80},${CENTROID.y+90}`;
+  const r3 = `M ${CENTROID.x+40},${CENTROID.y-160}  C ${CENTROID.x+20},${CENTROID.y-110} ${CENTROID.x-30},${CENTROID.y-60} ${CENTROID.x-70},${CENTROID.y-10}`;
+  [r1,r2,r3].forEach(d=>{ rivEl.appendChild(pathEl(d,'river')); });
+}
+// --- Utility ---
+function rand(a,b){ return Math.random()*(b-a)+a; }
+function round(x,d){ const p=Math.pow(10,d); return Math.round(x*p)/p; }
+function clamp(x,a,b){ return Math.max(a, Math.min(b,x)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function pointInPoly(x,y, poly){
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i].x, yi=poly[i].y;
+    const xj=poly[j].x, yj=poly[j].y;
+    const intersect=((yi>y)!=(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi);
+    if(intersect) inside=!inside;
+  }
+  return inside;
+}
+// Auto water flow (m3/hr) at 100% load; approx factor per tech
+function autoWaterFlow(mw, tech){
+  const factor = {PEM:0.17, ALK:0.18, SOEC:0.16, AEM:0.18}[tech] || 0.18;
+  return round(mw * factor, 1);
+}
+// --- Site generation with richer properties ---
+function generateSites(n){
+  const munis=['Northport','Riverbend','Highridge','Westbay','Stonehaven','Eastfold','Lakeside','Hillcrest'];
+  const zonings=['Industrial','Mixed','Needs rezoning'];
+  const landCtl=['None','LOI','Option','Acquired'];
+  const gridConn=['Substation tie-in','Direct HV','On-site generation','Not applied'];
+  const qStat=['Applied','In queue','Confirmed'];
+  const feats=[]; let attempts=0;
+  const minX = Math.min(...LAND_POLY.map(p=>p.x)) + 30;
+  const maxX = Math.max(...LAND_POLY.map(p=>p.x)) - 30;
+  const minY = Math.min(...LAND_POLY.map(p=>p.y)) + 30;
+  const maxY = Math.max(...LAND_POLY.map(p=>p.y)) - 60;
+  while(feats.length<n && attempts<26000){
+    attempts++;
+    const x = minX + Math.random()*(maxX-minX);
+    const y = minY + Math.random()*(maxY-minY);
+    if(!pointInPoly(x,y, LAND_POLY)) continue;
+    let tooClose=false;
+    for(const f of feats){
+      const dx=x-f.properties.x, dy=y-f.properties.y;
+      if(Math.hypot(dx,dy) < 28){ tooClose=true; break; }
+    }
+    if(tooClose) continue;
+    const kv = pick([110,132,145,220,300,420]);
+    const wkm = round(rand(0.2,20),1);
+    const gkm = round(rand(0.2,40),1);
+    const hh  = Math.round(rand(5,200));
+    const portKm = Math.round(rand(2,200));
+    const landHa = round(rand(10,80),1);
+    const usable = Math.round(rand(55,95));
+    const slope  = Math.round(rand(0,22));
+    const gridMW = Math.round(rand(60,500));
+    const risk   = Math.round(rand(15,85));
+    const maturity = Math.round(rand(10,80));
+    const queueWaitYears = round(rand(0,7),1);
+    const zoning = pick(zonings);
+    const lctl   = pick(landCtl);
+    const gconn  = pick(gridConn);
+    const queue  = pick(qStat);
+    const wsrc   = pick(['Industrial','Surface','Desal','Wastewater']);
+    let score = (gridMW/5) + (90-risk) + (usable/2) - (slope/2) - (gkm*0.6) - (wkm*0.5) - (queueWaitYears*2);
+    score = clamp(Math.round(score/2), 30, 98);
+    const idx = feats.length+1;
+    const id = `S${String(idx).padStart(2,'0')}`;
+    feats.push({
+      type:'Feature',
+      geometry:{type:'Point', coordinates:[x,y]},
+      properties:{
+        id, muni: munis[idx%munis.length],
+        zoning, landCtl:lctl, gridConn:gconn,
+        kv,wkm,gkm,hh,portKm,landHa,usable,slope,gridMW,risk,maturity,queueWaitYears,
+        queue, wsrc, x,y,
+        lineColor: colorForScore(score), score
+      }
+    });
+  }
+  GEO = {type:'FeatureCollection',features:feats};
+}
+// --- Cost model (simple, deterministic) ---
+function baseCapexPerMW(tech){
+  // M€ per MW (very simplified demo values)
+  return {PEM:1.6, ALK:1.4, SOEC:1.2, AEM:1.5}[tech] || 1.5;
+}
+function gridConnFactor(type){
+  return {
+    'Substation tie-in': 1.00,
+    'Direct HV': 1.05,
+    'On-site generation': 1.12,
+    'Not applied': 1.08
+  }[type] || 1.00;
+}
+function capexEstimateMEUR(site, filters){
+  const tech = filters.tech;
+  const mw = filters.mw || 100;
+  const p = site.properties;
+  let capex = baseCapexPerMW(tech) * mw; // base
+  // Multipliers / adders
+  let mult = 1.0;
+  mult += (p.slope * 0.005);                  // +0.5% per % slope
+  mult += ((100 - p.usable) * 0.002);         // +0.2% per % unusable
+  mult += (p.gkm * 0.003);                    // +0.3% per km grid
+  mult += (p.wkm * 0.002);                    // +0.2% per km water
+  mult += (p.portKm * 0.0005);                // small logistics prep
+  if(p.kv >= 300) mult -= 0.05;               // strong grid
+  if(p.kv < 132)  mult += 0.05;               // weak grid
+  if(p.zoning === 'Needs rezoning') mult += 0.05;
+  mult *= gridConnFactor(p.gridConn);
+  // Risk uplift beyond 50
+  if(p.risk > 50) mult += (p.risk - 50) * 0.002; // +0.2% per point > 50
+  // Clamp reasonable range
+  mult = Math.max(0.85, Math.min(1.6, mult));
+  capex *= mult;
+  return Math.max(1, Math.round(capex*10)/10); // one decimal
+}
+function effKWhPerKg(tech){
+  return {PEM:53, ALK:56, SOEC:48, AEM:55}[tech] || 56;
+}
+function lcohEuroPerKg(site, filters){
+  const tech = filters.tech;
+  const mw = filters.mw || 100;
+  const eff = effKWhPerKg(tech);
+  const hours = 8000; // h/yr
+  const elecPrice = 45; // €/MWh (demo)
+  const CRF = 0.11;  // 20y @ ~10–11% WACC, demo
+  const opexFrac = 0.04; // of capex per year
+  const capexMEUR = capexEstimateMEUR(site, filters);
+  const annualH2kg = (mw*1000 / eff) * hours; // kg/yr
+  const elecComponent = (elecPrice * (eff/1000)); // €/kg
+  const capexAnnual = capexMEUR * 1e6 * CRF;
+  const opexAnnual  = capexMEUR * 1e6 * opexFrac;
+  const capexPerKg = (capexAnnual + opexAnnual) / annualH2kg;
+  const lcoh = elecComponent + capexPerKg;
+  return Math.max(0.5, Math.round(lcoh*100)/100); // 2 decimals
+}
+// --- Rendering ---
+function renderSites(){
+  const g = $('#sites'); g.innerHTML='';
+  const list = currentMatches();
+  list.forEach((s)=>{
+    const p = s.properties;
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx', p.x); c.setAttribute('cy', p.y);
+    c.setAttribute('r', 5.5);
+    c.setAttribute('fill', p.lineColor);
+    c.setAttribute('class','site-dot');
+    c.addEventListener('mouseenter', (e)=>{
+      const tip = document.createElement('div');
+      tip.className='pill'; tip.style.position='fixed'; tip.style.pointerEvents='none';
+      tip.style.left = (e.clientX+10)+'px'; tip.style.top = (e.clientY+10)+'px';
+      tip.textContent = `${p.id} — ${p.muni} • Score ${p.score}`;
+      tip.id='__tip'; document.body.appendChild(tip);
+    });
+    c.addEventListener('mouseleave', ()=>{
+      const t = document.getElementById('__tip'); if(t) t.remove();
+    });
+    g.appendChild(c);
+  });
+}
+function updateCounters(list){
+  $('#hm_totalSites').textContent = GEO.features.length;
+  $('#hm_matchSites').textContent = list.length;
+  const f = getFilters();
+  const pf = `Grid ≥ ${f.minKV} kV • Grid ≤ ${f.maxG} km • Water ≤ ${f.maxW} km • H₂ ≤ ${f.maxHH} km • Port ≤ ${f.maxPort} km • Land ≥ ${f.needHa.toFixed(1)} ha, Usable ≥ ${f.minUsable}%`;
+  const qf = ` • Queue ≤ ${f.maxGWait}y` + (f.queue!=='Any'?` • Status: ${f.queue}`:'') + (f.zoning!=='Any'?` • Zoning: ${f.zoning}`:'') + (f.wsrc!=='Any'?` • Water: ${f.wsrc}`:'');
+  $('#hm_filters').textContent = `Filters: ${pf}${qf}`;
+}
+const rowsEl = document.getElementById('hm_rows');
+function renderList(list){
+  rowsEl.innerHTML='';
+  if(!list.length){
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td colspan="17"><div class="muted">No matching sites. Try relaxing filters.</div></td>`;
+    rowsEl.appendChild(tr);
+    return;
+  }
+  const f = getFilters();
+  list.forEach((s,i)=>{
+    const p = s.properties;
+    const fit = Math.max(0, Math.min(1, p.landHa/(f.needHa||1)));
+    const capex = capexEstimateMEUR(s, f);
+    const lcoh  = lcohEuroPerKg(s, f);
+    const tr=document.createElement('tr');
+    const clr = p.lineColor;
+    tr.style.borderLeft = `4px solid ${clr}`;
     tr.innerHTML = `
       <td>${i+1}</td>
-      <td><input type="checkbox" data-ix="${i}" class="rowSel"></td>
-      <td>${s.site}</td>
-      <td>${s.kv} kV / ${s.gdkm} km</td>
-      <td>${s.wkm} km</td>
-      <td>${s.hh} km</td>
-      <td>${(s.score*100|0)}%</td>
-      <td class="stack">
-        <button class="btn" data-i="${i}" data-role="use">Use</button>
-        <button class="btn" data-i="${i}" data-role="add">Add</button>
+      <td>
+        <div><strong>${p.id}</strong> — ${p.muni}</div>
+        <div class="muted" style="font-size:12px">Zoning: ${p.zoning} • Land: ${p.landCtl} • Grid conn: ${p.gridConn}</div>
+        <div class="muted" style="font-size:12px">kV: ${p.kv} • Grid: ${p.gkm} km • Water: ${p.wkm} km • H₂ route: ${p.hh} km • Port: ${p.portKm} km • Land fit: ${(fit*100).toFixed(0)}%</div>
+        <div class="muted" style="font-size:12px">Queue: ${p.queue} (${p.queueWaitYears}y) • Risk: ${p.risk} • Maturity: ${p.maturity}</div>
+      </td>
+      <td>${p.kv}</td>
+      <td>${p.gkm}</td>
+      <td>${p.wkm}</td>
+      <td>${p.hh}</td>
+      <td>${p.portKm}</td>
+      <td>${p.landHa}</td>
+      <td>${p.usable}</td>
+      <td>${p.slope}</td>
+      <td>${p.queue}</td>
+      <td>${p.risk}</td>
+      <td>${p.maturity}</td>
+      <td>€ ${lcoh.toFixed(2)}</td>
+      <td>${capex.toFixed(1)}</td>
+      <td><span style="font-weight:700">${p.score}</span></td>
+      <td>
+        <div class="mini-actions">
+          <a class="btnx" href="projectbuilder.html">Project Builder</a>
+          <a class="btnx" href="#" onclick="showReviewScreen('${p.id}', ${p.score}); return false;">Review Screen</a>
+        </div>
       </td>`;
-    tbody.appendChild(tr);
+    rowsEl.appendChild(tr);
   });
-  document.getElementById('autoTableWrap').classList.remove('hidden');
-  tbody.querySelectorAll('.rowSel').forEach(cb=>{ cb.onchange = ()=>{ const ix = +cb.dataset.ix; if(cb.checked) selectedIndices.add(ix); else selectedIndices.delete(ix); refreshSelCount(); }; });
-  tbody.querySelectorAll('button').forEach(btn=>btn.onclick = ()=>{
-    const ix = +btn.dataset.i; const s = AUTO_DEMO_SITES[ix];
-    if(btn.dataset.role==='use'){
-      $('#s_name').value = s.site; $('#s_coords').value = s.coords; $('#u_kv').value = s.kv; $('#u_gdkm').value = s.gdkm; $('#u_wkm').value = s.wkm; $('#u_hh').value = s.hh; $('#u_q').value = 'confirmed';
-      if(s.parcel?.areaHa) $('#s_plot').value = s.parcel.areaHa; if($('#s_zone') && s.parcel?.zoning) $('#s_zone').value = s.parcel.zoning; renderParcel(s.parcel); sync();
-    }
-    if(btn.dataset.role==='add'){
-      if(!shortlist.find(x=>x.site===s.site)){ shortlist.push({ site:s.site, coords:s.coords, kv:s.kv, gdkm:s.gdkm, wkm:s.wkm, hh:s.hh, score:s.score, parcel:s.parcel }); renderShortlistChips(); sync(); }
-    }
-  });
-  refreshSelCount();
-}; }
-
-document.getElementById('btnAddSelected') && (document.getElementById('btnAddSelected').onclick = ()=>{ selectedIndices.forEach(ix=>{ const s=AUTO_DEMO_SITES[ix]; if(!shortlist.find(x=>x.site===s.site)){ shortlist.push({ site:s.site, coords:s.coords, kv:s.kv, gdkm:s.gdkm, wkm:s.wkm, hh:s.hh, score:s.score, parcel:s.parcel }); } }); renderShortlistChips(); sync(); });
-document.getElementById('btnGoComparison') && (document.getElementById('btnGoComparison').onclick = ()=>{ if(shortlist.length===0){ alert('Select at least one site to compare.'); return; } alert('Sending '+shortlist.length+' site(s) to Comparison (mock).'); });
-document.getElementById('btnPickAuto') && (document.getElementById('btnPickAuto').onclick = ()=>{ const best=[...AUTO_DEMO_SITES].sort((a,b)=>b.score-a.score)[0]; $('#s_name').value=best.site; $('#s_coords').value=best.coords; $('#u_kv').value=best.kv; $('#u_gdkm').value=best.gdkm; $('#u_wkm').value=best.wkm; $('#u_hh').value=best.hh; $('#u_q').value='confirmed'; if(best.parcel?.areaHa) $('#s_plot').value=best.parcel.areaHa; if($('#s_zone') && best.parcel?.zoning) $('#s_zone').value=best.parcel.zoning; renderParcel(best.parcel); sync(); });
-
-// ---- Live sizing / evidence / class ----
-function compute(){
-  const tech = $('#t_tech')?.value || 'PEM';
-  const mw = +($('#t_mw')?.value||0);
-  const hours = +($('#t_hours')?.value||0);
-  const eff = +($('#t_eff')?.value||52);
-  const avail = clamp01((+($('#t_avail')?.value||0)/100));
-  const plot = +($('#s_plot')?.value||0);
-  const coords = $('#s_coords')?.value?.trim()||'';
-  const zone = $('#s_zone')? $('#s_zone').value : '—';
-  const flags = $('#s_flags')?.value?.trim()||'';
-  const kg = (mw*1000*hours*avail)/(eff||1);
-  const tpy = kg/1000;
-  const water_m3_day = (kg * 9 / 1000) / 365 * 1000;
-  const need_ha = (FIT_HA_PER_MW[tech]||0.055) * mw;
-  const fit_ratio = need_ha? Math.max(0, Math.min(1, plot/need_ha)) : 0;
-  const pack = $('#e_pack')?.value||'None';
-  const ev = pack==='None'?0: pack==='Minimal (grid+water)'?50: 80;
-  const gridOk = (+($('#u_kv')?.value||0) >= GRID_MIN_KV) && (['confirmed','fast-track','allocation'].includes($('#u_q')?.value||''));
-  const waterOk = (+($('#u_wkm')?.value||999) <= 5) && (['industrial','municipal','on-site'].includes($('#u_wsrc')?.value||''));
-  const hhOk = (+($('#u_hh')?.value||999) <= 25);
-  const mustFail = [];
-  if(!gridOk) mustFail.push('Grid intake/queue');
-  if(!waterOk) mustFail.push('Water distance/source');
-  if(!hhOk) mustFail.push('Heavy-haul route');
-  let cls='Amber', why='Score between thresholds';
-  if(mustFail.length) { cls='Red'; why='MUST fail: '+mustFail.join(', '); }
-  else if(ev < EVIDENCE_AMBER_FLOOR) { cls='Red'; why=`Evidence ${ev}% < floor ${EVIDENCE_AMBER_FLOOR}%`; }
-  else if(ev >= EVIDENCE_TARGET_GREEN && fit_ratio>=0.9) { cls='Green'; why=`Fit ≥90% & evidence ≥${EVIDENCE_TARGET_GREEN}%`; }
-  const capex = [
-    {pkg:'Electrolyzer + Rectifier', base: mw*9.5},
-    {pkg:'Balance of Plant (process)', base: mw*4.0},
-    {pkg:'Civil & Structural', base: mw*2.0*(1+Math.max(0,1-fit_ratio))},
-    {pkg:'Grid Connection', base: 60 + (Math.max(0,(+($('#u_gdkm')?.value||0)-3))*3)},
-    {pkg:'Water & Treatment', base: 20 + (+($('#u_wkm')?.value||0)*2)},
-    {pkg:'Compression/Storage/Loadout', base: 35 + (+($('#prod_storage')?.value||0)*0.6)}
-  ];
-  const cont = 0.25; const total = capex.reduce((a,c)=>a+c.base,0) * (1+cont);
-  const year = new Date($('#e_date')?.value||Date.now()).getFullYear() || new Date().getFullYear();
-  const withinCOD = year>=COD_WINDOW[0] && year<=COD_WINDOW[1];
-  const schPct = withinCOD? 80: 45;
-  return {tech,mw,hours,eff,avail,plot,coords,zone,flags,tpy,water_m3_day,need_ha,fit_ratio,ev,cls,why,capex,total,schPct};
+}
+// --- Filters ---
+function getFilters(){
+  const tech = $('#dd_tech').value;
+  const product = $('#dd_product').value;
+  const scale = $('#dd_scale').value;
+  const gridConn = $('#dd_gridconn').value;
+  const landCtl = $('#dd_landctl').value;
+  const queue = $('#dd_queuestat').value;
+  const wsrc = $('#dd_wsrc').value;
+  const zoning = $('#dd_zoning').value;
+  const trl = $('#dd_trl').value;
+  const FIT_HA_PER_MW = { PEM: 0.05, ALK: 0.06, SOEC: 0.04, AEM: 0.055 };
+  const mw   = +$('#sl_mw').value || 0;
+  const needHaAuto = (FIT_HA_PER_MW[tech]||0.055) * mw;
+  const needHa = +$('#sl_plot').value>0 ? +$('#sl_plot').value : needHaAuto;
+  return {
+    tech, product, scale, gridConn, landCtl, queue, wsrc, zoning, trl,
+    mw, needHa,
+    minKV:+$('#sl_kv').value||66,
+    maxG:+$('#sl_gkm').value||50,
+    maxGWait:+$('#sl_gwait').value||10,
+    maxW:+$('#sl_wkm').value||30,
+    maxPort:+$('#sl_port').value||200,
+    maxHH:+$('#sl_hh').value||200,
+    maxCO2:+$('#sl_co2') ? (+$('#sl_co2').value||300) : 300,
+    minUsable:+$('#sl_usable').value||50,
+    maxSlope:+$('#sl_slope').value||30,
+    maxRisk:+$('#sl_risk').value||100,
+    minMaturity:+$('#sl_maturity').value||0
+  };
+}
+function productNeedsCO2(prod){
+  return (prod==='Ammonia' || prod==='Methanol');
+}
+function currentMatches(){
+  const f = getFilters();
+  return GEO.features.filter(s => {
+    const p = s.properties;
+    const pass =
+      p.kv>=f.minKV &&
+      p.gkm<=f.maxG &&
+      p.queueWaitYears<=f.maxGWait &&
+      p.wkm<=f.maxW &&
+      p.portKm<=f.maxPort &&
+      p.hh<=f.maxHH &&
+      p.landHa>=f.needHa &&
+      p.usable>=f.minUsable &&
+      p.slope<=f.maxSlope &&
+      p.risk<=f.maxRisk &&
+      p.maturity>=f.minMaturity &&
+      (f.queue==='Any' || p.queue===f.queue) &&
+      (f.wsrc==='Any' || p.wsrc===f.wsrc) &&
+      (f.zoning==='Any' || p.zoning===f.zoning);
+    return pass;
+  }).sort((a,b)=>b.properties.score-a.properties.score);
+}
+function updateAutoFlow(){
+  const tech = $('#dd_tech').value;
+  const mw = +$('#sl_mw').value || 0;
+  const flow = autoWaterFlow(mw, tech);
+  $('#auto_flow').textContent = flow.toFixed(1);
+}
+function toggleCO2Slider(){
+  const prod = $('#dd_product').value;
+  $('#co2_wrap').style.display = productNeedsCO2(prod)? 'block' : 'none';
+}
+// --- Bindings ---
+const sliderIds = [
+  ['sl_mw','sl_mw_v',0],
+  ['sl_kv','sl_kv_v',0],
+  ['sl_gkm','sl_gkm_v',1],
+  ['sl_gwait','sl_gwait_v',1],
+  ['sl_wkm','sl_wkm_v',1],
+  ['sl_port','sl_port_v',0],
+  ['sl_hh','sl_hh_v',0],
+  ['sl_co2','sl_co2_v',0],
+  ['sl_plot','sl_plot_v',0],
+  ['sl_usable','sl_usable_v',0],
+  ['sl_slope','sl_slope_v',0],
+  ['sl_risk','sl_risk_v',0],
+  ['sl_maturity','sl_maturity_v',0],
+];
+function updateSliderReadout(id, spanId, decimals){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const v = el.value;
+  const txt = decimals? Number(v).toFixed(decimals) : String(v);
+  const sp = document.getElementById(spanId);
+  if(sp) sp.textContent = txt;
 }
 function paint(){
-  const x = compute();
-  const set=(sel,v)=>{ const el=$(sel); if(el) el.textContent=v; };
-  set('#pv_coords', x.coords||'—'); set('#pv_zone', x.zone); set('#pv_flags', x.flags||'—');
-  set('#pv_h2', fmt(x.tpy,0)); set('#pv_mw', fmt(x.mw,0)); set('#pv_water', fmt(x.water_m3_day,0));
-  set('#pv_ha', fmt(x.need_ha,2)); set('#pv_fit', (x.fit_ratio*100|0)+'%');
-  const storeEl=$('#pv_store'); if(storeEl){ storeEl.textContent=( +($('#prod_storage')?.value||0) / ( (x.tpy/365)||1) ).toFixed(1); }
-  const bar=$('#pv_fitbar'); if(bar){ bar.style.width=(x.fit_ratio*100)+'%'; }
-  const evB=$('#pv_ev'); if(evB){ evB.className='scoreBubble'; if(x.ev<EVIDENCE_AMBER_FLOOR) evB.classList.add('red'); else if(x.ev<EVIDENCE_TARGET_GREEN) evB.classList.add('amber'); else evB.classList.add('green'); evB.textContent = x.ev+'%'; const help=$('#pv_ev_help'); if(help) help.textContent='Target ≥ '+EVIDENCE_TARGET_GREEN+'%'; }
-  const cB=$('#pv_class'); if(cB){ cB.className='scoreBubble'; cB.textContent=x.cls; cB.classList.add(x.cls.toLowerCase()); const h=$('#pv_class_help'); if(h) h.textContent=x.why; }
-  const tbody=document.getElementById('capexRows'); if(tbody){ tbody.innerHTML=''; x.capex.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.pkg}</td><td>${fmt(r.base,0)}</td>`; tbody.appendChild(tr); }); }
-  set('#capexTot', fmt(x.total,0));
-  const ms=[{name:'DG0',pct:10},{name:'DG1',pct:30},{name:'Permits 60%',pct:60},{name:'FID',pct:85},{name:'COD',pct:100}];
-  const ul=document.getElementById('msList'); if(ul){ ul.innerHTML=''; ms.forEach(m=>{ const li=document.createElement('li'); li.textContent=`${m.name}`; ul.appendChild(li); }); const sb=document.getElementById('schBar'); if(sb) sb.style.width=x.schPct+'%'; }
-  const jsonEl=document.getElementById('jsonOut'); if(jsonEl){ jsonEl.textContent=JSON.stringify(collectJSON(),null,2); }
+  updateAutoFlow();
+  toggleCO2Slider();
+  const list = currentMatches();
+  updateCounters(list);
+  renderList(list);
+  renderSites();
 }
-function collectJSON(){ return { meta:{ name: $('#p_name')?.value, gate: $('#p_gate')?.value, owner: $('#p_owner')?.value, tag: $('#p_tag')?.value, confidentiality: $('#p_conf')?.value }, site:{ name: $('#s_name')?.value, coords: $('#s_coords')?.value, plot_ha: +($('#s_plot')?.value||0), zoning: $('#s_zone')? $('#s_zone').value: null, flags: $('#s_flags')?.value }, tech:{ type: $('#t_tech')?.value, capacity_mw: +($('#t_mw')?.value||0), stack_config: $('#t_stack')?.value, hours: +($('#t_hours')?.value||0), efficiency_kwh_per_kg: +($('#t_eff')?.value||0), availability_pct: +($('#t_avail')?.value||0) }, product:{ primary: $('#prod_primary')?.value, pressure_bar: +($('#prod_bar')?.value||0), storage_t: +($('#prod_storage')?.value||0), offtake_status: $('#prod_status')?.value, trucks_per_day: +($('#prod_trucks')?.value||0) }, utilities:{ grid_kv: +($('#u_kv')?.value||0), grid_distance_km: +($('#u_gdkm')?.value||0), queue: $('#u_q')?.value, water_source: $('#u_wsrc')?.value, water_distance_km: +($('#u_wkm')?.value||0), hh_route_km: +($('#u_hh')?.value||0) }, evidence:{ pack: $('#e_pack')?.value, target_decision_date: $('#e_date')?.value, notes: $('#e_notes')?.value }, comparison:{ shortlist: shortlist.map(s=>({ site:s.site, coords:s.coords, kv:s.kv, grid_km:s.gdkm, water_km:s.wkm, hh_km:s.hh, score:s.score, parcel: s.parcel ? { gnr:s.parcel.gnr, bnr:s.parcel.bnr, muni:s.parcel.muni, areaHa:s.parcel.areaHa, zoning:s.parcel.zoning, plan:s.parcel.plan, lastSale:s.parcel.lastSale, owners:s.parcel.owners, easements:s.parcel.easements } : null })) } }; }
-function sync(){ paint(); }
-$all('input,select,textarea').forEach(el=>{ if(el.type==='file') return; el.addEventListener('input', sync); el.addEventListener('change', sync); });
-
-// Reset / Preset / Export / Import / Create
-document.getElementById('btnReset') && (document.getElementById('btnReset').onclick = ()=>{ document.querySelectorAll('input,select,textarea').forEach(el=>{ if(el.id==='p_conf'){ el.value='Confidential'; return; } if(el.tagName==='TEXTAREA'){ el.value=''; return; } if(el.type==='number'){ el.value = el.id==='t_mw'?20: el.id==='t_hours'?8000: el.id==='t_eff'?51: el.id==='t_avail'?95: el.id==='s_plot'?12: el.id==='u_kv'?132: el.id==='u_gdkm'?5: el.id==='u_wkm'?2: el.id==='u_hh'?12: el.id==='prod_bar'?350: el.id==='prod_storage'?20: el.id==='prod_trucks'?4: 0; return; } if(el.tagName==='SELECT'){ el.selectedIndex=0; } else { el.value=''; } }); renderParcel(null); selectedIndices.clear(); refreshSelCount(); shortlist.splice(0,shortlist.length); renderShortlistChips(); paint(); });
-function createProjectAction(){ const json = collectJSON(); alert('Project created (mock). Next: Project Builder → Layout.'); }
-document.getElementById('btnCreate') && (document.getElementById('btnCreate').onclick = createProjectAction);
-document.getElementById('btnCreateBottom') && (document.getElementById('btnCreateBottom').onclick = createProjectAction);
-document.getElementById('btnPreset') && (document.getElementById('btnPreset').onclick = ()=>{
-  document.getElementById('p_name').value = 'Ålesund H₂ Hub — 20 MW';
-  document.getElementById('p_owner').value = 'Norwegian Hydrogen';
-  document.getElementById('p_tag').value = 'NO-West / H₂ Mobility';
-  document.getElementById('s_name').value = 'Industripark West — Plot B';
-  document.getElementById('s_coords').value = '62.47, 6.15';
-  document.getElementById('s_plot').value = 14;
-  document.getElementById('s_zone').value = 'Industrial';
-  document.getElementById('t_tech').value = 'PEM';
-  document.getElementById('t_mw').value = 20;
-  document.getElementById('t_stack').value = 'OEM B — 10 MW skids';
-  document.getElementById('t_hours').value = 8200;
-  document.getElementById('t_eff').value = 50.5;
-  document.getElementById('t_avail').value = 95;
-  document.getElementById('u_kv').value = 220; document.getElementById('u_gdkm').value = 4; document.getElementById('u_wsrc').value = 'industrial'; document.getElementById('u_wkm').value = 1.5; document.getElementById('u_hh').value = 10; document.getElementById('u_q').value='confirmed';
-  document.getElementById('prod_primary').value='Hydrogen (compressed)'; document.getElementById('prod_bar').value=350; document.getElementById('prod_storage').value=30; document.getElementById('prod_status').value='LOI'; document.getElementById('prod_trucks').value=6;
-  document.getElementById('e_pack').value='Standard (grid+water+HH+zoning)';
-  const d=new Date(); d.setFullYear(2029); d.setMonth(5); d.setDate(1); document.getElementById('e_date').value = d.toISOString().slice(0,10);
-  document.getElementById('e_notes').value = 'Assume shared substation bay; water via industrial loop; HH route via E39; off-take LOI.';
-  renderParcel(AUTO_DEMO_SITES.find(x=>x.coords==='62.47, 6.15')?.parcel || null);
+$all('input[type="range"]').forEach(el=>{
+  const row = sliderIds.find(x=>x[0]===el.id);
+  if(row){
+    el.addEventListener('input',()=>{ updateSliderReadout(row[0],row[1],row[2]); paint(); });
+    el.addEventListener('change',()=>{ updateSliderReadout(row[0],row[1],row[2]); paint(); });
+  }
+});
+$all('select').forEach(el=>{
+  el.addEventListener('change', ()=>{ paint(); });
+});
+document.getElementById('btnPreset').onclick = ()=>{
+  // Scenario
+  $('#dd_tech').value='ALK';
+  $('#dd_product').value='Hydrogen (gas)';
+  $('#dd_scale').value='Large (120–500 MW)';
+  $('#dd_gridconn').value='Substation tie-in';
+  $('#dd_landctl').value='Option';
+  $('#dd_queuestat').value='Any';
+  $('#dd_wsrc').value='Any';
+  $('#dd_zoning').value='Any';
+  $('#dd_trl').value='Proven';
+  // Sliders
+  $('#sl_mw').value=130;
+  $('#sl_kv').value=220;
+  $('#sl_gkm').value=4;
+  $('#sl_gwait').value=3;
+  $('#sl_wkm').value=1.5;
+  $('#sl_port').value=80;
+  $('#sl_hh').value=60;
+  $('#sl_plot').value= Math.round(0.06*130);
+  $('#sl_usable').value=70;
+  $('#sl_slope').value=12;
+  $('#sl_risk').value=60;
+  $('#sl_maturity').value=30;
+  sliderIds.forEach(([id,span,d])=>updateSliderReadout(id,span,d));
   paint();
-});
-document.getElementById('btnExport') && (document.getElementById('btnExport').onclick = ()=>{
-  const blob = new Blob([JSON.stringify(collectJSON(),null,2)],{type:'application/json'});
-  const url = URL.createObjectURL(blob); const a=document.createElement('a');
-  a.href=url; a.download='seidr_project_'+Date.now()+'.json'; a.click(); URL.revokeObjectURL(url);
-});
-document.getElementById('btnImport') && (document.getElementById('btnImport').onclick = ()=>{
-  const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json';
-  inp.onchange = e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload = ()=>{ try{ const o=JSON.parse(r.result);
-    document.getElementById('p_name').value=o?.meta?.name||''; document.getElementById('p_owner').value=o?.meta?.owner||''; document.getElementById('p_tag').value=o?.meta?.tag||''; document.getElementById('p_conf').value=o?.meta?.confidentiality||'Confidential';
-    document.getElementById('s_name').value=o?.site?.name||''; document.getElementById('s_coords').value=o?.site?.coords||''; document.getElementById('s_plot').value=o?.site?.plot_ha||12; if(o?.site?.zoning) document.getElementById('s_zone').value=o.site.zoning; document.getElementById('s_flags').value=o?.site?.flags||'';
-    document.getElementById('t_tech').value=o?.tech?.type||'PEM'; document.getElementById('t_mw').value=o?.tech?.capacity_mw||20; document.getElementById('t_stack').value=o?.tech?.stack_config||''; document.getElementById('t_hours').value=o?.tech?.hours||8000; document.getElementById('t_eff').value=o?.tech?.efficiency_kwh_per_kg||51; document.getElementById('t_avail').value=o?.tech?.availability_pct||95;
-    document.getElementById('prod_primary').value=o?.product?.primary||'Hydrogen (compressed)'; document.getElementById('prod_bar').value=o?.product?.pressure_bar||350; document.getElementById('prod_storage').value=o?.product?.storage_t||20; document.getElementById('prod_status').value=o?.product?.offtake_status||'Exploration'; document.getElementById('prod_trucks').value=o?.product?.trucks_per_day||4;
-    document.getElementById('u_kv').value=o?.utilities?.grid_kv||132; document.getElementById('u_gdkm').value=o?.utilities?.grid_distance_km||5; document.getElementById('u_q').value=o?.utilities?.queue||'confirmed'; document.getElementById('u_wsrc').value=o?.utilities?.water_source||'industrial'; document.getElementById('u_wkm').value=o?.utilities?.water_distance_km||2; document.getElementById('u_hh').value=o?.utilities?.hh_route_km||12;
-    document.getElementById('e_pack').value=o?.evidence?.pack||'None'; document.getElementById('e_date').value=o?.evidence?.target_decision_date||''; document.getElementById('e_notes').value=o?.evidence?.notes||'';
-    selectedIndices.clear(); shortlist.splice(0,shortlist.length); paint();
-  }catch(err){ alert('Invalid JSON'); }}; r.readAsText(f); };
-  inp.click();
-});
-
-// Seed on load
+};
+// Init
+buildLand();
+generateSites(40);
+sliderIds.forEach(([id,span,d])=>updateSliderReadout(id,span,d));
 paint();
-</script>
-<script>
-// Prevent unfinished links from navigating to 404s
-(function safeLinks(){
-  const allowed = new Set([
-    'index.html','seidr_homepage_landing.html','create_ptx_project.html','comparison.html',
-    'Screening_Result2.html','Screening_Result3.html','projectbuilder.html','OEMcomparison.html',
-    'CAPEX.html','LLI5.html','schedule.html','ESIA3.html','offtake.html','decision_board.html'
-  ]);
-  document.addEventListener('click', (e)=>{
-    const a = e.target.closest('a'); if(!a) return;
-    const href = a.getAttribute('href')||''; if(!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-    try{ const u=new URL(href, window.location.href); if(u.origin!==window.location.origin) return; }catch{}
-    const path = href.split('?')[0].split('#')[0];
-    if(path.startsWith('/') && !path.endsWith('.html')){ e.preventDefault(); return; }
-    if(path.endsWith('.html') && !allowed.has(path.replace(/^\/?/,''))){ e.preventDefault(); return; }
-  }, true);
-})();
+document.getElementById('btnReseed').onclick = ()=>{
+  generateSites(40);
+  paint();
+};
+
+// View switching
+let currentView = 'screener';
+function showView(viewName){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  let viewId = 'view';
+  if(viewName === 'screener') viewId = 'viewScreener';
+  else if(viewName === 'ReviewGo') viewId = 'viewReviewGo';
+  else if(viewName === 'ReviewNoGo') viewId = 'viewReviewNoGo';
+  else viewId = 'view' + viewName.charAt(0).toUpperCase() + viewName.slice(1);
+  
+  const viewEl = document.getElementById(viewId);
+  if(viewEl) viewEl.classList.add('active');
+  currentView = viewName;
+  $('#btnBackToScreener').style.display = viewName === 'screener' ? 'none' : 'inline-block';
+  if(viewName !== 'screener'){
+    $('#btnPreset').style.display = 'none';
+    $('#btnReseed').style.display = 'none';
+  } else {
+    $('#btnPreset').style.display = 'inline-block';
+    $('#btnReseed').style.display = 'inline-block';
+  }
+}
+
+function showReviewScreen(siteId, score){
+  const isGreen = score >= 70;
+  const viewName = isGreen ? 'ReviewGo' : 'ReviewNoGo';
+  
+  // Switch view first to show loading state
+  showView(viewName);
+  
+  // Load review content if not already loaded
+  const contentEl = document.getElementById(isGreen ? 'reviewGoContent' : 'reviewNoGoContent');
+  if(!contentEl.dataset.loaded){
+    fetch(isGreen ? 'Screening_Result3.html' : 'Screening_Result2.html')
+      .then(r=>r.text())
+      .then(html=>{
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const wrap = doc.querySelector('.wrap');
+        if(wrap){
+          // Get the layout div inside wrap (which contains the actual content)
+          const layout = wrap.querySelector('.layout');
+          if(layout){
+            // Clone the layout content
+            const layoutClone = layout.cloneNode(true);
+            
+            // Remove any topbar/nav elements that might be inside
+            layoutClone.querySelectorAll('.topbar, nav, #main-nav, .seidr-nav').forEach(el=>el.remove());
+            
+            // Insert the layout content directly (we already have review-layout wrapper)
+            contentEl.innerHTML = layoutClone.innerHTML;
+          } else {
+            // Fallback: use wrap content if no layout found
+            const wrapClone = wrap.cloneNode(true);
+            wrapClone.querySelectorAll('.topbar, nav, #main-nav, .seidr-nav').forEach(el=>el.remove());
+            contentEl.innerHTML = wrapClone.innerHTML;
+          }
+          
+          // Remove any nav elements that might have been included
+          contentEl.querySelectorAll('nav, #main-nav, .seidr-nav, .topbar').forEach(el=>el.remove());
+          
+          // Extract scripts before they're lost
+          const scripts = Array.from(doc.querySelectorAll('script'));
+          const inlineScripts = [];
+          const externalScripts = [];
+          
+          scripts.forEach(oldScript=>{
+            if(oldScript.src){
+              if(!oldScript.src.includes('navigation.js') && !oldScript.src.includes('main.js') && !oldScript.src.includes('lucide')){
+                externalScripts.push(oldScript.src);
+              }
+            } else {
+              inlineScripts.push(oldScript.textContent);
+            }
+          });
+          
+          // Mark as loaded
+          contentEl.dataset.loaded = 'true';
+          
+          // Load external scripts first (if any), then execute inline scripts
+          const loadPromises = externalScripts.map(src=>{
+            return new Promise((resolve)=>{
+              // Check if script already loaded
+              const existing = document.querySelector(`script[src="${src}"]`);
+              if(existing){
+                resolve();
+                return;
+              }
+              const script = document.createElement('script');
+              script.src = src;
+              script.onload = resolve;
+              script.onerror = resolve; // Continue even if script fails
+              document.head.appendChild(script);
+            });
+          });
+          
+          Promise.all(loadPromises).then(()=>{
+            // Execute inline scripts - they'll define functions and run initialization
+            inlineScripts.forEach(scriptText=>{
+              try{
+                // Execute in global scope
+                eval(scriptText);
+              } catch(e){
+                console.error('Script execution error:', e);
+              }
+            });
+            
+            // Cleanup and finalize after scripts execute
+            setTimeout(()=>{
+              // Remove any nav elements that might have been injected by scripts
+              contentEl.querySelectorAll('nav, #main-nav, .seidr-nav, .topbar').forEach(el=>el.remove());
+              
+              // Reinitialize lucide icons
+              if(typeof lucide !== 'undefined'){
+                lucide.createIcons();
+              }
+            }, 200);
+          });
+        } else {
+          console.error('Could not find .wrap in fetched HTML');
+        }
+      })
+      .catch(e=>console.error('Failed to load review:', e));
+  } else {
+    // Already loaded, just show it
+    showView(viewName);
+  }
+}
+
+// Review page initialization functions
+function initReviewNoGo(){
+  // Functions will be scoped - use eval or inline scripts
+  // For now, just ensure lucide icons are created
+  if(typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function initReviewGo(){
+  if(typeof lucide !== 'undefined') lucide.createIcons();
+}
 </script>
 </body>
 </html>
-
