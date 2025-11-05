@@ -1,3 +1,4 @@
+// Navigation v2 - Portfolio Board, Screening R2/R3 removed
 // Define your pages - matching your actual HTML files
 const pages = [
     { name: 'Home', file: 'index.html' },
