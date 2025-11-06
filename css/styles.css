@@ -42,17 +42,20 @@
     box-shadow: 0 2px 8px rgba(25, 197, 190, 0.3);
 }
 
-/* Fixed navigation positioning */
+/* Fixed navigation positioning - standardized across all pages */
 .topbar {
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 20 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 12px !important;
     padding: 14px 20px !important;
     min-height: 56px !important;
-    background: rgba(15,26,34,.9);
-    border-bottom: 1px solid var(--line);
-    backdrop-filter: saturate(120%) blur(6px);
+    background: rgba(15,26,34,.9) !important;
+    border-bottom: 1px solid var(--line) !important;
+    backdrop-filter: saturate(120%) blur(6px) !important;
 }
 
 /* Global readability constraints */
@@ -61,11 +64,24 @@ p, .muted { max-width: 72ch; overflow-wrap: anywhere; }
 
 /* Unified SEIDR logo styling across pages */
 .topbar .logo {
-    font-weight: 900;
-    letter-spacing: .24em;
-    text-transform: uppercase;
+    font-weight: 900 !important;
+    letter-spacing: .24em !important;
+    text-transform: uppercase !important;
 }
-.topbar a .logo { text-decoration: none; color: inherit; }
+.topbar a.logo,
+.topbar a .logo { 
+    text-decoration: none !important; 
+    color: inherit !important; 
+}
+.topbar .brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+.topbar .crumb {
+    color: var(--muted) !important;
+    font-size: 13px !important;
+}
 
 /* Hide breadcrumbs globally for a cleaner header */
 .topbar .crumb{ display:none !important; }
