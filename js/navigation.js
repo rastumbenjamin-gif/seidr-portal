@@ -7,7 +7,7 @@ const pages = [
     { name: 'Electrolyzer', file: 'electrolyzer_config.html' },
     { name: 'OEM Comparison', file: 'OEMcomparison.html' },
     { name: 'HAZID', file: 'hazid.html' },
-    { name: 'CAPEX', file: 'CAPEX.html' },
+    { name: 'Financial', file: 'CAPEX.html' },
     { name: 'Long Lead Items', file: 'LLI5.html' },
     { name: 'Schedule', file: 'schedule.html' },
     { name: 'Impact Screening', file: 'ESIA3.html' },
